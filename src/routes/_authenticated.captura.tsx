@@ -25,9 +25,13 @@ function Captura() {
   const [captureUrl, setCaptureUrl] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCaptureUrl(`${window.location.origin}/cadastro?ref=admin`);
-    }
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && typeof window !== "undefined") {
+        setCaptureUrl(`${window.location.origin}/cadastro?ref=${user.id}`);
+      }
+    };
+    fetchUser();
   }, []);
 
   const copyToClipboard = () => {
