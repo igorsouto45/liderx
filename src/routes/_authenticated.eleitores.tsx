@@ -160,14 +160,19 @@ function Eleitores() {
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
     if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
+    
+    if (form.cpf && !isValidCPF(form.cpf)) {
+      return toast.error("CPF inválido. Verifique os números informados.");
+    }
+
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from("eleitores").insert({
       nome: form.nome,
       telefone: form.telefone,
       data_nascimento: form.data_nascimento,
-      cpf: form.cpf || null,
-      cep: form.cep || null,
+      cpf: form.cpf ? onlyDigits(form.cpf) : null,
+      cep: form.cep ? onlyDigits(form.cep) : null,
       endereco: form.endereco || null,
       numero: form.numero || null,
       complemento: form.complemento || null,
