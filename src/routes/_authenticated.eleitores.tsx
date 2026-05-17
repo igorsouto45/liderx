@@ -306,33 +306,90 @@ function Eleitores() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Cadastrar Eleitor</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome *</Label>
-              <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Bairro</Label>
-              <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="apoiador">Apoiador</SelectItem>
-                  <SelectItem value="indeciso">Indeciso</SelectItem>
-                  <SelectItem value="rejeição">Rejeição</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2 md:col-span-2">
+                <Label>Nome *</Label>
+                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>WhatsApp *</Label>
+                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Nascimento *</Label>
+                <Input type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} required />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>CPF (opcional)</Label>
+                <Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
+              </div>
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  value={form.cep}
+                  onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                  onBlur={handleCepBlur}
+                  placeholder="00000-000"
+                />
+                {cepLoading && <p className="text-xs text-muted-foreground">Buscando endereço...</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Endereço</Label>
+                <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Complemento</Label>
+                <Input value={form.complemento} onChange={(e) => setForm({ ...form, complemento: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input value={form.uf} maxLength={2} onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apoiador">Apoiador</SelectItem>
+                    <SelectItem value="indeciso">Indeciso</SelectItem>
+                    <SelectItem value="rejeição">Rejeição</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Local de votação (detectado automaticamente)</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Zona</Label>
+                    <Input value={form.zona_votacao} onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Seção</Label>
+                    <Input value={form.secao_votacao} onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} />
+                  </div>
+                  <div className="space-y-1 col-span-3">
+                    <Label className="text-xs">Local</Label>
+                    <Input value={form.local_votacao_nome} onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} />
+                  </div>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
