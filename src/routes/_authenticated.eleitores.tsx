@@ -71,6 +71,30 @@ const initialForm: FormState = {
 
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
+function isValidCPF(cpf: string) {
+  const cleanCPF = onlyDigits(cpf);
+  if (!cleanCPF || cleanCPF.length !== 11) return false;
+  
+  // Elimina CPFs conhecidos inválidos
+  if (/^(\d)\1+$/.test(cleanCPF)) return false;
+
+  // Valida 1o dígito
+  let add = 0;
+  for (let i = 0; i < 9; i++) add += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  let rev = 11 - (add % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(cleanCPF.charAt(9))) return false;
+
+  // Valida 2o dígito
+  add = 0;
+  for (let i = 0; i < 10; i++) add += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  rev = 11 - (add % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(cleanCPF.charAt(10))) return false;
+
+  return true;
+}
+
 function Eleitores() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -136,14 +160,19 @@ function Eleitores() {
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
     if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
+    
+    if (form.cpf && !isValidCPF(form.cpf)) {
+      return toast.error("CPF inválido. Verifique os números informados.");
+    }
+
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from("eleitores").insert({
       nome: form.nome,
       telefone: form.telefone,
       data_nascimento: form.data_nascimento,
-      cpf: form.cpf || null,
-      cep: form.cep || null,
+      cpf: form.cpf ? onlyDigits(form.cpf) : null,
+      cep: form.cep ? onlyDigits(form.cep) : null,
       endereco: form.endereco || null,
       numero: form.numero || null,
       complemento: form.complemento || null,
@@ -373,22 +402,44 @@ function Eleitores() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-3 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Local de votação (detectado automaticamente)</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Zona</Label>
-                    <Input value={form.zona_votacao} onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} />
+              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-primary">Local de Votação</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-white/5 px-2 py-0.5 rounded">Ajuste manual disponível</span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Zona</Label>
+                    <Input 
+                      className="h-8 bg-black/40" 
+                      value={form.zona_votacao} 
+                      onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} 
+                      placeholder="Ex: 123"
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Seção</Label>
-                    <Input value={form.secao_votacao} onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} />
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Seção</Label>
+                    <Input 
+                      className="h-8 bg-black/40" 
+                      value={form.secao_votacao} 
+                      onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} 
+                      placeholder="Ex: 0456"
+                    />
                   </div>
-                  <div className="space-y-1 col-span-3">
-                    <Label className="text-xs">Local</Label>
-                    <Input value={form.local_votacao_nome} onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} />
+                  <div className="space-y-1.5 col-span-2 md:col-span-2">
+                    <Label className="text-xs text-muted-foreground">Nome do Local</Label>
+                    <Input 
+                      className="h-8 bg-black/40" 
+                      value={form.local_votacao_nome} 
+                      onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} 
+                      placeholder="Nome da Escola ou Prédio"
+                    />
                   </div>
                 </div>
+                <p className="text-[10px] text-muted-foreground italic">
+                  * Os campos acima são preenchidos automaticamente pelo CEP, mas podem ser alterados se necessário.
+                </p>
               </div>
             </div>
             <DialogFooter>
