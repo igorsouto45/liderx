@@ -25,17 +25,22 @@ function Captura() {
   const [captureUrl, setCaptureUrl] = useState("");
 
   useEffect(() => {
-    setCaptureUrl(`${window.location.origin}/cadastro?ref=admin`);
+    if (typeof window !== "undefined") {
+      setCaptureUrl(`${window.location.origin}/cadastro?ref=admin`);
+    }
   }, []);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(captureUrl);
-    setCopied(true);
-    toast.success("Link copiado com sucesso!");
-    setTimeout(() => setCopied(false), 2000);
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(captureUrl);
+      setCopied(true);
+      toast.success("Link copiado com sucesso!");
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const downloadQRCode = () => {
+    if (typeof document === "undefined") return;
     const svg = document.getElementById("qr-code-svg");
     if (!svg) return;
     const svgData = new XMLSerializer().serializeToString(svg);
