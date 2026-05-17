@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,11 @@ export const Route = createFileRoute("/_authenticated/captura")({
 
 function Captura() {
   const [copied, setCopied] = useState(false);
-  const captureUrl = `${window.location.origin}/cadastro?ref=admin`;
+  const [captureUrl, setCaptureUrl] = useState("");
+
+  useEffect(() => {
+    setCaptureUrl(`${window.location.origin}/cadastro?ref=admin`);
+  }, []);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(captureUrl);
