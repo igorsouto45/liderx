@@ -141,11 +141,11 @@ function AuthenticatedLayout() {
         <div className="border-t border-white/5 p-4">
           <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 mb-4">
             <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold">
-              {session.user.email?.[0].toUpperCase()}
+              {profile?.nome?.[0]?.toUpperCase() || session.user.email?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-semibold truncate">{session.user.email?.split("@")[0]}</p>
-              <p className="text-xs text-muted-foreground capitalize">Administrador</p>
+              <p className="text-sm font-semibold truncate">{profile?.nome || session.user.email?.split("@")[0]}</p>
+              <p className="text-xs text-muted-foreground capitalize">{profile?.tipo || "Usuário"}</p>
             </div>
           </div>
           <Button 
