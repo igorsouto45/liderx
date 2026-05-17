@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import { 
   Users, 
   Search, 
@@ -39,6 +44,37 @@ export const Route = createFileRoute("/_authenticated/eleitores")({
 });
 
 function Eleitores() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ nome: "", telefone: "", bairro: "", status: "indeciso" });
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.nome.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("eleitores").insert({
+      nome: form.nome,
+      telefone: form.telefone || null,
+      bairro: form.bairro || null,
+      status: form.status as any,
+      origem_usuario_id: user?.id,
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Erro ao cadastrar: " + error.message);
+      return;
+    }
+    toast.success("Eleitor cadastrado!");
+    setForm({ nome: "", telefone: "", bairro: "", status: "indeciso" });
+    setOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["eleitores"] });
+  };
+
   const { data: eleitores, isLoading } = useQuery({
     queryKey: ["eleitores"],
     queryFn: async () => {
@@ -80,7 +116,7 @@ function Eleitores() {
             <Filter className="mr-2 h-4 w-4" />
             Filtros
           </Button>
-          <Button className="shadow-lg shadow-primary/20">
+          <Button className="shadow-lg shadow-primary/20" onClick={() => setOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Cadastrar Eleitor
           </Button>
@@ -176,6 +212,43 @@ function Eleitores() {
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+          <DialogHeader>
+            <DialogTitle>Cadastrar Eleitor</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome *</Label>
+              <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Bairro</Label>
+              <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="apoiador">Apoiador</SelectItem>
+                  <SelectItem value="indeciso">Indeciso</SelectItem>
+                  <SelectItem value="rejeição">Rejeição</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Cadastrar"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
