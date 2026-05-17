@@ -1,22 +1,33 @@
-I will create the five missing pages requested by the user, ensuring they follow the established visual style of the application.
+## Objetivo
+Tornar o cadastro de eleitor completo, com lookup de endereço via ViaCEP e atribuição automática de zona, seção e local de votação a partir da planilha do RJ.
 
-### Pages to Create:
-1.  **Prioridades (`/prioridades`):** A list of strategic goals and priorities for the campaign.
-2.  **Lideranças (`/liderancas`):** A management interface for campaign leaders.
-3.  **Mapa Estratégico (`/mapa`):** A visual overview of the campaign's geographic or strategic distribution.
-4.  **Interações IA (`/interacoes`):** A chat or log-based interface for AI insights.
-5.  **Configurações (`/settings`):** User and system settings.
+## Mudanças no banco
 
-### Technical Details:
-- Files will be created in `src/routes/` as `_authenticated.<route>.tsx`.
-- They will use the `Card`, `Button`, and `ScrollArea` components from the existing UI library.
-- They will maintain the dark, futuristic "cyberpunk" theme (radial gradients, backdrop blurs, primary purple accents).
-- I will use `lucide-react` for icons and `recharts` for any data visualization.
-- I will ensure all routes are consistent with the navigation menu defined in `src/routes/_authenticated.tsx`.
+1. **Nova tabela `locais_votacao`** com os campos relevantes:
+   - `uf`, `municipio`, `zona`, `secao`, `local_numero`, `local_nome`, `endereco`, `bairro`, `cep`, `latitude`, `longitude`
+   - Índices em `cep` e (`bairro`, `municipio`) para busca rápida
+   - RLS: leitura pública para usuários autenticados
+   - Importação dos ~38k registros ativos da planilha enviada (via COPY)
 
-### Implementation Plan:
-1.  **Create `src/routes/_authenticated.prioridades.tsx`**
-2.  **Create `src/routes/_authenticated.liderancas.tsx`**
-3.  **Create `src/routes/_authenticated.mapa.tsx`**
-4.  **Create `src/routes/_authenticated.interacoes.tsx`**
-5.  **Create `src/routes/_authenticated.settings.tsx`**
+2. **Tabela `eleitores`** — novos campos:
+   - `data_nascimento` (date, obrigatório no formulário)
+   - `cpf` (text, opcional)
+   - `cep`, `endereco`, `numero`, `complemento`, `cidade`, `uf`
+   - `zona_votacao`, `secao_votacao`, `local_votacao_nome`
+
+## Mudanças na UI (Cadastrar Eleitor)
+
+Formulário ampliado em diálogo com:
+- Nome (obrigatório)
+- WhatsApp (obrigatório, máscara)
+- Data de Nascimento (obrigatório)
+- CPF (opcional)
+- CEP — onBlur dispara `https://viacep.com.br/ws/{cep}/json/` e preenche endereço, bairro, cidade, UF
+- Após CEP preenchido, consulta `locais_votacao` filtrando por CEP exato (fallback: bairro + município) e seleciona o local mais frequente, preenchendo zona, seção e nome do local automaticamente
+- Status (apoiador/indeciso/rejeição)
+
+## Detalhes técnicos
+
+- Importação: filtrar `DS_SITU_LOCAL_VOTACAO = 'ATIVO'`, exportar CSV e usar `\copy` via psql.
+- Lookup de zona/seção: query `select zona, secao, local_nome from locais_votacao where cep = $1 limit 1`. Quando CEP não bate, usar `ilike` em bairro + município.
+- Validação com Zod no cliente (CPF opcional, telefone com 10–11 dígitos).

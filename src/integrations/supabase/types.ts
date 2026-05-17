@@ -17,30 +17,63 @@ export type Database = {
       eleitores: {
         Row: {
           bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          cpf: string | null
           created_at: string | null
+          data_nascimento: string | null
+          endereco: string | null
           id: string
+          local_votacao_nome: string | null
           nome: string
+          numero: string | null
           origem_usuario_id: string | null
+          secao_votacao: number | null
           status: Database["public"]["Enums"]["eleitor_status"]
           telefone: string | null
+          uf: string | null
+          zona_votacao: number | null
         }
         Insert: {
           bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
           created_at?: string | null
+          data_nascimento?: string | null
+          endereco?: string | null
           id?: string
+          local_votacao_nome?: string | null
           nome: string
+          numero?: string | null
           origem_usuario_id?: string | null
+          secao_votacao?: number | null
           status?: Database["public"]["Enums"]["eleitor_status"]
           telefone?: string | null
+          uf?: string | null
+          zona_votacao?: number | null
         }
         Update: {
           bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
           created_at?: string | null
+          data_nascimento?: string | null
+          endereco?: string | null
           id?: string
+          local_votacao_nome?: string | null
           nome?: string
+          numero?: string | null
           origem_usuario_id?: string | null
+          secao_votacao?: number | null
           status?: Database["public"]["Enums"]["eleitor_status"]
           telefone?: string | null
+          uf?: string | null
+          zona_votacao?: number | null
         }
         Relationships: [
           {
@@ -83,6 +116,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      locais_votacao: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          created_at: string
+          endereco: string | null
+          id: string
+          latitude: number | null
+          local_nome: string | null
+          local_numero: number | null
+          longitude: number | null
+          municipio: string
+          secao: number
+          uf: string
+          zona: number
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local_nome?: string | null
+          local_numero?: number | null
+          longitude?: number | null
+          municipio: string
+          secao: number
+          uf: string
+          zona: number
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local_nome?: string | null
+          local_numero?: number | null
+          longitude?: number | null
+          municipio?: string
+          secao?: number
+          uf?: string
+          zona?: number
+        }
+        Relationships: []
       }
       perfis: {
         Row: {

@@ -43,24 +43,116 @@ export const Route = createFileRoute("/_authenticated/eleitores")({
   component: Eleitores,
 });
 
+type FormState = {
+  nome: string;
+  telefone: string;
+  data_nascimento: string;
+  cpf: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  zona_votacao: string;
+  secao_votacao: string;
+  local_votacao_nome: string;
+  status: string;
+};
+
+const initialForm: FormState = {
+  nome: "", telefone: "", data_nascimento: "", cpf: "",
+  cep: "", endereco: "", numero: "", complemento: "",
+  bairro: "", cidade: "", uf: "",
+  zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
+  status: "indeciso",
+};
+
+function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
+
 function Eleitores() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nome: "", telefone: "", bairro: "", status: "indeciso" });
+  const [cepLoading, setCepLoading] = useState(false);
+  const [form, setForm] = useState<FormState>(initialForm);
+
+  const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
+    // Try exact CEP match first
+    let { data } = await supabase
+      .from("locais_votacao")
+      .select("zona, secao, local_nome")
+      .eq("cep", cep)
+      .limit(1);
+    if ((!data || data.length === 0) && bairro && cidade) {
+      const r = await supabase
+        .from("locais_votacao")
+        .select("zona, secao, local_nome")
+        .ilike("bairro", bairro)
+        .ilike("municipio", cidade)
+        .limit(1);
+      data = r.data;
+    }
+    if (data && data[0]) {
+      setForm((f) => ({
+        ...f,
+        zona_votacao: String(data![0].zona ?? ""),
+        secao_votacao: String(data![0].secao ?? ""),
+        local_votacao_nome: data![0].local_nome ?? "",
+      }));
+    }
+  };
+
+  const handleCepBlur = async () => {
+    const cep = onlyDigits(form.cep);
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        cep,
+        endereco: data.logradouro || f.endereco,
+        bairro: data.bairro || f.bairro,
+        cidade: data.localidade || f.cidade,
+        uf: data.uf || f.uf,
+      }));
+      await lookupLocalVotacao(cep, data.bairro, data.localidade);
+    } catch {
+      toast.error("Erro ao consultar CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nome.trim()) {
-      toast.error("Nome é obrigatório");
-      return;
-    }
+    if (!form.nome.trim()) return toast.error("Nome é obrigatório");
+    if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
+    if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from("eleitores").insert({
       nome: form.nome,
-      telefone: form.telefone || null,
+      telefone: form.telefone,
+      data_nascimento: form.data_nascimento,
+      cpf: form.cpf || null,
+      cep: form.cep || null,
+      endereco: form.endereco || null,
+      numero: form.numero || null,
+      complemento: form.complemento || null,
       bairro: form.bairro || null,
+      cidade: form.cidade || null,
+      uf: form.uf || null,
+      zona_votacao: form.zona_votacao ? parseInt(form.zona_votacao) : null,
+      secao_votacao: form.secao_votacao ? parseInt(form.secao_votacao) : null,
+      local_votacao_nome: form.local_votacao_nome || null,
       status: form.status as any,
       origem_usuario_id: user?.id,
     });
@@ -70,7 +162,7 @@ function Eleitores() {
       return;
     }
     toast.success("Eleitor cadastrado!");
-    setForm({ nome: "", telefone: "", bairro: "", status: "indeciso" });
+    setForm(initialForm);
     setOpen(false);
     queryClient.invalidateQueries({ queryKey: ["eleitores"] });
   };
@@ -214,33 +306,90 @@ function Eleitores() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Cadastrar Eleitor</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome *</Label>
-              <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Bairro</Label>
-              <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="apoiador">Apoiador</SelectItem>
-                  <SelectItem value="indeciso">Indeciso</SelectItem>
-                  <SelectItem value="rejeição">Rejeição</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2 md:col-span-2">
+                <Label>Nome *</Label>
+                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>WhatsApp *</Label>
+                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Nascimento *</Label>
+                <Input type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} required />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>CPF (opcional)</Label>
+                <Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
+              </div>
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  value={form.cep}
+                  onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                  onBlur={handleCepBlur}
+                  placeholder="00000-000"
+                />
+                {cepLoading && <p className="text-xs text-muted-foreground">Buscando endereço...</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Endereço</Label>
+                <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Complemento</Label>
+                <Input value={form.complemento} onChange={(e) => setForm({ ...form, complemento: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input value={form.uf} maxLength={2} onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apoiador">Apoiador</SelectItem>
+                    <SelectItem value="indeciso">Indeciso</SelectItem>
+                    <SelectItem value="rejeição">Rejeição</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Local de votação (detectado automaticamente)</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Zona</Label>
+                    <Input value={form.zona_votacao} onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Seção</Label>
+                    <Input value={form.secao_votacao} onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} />
+                  </div>
+                  <div className="space-y-1 col-span-3">
+                    <Label className="text-xs">Local</Label>
+                    <Input value={form.local_votacao_nome} onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} />
+                  </div>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
