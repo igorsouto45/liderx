@@ -71,6 +71,30 @@ const initialForm: FormState = {
 
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
+function isValidCPF(cpf: string) {
+  const cleanCPF = onlyDigits(cpf);
+  if (!cleanCPF || cleanCPF.length !== 11) return false;
+  
+  // Elimina CPFs conhecidos inválidos
+  if (/^(\d)\1+$/.test(cleanCPF)) return false;
+
+  // Valida 1o dígito
+  let add = 0;
+  for (let i = 0; i < 9; i++) add += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  let rev = 11 - (add % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(cleanCPF.charAt(9))) return false;
+
+  // Valida 2o dígito
+  add = 0;
+  for (let i = 0; i < 10; i++) add += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  rev = 11 - (add % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(cleanCPF.charAt(10))) return false;
+
+  return true;
+}
+
 function Eleitores() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
