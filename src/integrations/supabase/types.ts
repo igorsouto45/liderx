@@ -25,7 +25,9 @@ export type Database = {
           data_nascimento: string | null
           endereco: string | null
           id: string
+          latitude: number | null
           local_votacao_nome: string | null
+          longitude: number | null
           nome: string
           numero: string | null
           origem_usuario_id: string | null
@@ -45,7 +47,9 @@ export type Database = {
           data_nascimento?: string | null
           endereco?: string | null
           id?: string
+          latitude?: number | null
           local_votacao_nome?: string | null
+          longitude?: number | null
           nome: string
           numero?: string | null
           origem_usuario_id?: string | null
@@ -65,7 +69,9 @@ export type Database = {
           data_nascimento?: string | null
           endereco?: string | null
           id?: string
+          latitude?: number | null
           local_votacao_nome?: string | null
+          longitude?: number | null
           nome?: string
           numero?: string | null
           origem_usuario_id?: string | null
@@ -113,6 +119,80 @@ export type Database = {
             columns: ["eleitor_id"]
             isOneToOne: false
             referencedRelation: "eleitores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      liderancas: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          cpf: string | null
+          created_at: string | null
+          data_nascimento: string | null
+          endereco: string | null
+          id: string
+          latitude: number | null
+          local_votacao_nome: string | null
+          longitude: number | null
+          nome: string
+          numero: string | null
+          perfil_id: string | null
+          secao_votacao: number | null
+          telefone: string | null
+          uf: string | null
+          zona_votacao: number | null
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_nascimento?: string | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local_votacao_nome?: string | null
+          longitude?: number | null
+          nome: string
+          numero?: string | null
+          perfil_id?: string | null
+          secao_votacao?: number | null
+          telefone?: string | null
+          uf?: string | null
+          zona_votacao?: number | null
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_nascimento?: string | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local_votacao_nome?: string | null
+          longitude?: number | null
+          nome?: string
+          numero?: string | null
+          perfil_id?: string | null
+          secao_votacao?: number | null
+          telefone?: string | null
+          uf?: string | null
+          zona_votacao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liderancas_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
             referencedColumns: ["id"]
           },
         ]
@@ -185,6 +265,41 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: []
+      }
+      prioridades: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          lider_id: string | null
+          status: string | null
+          titulo: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          lider_id?: string | null
+          status?: string | null
+          titulo: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          lider_id?: string | null
+          status?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prioridades_lider_id_fkey"
+            columns: ["lider_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

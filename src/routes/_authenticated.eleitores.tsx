@@ -166,34 +166,45 @@ function Eleitores() {
     }
 
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("eleitores").insert({
-      nome: form.nome,
-      telefone: form.telefone,
-      data_nascimento: form.data_nascimento,
-      cpf: form.cpf ? onlyDigits(form.cpf) : null,
-      cep: form.cep ? onlyDigits(form.cep) : null,
-      endereco: form.endereco || null,
-      numero: form.numero || null,
-      complemento: form.complemento || null,
-      bairro: form.bairro || null,
-      cidade: form.cidade || null,
-      uf: form.uf || null,
-      zona_votacao: form.zona_votacao ? parseInt(form.zona_votacao) : null,
-      secao_votacao: form.secao_votacao ? parseInt(form.secao_votacao) : null,
-      local_votacao_nome: form.local_votacao_nome || null,
-      status: form.status as any,
-      origem_usuario_id: user?.id,
-    });
-    setSaving(false);
-    if (error) {
-      toast.error("Erro ao cadastrar: " + error.message);
-      return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      // Validate numeric fields to avoid NaN errors
+      const zona = form.zona_votacao ? parseInt(onlyDigits(form.zona_votacao)) : null;
+      const secao = form.secao_votacao ? parseInt(onlyDigits(form.secao_votacao)) : null;
+
+      const { error } = await supabase.from("eleitores").insert({
+        nome: form.nome,
+        telefone: form.telefone,
+        data_nascimento: form.data_nascimento,
+        cpf: form.cpf ? onlyDigits(form.cpf) : null,
+        cep: form.cep ? onlyDigits(form.cep) : null,
+        endereco: form.endereco || null,
+        numero: form.numero || null,
+        complemento: form.complemento || null,
+        bairro: form.bairro || null,
+        cidade: form.cidade || null,
+        uf: form.uf || null,
+        zona_votacao: zona,
+        secao_votacao: secao,
+        local_votacao_nome: form.local_votacao_nome || null,
+        status: form.status as any,
+        origem_usuario_id: user.id,
+      });
+
+      if (error) throw error;
+
+      toast.success("Eleitor cadastrado com sucesso!");
+      setForm(initialForm);
+      setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["eleitores"] });
+    } catch (error: any) {
+      console.error("Erro no cadastro:", error);
+      toast.error("Erro ao cadastrar: " + (error.message || "Tente novamente"));
+    } finally {
+      setSaving(false);
     }
-    toast.success("Eleitor cadastrado!");
-    setForm(initialForm);
-    setOpen(false);
-    queryClient.invalidateQueries({ queryKey: ["eleitores"] });
   };
 
   const { data: eleitores, isLoading } = useQuery({
