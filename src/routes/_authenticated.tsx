@@ -1,0 +1,169 @@
+import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  LayoutDashboard, 
+  Users, 
+  UserPlus, 
+  Map, 
+  MessageSquare, 
+  Settings, 
+  LogOut,
+  Shield,
+  Menu,
+  X,
+  TrendingUp,
+  Award
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated")({
+  component: AuthenticatedLayout,
+});
+
+function AuthenticatedLayout() {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate({ to: "/login" });
+      } else {
+        setSession(session);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate({ to: "/login" });
+      } else {
+        setSession(session);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Sessão encerrada");
+  };
+
+  if (loading) return null;
+  if (!session) return null;
+
+  const menuItems = [
+    { label: "Painel de Guerra", icon: LayoutDashboard, to: "/dashboard" },
+    { label: "Eleitores", icon: Users, to: "/eleitores" },
+    { label: "Prioridades", icon: Award, to: "/prioridades" },
+    { label: "Lideranças", icon: TrendingUp, to: "/liderancas" },
+    { label: "Mapa Estratégico", icon: Map, to: "/mapa" },
+    { label: "Captura (QR Code)", icon: UserPlus, to: "/captura" },
+    { label: "Interações IA", icon: MessageSquare, to: "/interacoes" },
+    { label: "Configurações", icon: Settings, to: "/settings" },
+  ];
+
+  return (
+    <div className="flex h-screen bg-background overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
+      {!sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(true)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/5 bg-card/40 backdrop-blur-2xl transition-transform duration-300 lg:static lg:translate-x-0",
+        !sidebarOpen && "-translate-x-full"
+      )}>
+        <div className="flex h-16 items-center justify-between px-6 border-b border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <Shield className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold tracking-tight">LiderX</span>
+          </div>
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <ScrollArea className="flex-1 px-4 py-6">
+          <nav className="space-y-1">
+            {menuItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-white/5",
+                  location.pathname === item.to ? "bg-primary/10 text-primary shadow-[inset_0_0_10px_rgba(108,43,217,0.1)]" : "text-muted-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5", location.pathname === item.to ? "text-primary" : "text-muted-foreground")} />
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </ScrollArea>
+
+        <div className="border-t border-white/5 p-4">
+          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 mb-4">
+            <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold">
+              {session.user.email?.[0].toUpperCase()}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-semibold truncate">{session.user.email?.split("@")[0]}</p>
+              <p className="text-xs text-muted-foreground capitalize">Administrador</p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5" />
+            Sair do Sistema
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <header className="flex h-16 items-center justify-between px-8 border-b border-white/5 bg-background/50 backdrop-blur-xl">
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+            <Menu className="h-6 w-6" />
+          </Button>
+          <div className="flex-1 px-4">
+            <h2 className="text-lg font-semibold tracking-tight">
+              {menuItems.find(item => item.to === location.pathname)?.label || "Dashboard"}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end">
+              <p className="text-xs text-muted-foreground">Status da Campanha</p>
+              <p className="text-sm font-bold text-green-500">Crescimento +12%</p>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,var(--primary)_0%,transparent_40%)] opacity-[0.03] absolute inset-0 pointer-events-none" />
+        
+        <ScrollArea className="flex-1">
+          <div className="p-8">
+            <Outlet />
+          </div>
+        </ScrollArea>
+      </main>
+    </div>
+  );
+}
