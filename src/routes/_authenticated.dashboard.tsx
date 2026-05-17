@@ -27,8 +27,6 @@ import {
   Cell
 } from "recharts";
 
-import { cn } from "@/lib/utils";
-
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
