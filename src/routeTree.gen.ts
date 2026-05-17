@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedEleitoresRouteImport } from './routes/_authenticated.eleitores'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedCapturaRouteImport } from './routes/_authenticated.captura'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,16 +40,23 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCapturaRoute = AuthenticatedCapturaRouteImport.update({
+  id: '/captura',
+  path: '/captura',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
 }
@@ -57,19 +65,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/captura': typeof AuthenticatedCapturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eleitores': typeof AuthenticatedEleitoresRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard' | '/eleitores'
+  fullPaths: '/' | '/login' | '/captura' | '/dashboard' | '/eleitores'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard' | '/eleitores'
+  to: '/' | '/login' | '/captura' | '/dashboard' | '/eleitores'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/captura'
     | '/_authenticated/dashboard'
     | '/_authenticated/eleitores'
   fileRoutesById: FileRoutesById
@@ -117,15 +127,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/captura': {
+      id: '/_authenticated/captura'
+      path: '/captura'
+      fullPath: '/captura'
+      preLoaderRoute: typeof AuthenticatedCapturaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedCapturaRoute: typeof AuthenticatedCapturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEleitoresRoute: typeof AuthenticatedEleitoresRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedCapturaRoute: AuthenticatedCapturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEleitoresRoute: AuthenticatedEleitoresRoute,
 }
