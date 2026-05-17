@@ -43,24 +43,116 @@ export const Route = createFileRoute("/_authenticated/eleitores")({
   component: Eleitores,
 });
 
+type FormState = {
+  nome: string;
+  telefone: string;
+  data_nascimento: string;
+  cpf: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  zona_votacao: string;
+  secao_votacao: string;
+  local_votacao_nome: string;
+  status: string;
+};
+
+const initialForm: FormState = {
+  nome: "", telefone: "", data_nascimento: "", cpf: "",
+  cep: "", endereco: "", numero: "", complemento: "",
+  bairro: "", cidade: "", uf: "",
+  zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
+  status: "indeciso",
+};
+
+function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
+
 function Eleitores() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nome: "", telefone: "", bairro: "", status: "indeciso" });
+  const [cepLoading, setCepLoading] = useState(false);
+  const [form, setForm] = useState<FormState>(initialForm);
+
+  const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
+    // Try exact CEP match first
+    let { data } = await supabase
+      .from("locais_votacao")
+      .select("zona, secao, local_nome")
+      .eq("cep", cep)
+      .limit(1);
+    if ((!data || data.length === 0) && bairro && cidade) {
+      const r = await supabase
+        .from("locais_votacao")
+        .select("zona, secao, local_nome")
+        .ilike("bairro", bairro)
+        .ilike("municipio", cidade)
+        .limit(1);
+      data = r.data;
+    }
+    if (data && data[0]) {
+      setForm((f) => ({
+        ...f,
+        zona_votacao: String(data![0].zona ?? ""),
+        secao_votacao: String(data![0].secao ?? ""),
+        local_votacao_nome: data![0].local_nome ?? "",
+      }));
+    }
+  };
+
+  const handleCepBlur = async () => {
+    const cep = onlyDigits(form.cep);
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        cep,
+        endereco: data.logradouro || f.endereco,
+        bairro: data.bairro || f.bairro,
+        cidade: data.localidade || f.cidade,
+        uf: data.uf || f.uf,
+      }));
+      await lookupLocalVotacao(cep, data.bairro, data.localidade);
+    } catch {
+      toast.error("Erro ao consultar CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nome.trim()) {
-      toast.error("Nome é obrigatório");
-      return;
-    }
+    if (!form.nome.trim()) return toast.error("Nome é obrigatório");
+    if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
+    if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from("eleitores").insert({
       nome: form.nome,
-      telefone: form.telefone || null,
+      telefone: form.telefone,
+      data_nascimento: form.data_nascimento,
+      cpf: form.cpf || null,
+      cep: form.cep || null,
+      endereco: form.endereco || null,
+      numero: form.numero || null,
+      complemento: form.complemento || null,
       bairro: form.bairro || null,
+      cidade: form.cidade || null,
+      uf: form.uf || null,
+      zona_votacao: form.zona_votacao ? parseInt(form.zona_votacao) : null,
+      secao_votacao: form.secao_votacao ? parseInt(form.secao_votacao) : null,
+      local_votacao_nome: form.local_votacao_nome || null,
       status: form.status as any,
       origem_usuario_id: user?.id,
     });
@@ -70,7 +162,7 @@ function Eleitores() {
       return;
     }
     toast.success("Eleitor cadastrado!");
-    setForm({ nome: "", telefone: "", bairro: "", status: "indeciso" });
+    setForm(initialForm);
     setOpen(false);
     queryClient.invalidateQueries({ queryKey: ["eleitores"] });
   };
