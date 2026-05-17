@@ -12,6 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
+import { Route as AuthenticatedPrioridadesRouteImport } from './routes/_authenticated.prioridades'
+import { Route as AuthenticatedMapaRouteImport } from './routes/_authenticated.mapa'
+import { Route as AuthenticatedLiderancasRouteImport } from './routes/_authenticated.liderancas'
+import { Route as AuthenticatedInteracoesRouteImport } from './routes/_authenticated.interacoes'
 import { Route as AuthenticatedEleitoresRouteImport } from './routes/_authenticated.eleitores'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCapturaRouteImport } from './routes/_authenticated.captura'
@@ -29,6 +34,32 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPrioridadesRoute =
+  AuthenticatedPrioridadesRouteImport.update({
+    id: '/prioridades',
+    path: '/prioridades',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMapaRoute = AuthenticatedMapaRouteImport.update({
+  id: '/mapa',
+  path: '/mapa',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLiderancasRoute = AuthenticatedLiderancasRouteImport.update({
+  id: '/liderancas',
+  path: '/liderancas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedInteracoesRoute = AuthenticatedInteracoesRouteImport.update({
+  id: '/interacoes',
+  path: '/interacoes',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEleitoresRoute = AuthenticatedEleitoresRouteImport.update({
   id: '/eleitores',
@@ -52,6 +83,11 @@ export interface FileRoutesByFullPath {
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
+  '/interacoes': typeof AuthenticatedInteracoesRoute
+  '/liderancas': typeof AuthenticatedLiderancasRoute
+  '/mapa': typeof AuthenticatedMapaRoute
+  '/prioridades': typeof AuthenticatedPrioridadesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +95,11 @@ export interface FileRoutesByTo {
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
+  '/interacoes': typeof AuthenticatedInteracoesRoute
+  '/liderancas': typeof AuthenticatedLiderancasRoute
+  '/mapa': typeof AuthenticatedMapaRoute
+  '/prioridades': typeof AuthenticatedPrioridadesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +109,37 @@ export interface FileRoutesById {
   '/_authenticated/captura': typeof AuthenticatedCapturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eleitores': typeof AuthenticatedEleitoresRoute
+  '/_authenticated/interacoes': typeof AuthenticatedInteracoesRoute
+  '/_authenticated/liderancas': typeof AuthenticatedLiderancasRoute
+  '/_authenticated/mapa': typeof AuthenticatedMapaRoute
+  '/_authenticated/prioridades': typeof AuthenticatedPrioridadesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/captura' | '/dashboard' | '/eleitores'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/captura'
+    | '/dashboard'
+    | '/eleitores'
+    | '/interacoes'
+    | '/liderancas'
+    | '/mapa'
+    | '/prioridades'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/captura' | '/dashboard' | '/eleitores'
+  to:
+    | '/'
+    | '/login'
+    | '/captura'
+    | '/dashboard'
+    | '/eleitores'
+    | '/interacoes'
+    | '/liderancas'
+    | '/mapa'
+    | '/prioridades'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -82,6 +148,11 @@ export interface FileRouteTypes {
     | '/_authenticated/captura'
     | '/_authenticated/dashboard'
     | '/_authenticated/eleitores'
+    | '/_authenticated/interacoes'
+    | '/_authenticated/liderancas'
+    | '/_authenticated/mapa'
+    | '/_authenticated/prioridades'
+    | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -113,6 +184,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/prioridades': {
+      id: '/_authenticated/prioridades'
+      path: '/prioridades'
+      fullPath: '/prioridades'
+      preLoaderRoute: typeof AuthenticatedPrioridadesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mapa': {
+      id: '/_authenticated/mapa'
+      path: '/mapa'
+      fullPath: '/mapa'
+      preLoaderRoute: typeof AuthenticatedMapaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/liderancas': {
+      id: '/_authenticated/liderancas'
+      path: '/liderancas'
+      fullPath: '/liderancas'
+      preLoaderRoute: typeof AuthenticatedLiderancasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/interacoes': {
+      id: '/_authenticated/interacoes'
+      path: '/interacoes'
+      fullPath: '/interacoes'
+      preLoaderRoute: typeof AuthenticatedInteracoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/eleitores': {
       id: '/_authenticated/eleitores'
       path: '/eleitores'
@@ -141,12 +247,22 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCapturaRoute: typeof AuthenticatedCapturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEleitoresRoute: typeof AuthenticatedEleitoresRoute
+  AuthenticatedInteracoesRoute: typeof AuthenticatedInteracoesRoute
+  AuthenticatedLiderancasRoute: typeof AuthenticatedLiderancasRoute
+  AuthenticatedMapaRoute: typeof AuthenticatedMapaRoute
+  AuthenticatedPrioridadesRoute: typeof AuthenticatedPrioridadesRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCapturaRoute: AuthenticatedCapturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEleitoresRoute: AuthenticatedEleitoresRoute,
+  AuthenticatedInteracoesRoute: AuthenticatedInteracoesRoute,
+  AuthenticatedLiderancasRoute: AuthenticatedLiderancasRoute,
+  AuthenticatedMapaRoute: AuthenticatedMapaRoute,
+  AuthenticatedPrioridadesRoute: AuthenticatedPrioridadesRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -161,13 +277,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
