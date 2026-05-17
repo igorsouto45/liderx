@@ -26,20 +26,32 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const [session, setSession] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate({ to: "/login" });
-      } else {
-        setSession(session);
+        return;
       }
+      setSession(session);
+      
+      const { data: profile } = await supabase
+        .from("perfis")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+      
+      setProfile(profile);
       setLoading(false);
-    });
+    };
+
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
@@ -60,16 +72,26 @@ function AuthenticatedLayout() {
   if (loading) return null;
   if (!session) return null;
 
-  const menuItems = [
-    { label: "Painel de Guerra", icon: LayoutDashboard, to: "/dashboard" },
-    { label: "Eleitores", icon: Users, to: "/eleitores" },
-    { label: "Prioridades", icon: Award, to: "/prioridades" },
-    { label: "Lideranças", icon: TrendingUp, to: "/liderancas" },
-    { label: "Mapa Estratégico", icon: Map, to: "/mapa" },
-    { label: "Captura (QR Code)", icon: UserPlus, to: "/captura" },
-    { label: "Interações IA", icon: MessageSquare, to: "/interacoes" },
-    { label: "Configurações", icon: Settings, to: "/settings" },
+  const allMenuItems = [
+    { label: "Painel de Guerra", icon: LayoutDashboard, to: "/dashboard", roles: ["admin", "operador"] },
+    { label: "Eleitores", icon: Users, to: "/eleitores", roles: ["admin", "operador", "líder"] },
+    { label: "Prioridades", icon: Award, to: "/prioridades", roles: ["admin", "operador", "líder"] },
+    { label: "Lideranças", icon: TrendingUp, to: "/liderancas", roles: ["admin", "operador"] },
+    { label: "Mapa Estratégico", icon: Map, to: "/mapa", roles: ["admin", "operador"] },
+    { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
+    { label: "Interações IA", icon: MessageSquare, to: "/interacoes", roles: ["admin", "operador"] },
+    { label: "Configurações", icon: Settings, to: "/settings", roles: ["admin"] },
   ];
+
+  const menuItems = allMenuItems.filter(item => 
+    !item.roles || (profile && item.roles.includes(profile.tipo))
+  );
+
+  // Redirect if current path is not allowed
+  const currentItem = allMenuItems.find(item => item.to === location.pathname);
+  if (currentItem && profile && !currentItem.roles.includes(profile.tipo)) {
+    navigate({ to: menuItems[0]?.to || "/eleitores" });
+  }
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
