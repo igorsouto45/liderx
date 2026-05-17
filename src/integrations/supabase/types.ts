@@ -14,7 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      eleitores: {
+        Row: {
+          bairro: string | null
+          created_at: string | null
+          id: string
+          nome: string
+          origem_usuario_id: string | null
+          status: Database["public"]["Enums"]["eleitor_status"]
+          telefone: string | null
+        }
+        Insert: {
+          bairro?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+          origem_usuario_id?: string | null
+          status?: Database["public"]["Enums"]["eleitor_status"]
+          telefone?: string | null
+        }
+        Update: {
+          bairro?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+          origem_usuario_id?: string | null
+          status?: Database["public"]["Enums"]["eleitor_status"]
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eleitores_origem_usuario_id_fkey"
+            columns: ["origem_usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interacoes: {
+        Row: {
+          data: string | null
+          eleitor_id: string | null
+          id: string
+          mensagem: string
+          resposta: string | null
+        }
+        Insert: {
+          data?: string | null
+          eleitor_id?: string | null
+          id?: string
+          mensagem: string
+          resposta?: string | null
+        }
+        Update: {
+          data?: string | null
+          eleitor_id?: string | null
+          id?: string
+          mensagem?: string
+          resposta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interacoes_eleitor_id_fkey"
+            columns: ["eleitor_id"]
+            isOneToOne: false
+            referencedRelation: "eleitores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfis: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          tipo: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          nome: string
+          tipo?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          tipo?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +113,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "líder" | "operador"
+      eleitor_status: "apoiador" | "indeciso" | "rejeição"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +241,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "líder", "operador"],
+      eleitor_status: ["apoiador", "indeciso", "rejeição"],
+    },
   },
 } as const
