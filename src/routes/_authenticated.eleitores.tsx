@@ -77,7 +77,7 @@ const initialForm: FormState = {
   longitude: null,
 };
 
-function onlyDigits(s: string) { return s ? s.replace(/\D/g, "") : ""; }
+
 
 function isValidCPF(cpf: string) {
   const cleanCPF = onlyDigits(cpf);
