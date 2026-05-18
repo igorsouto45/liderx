@@ -294,6 +294,14 @@ function Liderancas() {
                 <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
               </div>
               <div className="space-y-2">
+                <Label>E-mail (Acesso ao Sistema) *</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Senha de Acesso *</Label>
+                <Input type="password" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} placeholder="Mínimo 6 caracteres" required />
+              </div>
+              <div className="space-y-2">
                 <Label>Telefone *</Label>
                 <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" required />
               </div>
