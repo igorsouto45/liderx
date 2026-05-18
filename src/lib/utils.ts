@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function onlyDigits(s: string) {
+  return s ? s.replace(/\D/g, "") : "";
+}
+
 export async function getLatLongFromCep(cep: string): Promise<{ lat: number; lng: number } | null> {
   const cleanCep = cep.replace(/\D/g, "");
   if (cleanCep.length !== 8) return null;
