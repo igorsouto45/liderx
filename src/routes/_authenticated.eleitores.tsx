@@ -39,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, getLatLongFromCep } from "@/lib/utils";
+import { cn, getLatLongFromCep, onlyDigits } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/eleitores")({
   component: Eleitores,
