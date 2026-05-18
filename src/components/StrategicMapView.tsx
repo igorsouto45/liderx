@@ -60,20 +60,35 @@ interface Props {
   voters: Voter[];
 }
 
+import { useEffect } from "react";
+import { useMap } from "react-leaflet";
+
+function MapUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
+
 export default function StrategicMapView({ center, showLeaders, showVoters, leaders, voters }: Props) {
+  // Filter only those with coordinates
+  const leadersWithCoords = leaders.filter(l => l.latitude && l.longitude);
+  const votersWithCoords = voters.filter(v => v.latitude && v.longitude);
+
   return (
-    <MapContainer center={center} zoom={4} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
+    <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      
+      <MapUpdater center={center} />
 
       {showLeaders &&
-        leaders.map(
-          (leader) =>
-            leader.latitude &&
-            leader.longitude && (
-              <Marker key={`leader-${leader.id}`} position={[leader.latitude, leader.longitude]} icon={redIcon}>
+        leadersWithCoords.map(
+          (leader) => (
+              <Marker key={`leader-${leader.id}`} position={[leader.latitude!, leader.longitude!]} icon={redIcon}>
                 <Popup>
                   <div className="p-1">
                     <h3 className="font-bold text-base border-b border-gray-100 pb-1 mb-2">Líder: {leader.nome}</h3>
@@ -97,11 +112,9 @@ export default function StrategicMapView({ center, showLeaders, showVoters, lead
         )}
 
       {showVoters &&
-        voters.map(
-          (eleitor) =>
-            eleitor.latitude &&
-            eleitor.longitude && (
-              <Marker key={`eleitor-${eleitor.id}`} position={[eleitor.latitude, eleitor.longitude]} icon={blueIcon}>
+        votersWithCoords.map(
+          (eleitor) => (
+              <Marker key={`eleitor-${eleitor.id}`} position={[eleitor.latitude!, eleitor.longitude!]} icon={blueIcon}>
                 <Popup>
                   <div className="p-1">
                     <h3 className="font-bold text-sm">Eleitor: {eleitor.nome}</h3>
