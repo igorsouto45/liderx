@@ -116,7 +116,7 @@ function MapaEstrategico() {
     return [
       ...(stats?.leadersWithCounts || []),
       ...(eleitores || [])
-    ].filter((p: any) => p.latitude && p.longitude);
+    ].filter((p: any) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude));
   }, [stats, eleitores]);
 
   const firstWithCoords = allWithCoords[0];
@@ -220,13 +220,13 @@ function MapaEstrategico() {
             <div className="p-8 text-center text-muted-foreground">Carregando mapa...</div>
           )}
 
-          <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur p-3 rounded-lg border border-white/20 shadow-lg space-y-2">
-            <h4 className="text-xs font-bold uppercase text-muted-foreground">Legenda</h4>
-            <div className="flex items-center gap-2 text-xs">
+          <div className="absolute bottom-4 left-4 z-[1000] rounded-md border border-border bg-background/95 p-3 shadow-lg backdrop-blur space-y-2 text-foreground">
+            <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">Legenda</h4>
+            <div className="flex items-center gap-2 text-xs text-foreground">
               <div className="w-3 h-3 rounded-full bg-red-500" />
               <span>Lideranças</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs text-foreground">
               <div className="w-3 h-3 rounded-full bg-blue-500" />
               <span>Eleitores</span>
             </div>

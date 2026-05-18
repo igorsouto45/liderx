@@ -10,40 +10,62 @@ export function onlyDigits(s: string) {
 }
 
 export async function getLatLongFromCep(cep: string, logradouro?: string, bairro?: string, cidade?: string): Promise<{ lat: number; lng: number } | null> {
-  const cleanCep = cep.replace(/\D/g, "");
+  const cleanCep = onlyDigits(cep);
   if (cleanCep.length !== 8) return null;
 
   try {
-    // 1. First, try searching for the specific CEP
-    let url = `https://nominatim.openstreetmap.org/search?format=json&postalcode=${cleanCep}&country=Brazil&limit=1`;
-    let response = await fetch(url, {
+    let resolvedLogradouro = logradouro;
+    let resolvedBairro = bairro;
+    let resolvedCidade = cidade;
+
+    const viaCepResponse = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    if (viaCepResponse.ok) {
+      const viaCepData = await viaCepResponse.json();
+      if (!viaCepData.erro) {
+        resolvedLogradouro = resolvedLogradouro || viaCepData.logradouro || undefined;
+        resolvedBairro = resolvedBairro || viaCepData.bairro || undefined;
+        resolvedCidade = resolvedCidade || viaCepData.localidade || undefined;
+      }
+    }
+
+    const makeRequest = async (query: string) => {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=1`, {
+        headers: {
+          "Accept-Language": "pt-BR",
+          "User-Agent": "LiderX-Strategic-Map-App-v2",
+        },
+      });
+
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (!data || data.length === 0) return null;
+
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    };
+
+    const queries = [
+      [resolvedLogradouro, resolvedBairro, resolvedCidade, "RJ", cleanCep, "Brasil"].filter(Boolean).join(", "),
+      [resolvedBairro, resolvedCidade, "RJ", cleanCep, "Brasil"].filter(Boolean).join(", "),
+      [cleanCep, resolvedCidade, "Brasil"].filter(Boolean).join(", "),
+      [cleanCep, "Brasil"].filter(Boolean).join(", "),
+    ];
+
+    for (const query of queries) {
+      if (!query) continue;
+      const result = await makeRequest(query);
+      if (result) return result;
+    }
+
+    let response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&postalcode=${cleanCep}&country=Brazil&limit=1`, {
       headers: {
         "Accept-Language": "pt-BR",
         "User-Agent": "LiderX-Strategic-Map-App-v2",
       },
     });
     let data = await response.json();
-
-    // 2. If no result, try a search combining address details
-    if (!data || data.length === 0) {
-      const queryParts = [];
-      if (logradouro) queryParts.push(logradouro);
-      if (bairro) queryParts.push(bairro);
-      if (cidade) queryParts.push(cidade);
-      // Even if we don't have other parts, search for the CEP as a generic query
-      queryParts.push(cleanCep);
-      queryParts.push("Brasil");
-
-      const query = encodeURIComponent(queryParts.join(", "));
-      url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`;
-      response = await fetch(url, {
-        headers: {
-          "Accept-Language": "pt-BR",
-          "User-Agent": "LiderX-Strategic-Map-App-v2",
-        },
-      });
-      data = await response.json();
-    }
 
     if (data && data.length > 0) {
       return {
@@ -52,10 +74,9 @@ export async function getLatLongFromCep(cep: string, logradouro?: string, bairro
       };
     }
     
-    // 3. Last resort: just city and bairro if we have them
-    if (cidade) {
-      const fallbackQuery = encodeURIComponent(`${bairro || ""}, ${cidade}, Brasil`);
-      response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${fallbackQuery}&limit=1`, {
+    if (resolvedCidade) {
+      const fallbackQuery = [resolvedBairro, resolvedCidade, "RJ", "Brasil"].filter(Boolean).join(", ");
+      response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackQuery)}&limit=1`, {
         headers: {
           "Accept-Language": "pt-BR",
           "User-Agent": "LiderX-Strategic-Map-App-v2",

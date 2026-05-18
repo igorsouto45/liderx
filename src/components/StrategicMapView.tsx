@@ -73,8 +73,8 @@ function MapUpdater({ center }: { center: [number, number] }) {
 
 export default function StrategicMapView({ center, showLeaders, showVoters, leaders, voters }: Props) {
   // Filter only those with coordinates
-  const leadersWithCoords = leaders.filter(l => l.latitude && l.longitude);
-  const votersWithCoords = voters.filter(v => v.latitude && v.longitude);
+  const leadersWithCoords = leaders.filter((l) => Number.isFinite(l.latitude) && Number.isFinite(l.longitude));
+  const votersWithCoords = voters.filter((v) => Number.isFinite(v.latitude) && Number.isFinite(v.longitude));
 
   return (
     <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
