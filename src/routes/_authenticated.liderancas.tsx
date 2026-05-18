@@ -37,6 +37,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { onlyDigits, getLatLongFromCep } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/liderancas")({
   component: Liderancas,
@@ -60,6 +61,8 @@ type FormState = {
   secao_votacao: string;
   local_votacao_nome: string;
   lgpd_consent: boolean;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 const initialForm: FormState = {
@@ -68,9 +71,11 @@ const initialForm: FormState = {
   bairro: "", cidade: "", uf: "",
   zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
   lgpd_consent: false,
+  latitude: null,
+  longitude: null,
 };
 
-function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
+
 
 function isValidCPF(cpf: string) {
   const cleanCPF = onlyDigits(cpf);
@@ -92,6 +97,7 @@ function isValidCPF(cpf: string) {
 function Liderancas() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
@@ -132,21 +138,27 @@ function Liderancas() {
     if (cep.length !== 8) return;
     setCepLoading(true);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (data.erro) {
+      const [viacepRes, coords] = await Promise.all([
+        fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()),
+        getLatLongFromCep(cep)
+      ]);
+
+      if (viacepRes.erro) {
         toast.error("CEP não encontrado");
         return;
       }
+
       setForm((f) => ({
         ...f,
         cep,
-        endereco: data.logradouro || f.endereco,
-        bairro: data.bairro || f.bairro,
-        cidade: data.localidade || f.cidade,
-        uf: data.uf || f.uf,
+        endereco: viacepRes.logradouro || f.endereco,
+        bairro: viacepRes.bairro || f.bairro,
+        cidade: viacepRes.localidade || f.cidade,
+        uf: viacepRes.uf || f.uf,
+        latitude: coords?.lat ?? f.latitude,
+        longitude: coords?.lng ?? f.longitude,
       }));
-      await lookupLocalVotacao(cep, data.bairro, data.localidade);
+      await lookupLocalVotacao(cep, viacepRes.bairro, viacepRes.localidade);
     } catch {
       toast.error("Erro ao consultar CEP");
     } finally {
@@ -154,41 +166,72 @@ function Liderancas() {
     }
   };
 
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setForm(initialForm);
+    setSuggestions([]);
+    setOpen(true);
+  };
+
+  const handleEdit = (lider: any) => {
+    setEditingId(lider.id);
+    setForm({
+      nome: lider.nome || "",
+      telefone: lider.telefone || "",
+      email: lider.email || "",
+      senha: "", // Não editamos a senha aqui por enquanto
+      data_nascimento: lider.data_nascimento || "",
+      cpf: lider.cpf || "",
+      cep: lider.cep || "",
+      endereco: lider.endereco || "",
+      numero: lider.numero || "",
+      complemento: lider.complemento || "",
+      bairro: lider.bairro || "",
+      cidade: lider.cidade || "",
+      uf: lider.uf || "",
+      zona_votacao: lider.zona_votacao ? String(lider.zona_votacao) : "",
+      secao_votacao: lider.secao_votacao ? String(lider.secao_votacao) : "",
+      local_votacao_nome: lider.local_votacao_nome || "",
+      lgpd_consent: lider.lgpd_consent || false,
+      latitude: lider.latitude || null,
+      longitude: lider.longitude || null,
+    });
+    setOpen(true);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (!form.email.trim()) return toast.error("E-mail é obrigatório");
-    if (!form.senha && !form.senha?.trim()) return toast.error("Senha é obrigatória");
+    if (!editingId && (!form.senha || !form.senha?.trim())) return toast.error("Senha é obrigatória");
     if (form.cpf && !isValidCPF(form.cpf)) return toast.error("CPF inválido");
     if (!form.lgpd_consent) return toast.error("É necessário aceitar os termos da LGPD");
     
     setSaving(true);
     try {
-      // 1. Criar o usuário no Auth usando uma Edge Function ou RPC segura seria o ideal
-      // Por enquanto, vamos simular a criação do perfil e alertar que o usuário precisa ser criado
-      // ou usar o próprio signup do Supabase se permitido.
-      
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.senha || "",
-        options: {
-          data: {
-            nome: form.nome,
-            tipo: 'liderança'
+      let authUserId = null;
+
+      if (!editingId) {
+        // 1. Criar o usuário no Auth apenas se for novo
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.senha || "",
+          options: {
+            data: {
+              nome: form.nome,
+              tipo: 'liderança'
+            }
           }
-        }
-      });
+        });
 
-      if (authError) throw authError;
+        if (authError) throw authError;
+        authUserId = authData.user?.id;
+      }
 
-      const authUserId = authData.user?.id;
-
-      // 2. Criar o registro na tabela liderancas vinculado ao authUserId
-      const { error } = await supabase.from("liderancas").insert({
+      const payload = {
         nome: form.nome,
         telefone: form.telefone,
         email: form.email,
-        auth_user_id: authUserId,
         data_nascimento: form.data_nascimento || null,
         cpf: form.cpf ? onlyDigits(form.cpf) : null,
         cep: form.cep ? onlyDigits(form.cep) : null,
@@ -202,13 +245,29 @@ function Liderancas() {
         secao_votacao: form.secao_votacao ? parseInt(onlyDigits(form.secao_votacao)) : null,
         local_votacao_nome: form.local_votacao_nome,
         lgpd_consent: form.lgpd_consent,
-      });
+        latitude: form.latitude,
+        longitude: form.longitude,
+      };
 
-      if (error) throw error;
+      if (editingId) {
+        const { error } = await supabase
+          .from("liderancas")
+          .update(payload)
+          .eq("id", editingId);
+        if (error) throw error;
+        toast.success("Liderança atualizada com sucesso!");
+      } else {
+        const { error } = await supabase.from("liderancas").insert({
+          ...payload,
+          auth_user_id: authUserId,
+        });
+        if (error) throw error;
+        toast.success("Liderança cadastrada e conta de acesso criada!");
+      }
 
-      toast.success("Liderança cadastrada e conta de acesso criada!");
       setForm(initialForm);
       setOpen(false);
+      setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["liderancas"] });
     } catch (error: any) {
       console.error("Erro no cadastro:", error);
@@ -238,7 +297,7 @@ function Liderancas() {
           <p className="text-muted-foreground mt-1">Gerencie a rede de líderes e multiplicadores.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button className="shadow-lg shadow-primary/20" onClick={() => setOpen(true)}>
+          <Button className="shadow-lg shadow-primary/20" onClick={handleOpenCreate}>
             <UserPlus className="mr-2 h-4 w-4" />
             Cadastrar Líder
           </Button>
@@ -272,8 +331,22 @@ function Liderancas() {
                         <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Remover</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(lider)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={async () => {
+                            if (confirm("Tem certeza que deseja remover este líder?")) {
+                              const { error } = await supabase.from("liderancas").delete().eq("id", lider.id);
+                              if (error) toast.error("Erro ao remover");
+                              else {
+                                toast.success("Líder removido");
+                                queryClient.invalidateQueries({ queryKey: ["liderancas"] });
+                              }
+                            }
+                          }}
+                        >
+                          Remover
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -286,7 +359,7 @@ function Liderancas() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl border-white/10">
-          <DialogHeader><DialogTitle>Cadastrar Nova Liderança</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingId ? "Editar Liderança" : "Cadastrar Nova Liderança"}</DialogTitle></DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2 md:col-span-2">
@@ -297,10 +370,12 @@ function Liderancas() {
                 <Label>E-mail (Acesso ao Sistema) *</Label>
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com" required />
               </div>
-              <div className="space-y-2">
-                <Label>Senha de Acesso *</Label>
-                <Input type="password" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} placeholder="Mínimo 6 caracteres" required />
-              </div>
+              {!editingId && (
+                <div className="space-y-2">
+                  <Label>Senha de Acesso *</Label>
+                  <Input type="password" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} placeholder="Mínimo 6 caracteres" required />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Telefone *</Label>
                 <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" required />
