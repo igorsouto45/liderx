@@ -45,6 +45,8 @@ export const Route = createFileRoute("/_authenticated/liderancas")({
 type FormState = {
   nome: string;
   telefone: string;
+  email: string;
+  senha?: string;
   data_nascimento: string;
   cpf: string;
   cep: string;
@@ -61,7 +63,7 @@ type FormState = {
 };
 
 const initialForm: FormState = {
-  nome: "", telefone: "", data_nascimento: "", cpf: "",
+  nome: "", telefone: "", email: "", senha: "", data_nascimento: "", cpf: "",
   cep: "", endereco: "", numero: "", complemento: "",
   bairro: "", cidade: "", uf: "",
   zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
@@ -155,14 +157,38 @@ function Liderancas() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
+    if (!form.email.trim()) return toast.error("E-mail é obrigatório");
+    if (!form.senha && !form.senha?.trim()) return toast.error("Senha é obrigatória");
     if (form.cpf && !isValidCPF(form.cpf)) return toast.error("CPF inválido");
     if (!form.lgpd_consent) return toast.error("É necessário aceitar os termos da LGPD");
     
     setSaving(true);
     try {
+      // 1. Criar o usuário no Auth usando uma Edge Function ou RPC segura seria o ideal
+      // Por enquanto, vamos simular a criação do perfil e alertar que o usuário precisa ser criado
+      // ou usar o próprio signup do Supabase se permitido.
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.senha || "",
+        options: {
+          data: {
+            nome: form.nome,
+            tipo: 'liderança'
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      const authUserId = authData.user?.id;
+
+      // 2. Criar o registro na tabela liderancas vinculado ao authUserId
       const { error } = await supabase.from("liderancas").insert({
         nome: form.nome,
         telefone: form.telefone,
+        email: form.email,
+        auth_user_id: authUserId,
         data_nascimento: form.data_nascimento || null,
         cpf: form.cpf ? onlyDigits(form.cpf) : null,
         cep: form.cep ? onlyDigits(form.cep) : null,
@@ -180,12 +206,13 @@ function Liderancas() {
 
       if (error) throw error;
 
-      toast.success("Liderança cadastrada com sucesso!");
+      toast.success("Liderança cadastrada e conta de acesso criada!");
       setForm(initialForm);
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["liderancas"] });
     } catch (error: any) {
-      toast.error("Erro ao cadastrar: " + error.message);
+      console.error("Erro no cadastro:", error);
+      toast.error("Erro ao cadastrar: " + (error.message || "Tente novamente"));
     } finally {
       setSaving(false);
     }
@@ -265,6 +292,14 @@ function Liderancas() {
               <div className="space-y-2 md:col-span-2">
                 <Label>Nome Completo *</Label>
                 <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail (Acesso ao Sistema) *</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Senha de Acesso *</Label>
+                <Input type="password" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} placeholder="Mínimo 6 caracteres" required />
               </div>
               <div className="space-y-2">
                 <Label>Telefone *</Label>
