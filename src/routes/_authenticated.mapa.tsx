@@ -83,9 +83,16 @@ function MapaEstrategico() {
               eleitor.bairro || undefined, 
               eleitor.cidade || undefined
             );
+            
+            console.log(`Buscando coordenadas para ${eleitor.nome}:`, coords);
+
             if (coords) {
-              await supabase.from("eleitores").update({ latitude: coords.lat, longitude: coords.lng }).eq("id", eleitor.id);
-              updatedCount++;
+              const { error } = await supabase.from("eleitores").update({ 
+                latitude: coords.lat, 
+                longitude: coords.lng 
+              }).eq("id", eleitor.id);
+              
+              if (!error) updatedCount++;
             }
           }
         }
