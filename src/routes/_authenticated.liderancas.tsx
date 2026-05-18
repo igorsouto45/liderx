@@ -343,11 +343,11 @@ function Liderancas() {
                   </div>
                 </div>
 
-                {suggestions.length > 1 && (
+                {suggestions.length > 0 && (
                   <div className="space-y-2 pt-2 border-t border-white/5">
-                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Outras sugestões:</Label>
+                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Sugestões de locais:</Label>
                     <div className="grid gap-2">
-                      {suggestions.slice(1).map((s, i) => (
+                      {suggestions.map((s, i) => (
                         <button
                           key={i}
                           type="button"
@@ -363,6 +363,23 @@ function Liderancas() {
                           <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao}</div>
                         </button>
                       ))}
+                    </div>
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm({
+                            ...form,
+                            zona_votacao: "",
+                            secao_votacao: "",
+                            local_votacao_nome: ""
+                          });
+                          setSuggestions([]);
+                        }}
+                        className="text-[10px] text-primary hover:underline font-medium"
+                      >
+                        Não voto em nenhum desses locais
+                      </button>
                     </div>
                   </div>
                 )}
