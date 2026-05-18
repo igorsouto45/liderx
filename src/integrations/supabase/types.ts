@@ -128,6 +128,7 @@ export type Database = {
       }
       liderancas: {
         Row: {
+          auth_user_id: string | null
           bairro: string | null
           cep: string | null
           cidade: string | null
@@ -135,6 +136,7 @@ export type Database = {
           cpf: string | null
           created_at: string | null
           data_nascimento: string | null
+          email: string | null
           endereco: string | null
           id: string
           latitude: number | null
@@ -150,6 +152,7 @@ export type Database = {
           zona_votacao: number | null
         }
         Insert: {
+          auth_user_id?: string | null
           bairro?: string | null
           cep?: string | null
           cidade?: string | null
@@ -157,6 +160,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           data_nascimento?: string | null
+          email?: string | null
           endereco?: string | null
           id?: string
           latitude?: number | null
@@ -172,6 +176,7 @@ export type Database = {
           zona_votacao?: number | null
         }
         Update: {
+          auth_user_id?: string | null
           bairro?: string | null
           cep?: string | null
           cidade?: string | null
@@ -179,6 +184,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           data_nascimento?: string | null
+          email?: string | null
           endereco?: string | null
           id?: string
           latitude?: number | null
