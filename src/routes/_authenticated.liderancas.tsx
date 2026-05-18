@@ -224,7 +224,7 @@ function Liderancas() {
           options: {
             data: {
               nome: form.nome,
-              tipo: 'liderança'
+              tipo: 'líder'
             }
           }
         });
