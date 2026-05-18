@@ -45,6 +45,8 @@ export const Route = createFileRoute("/_authenticated/liderancas")({
 type FormState = {
   nome: string;
   telefone: string;
+  email: string;
+  senha?: string;
   data_nascimento: string;
   cpf: string;
   cep: string;
@@ -61,7 +63,7 @@ type FormState = {
 };
 
 const initialForm: FormState = {
-  nome: "", telefone: "", data_nascimento: "", cpf: "",
+  nome: "", telefone: "", email: "", senha: "", data_nascimento: "", cpf: "",
   cep: "", endereco: "", numero: "", complemento: "",
   bairro: "", cidade: "", uf: "",
   zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
