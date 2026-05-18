@@ -104,9 +104,14 @@ function MapaEstrategico() {
     }
   };
 
-  const firstLeaderWithCoords = stats?.leadersWithCounts?.find((l: any) => l.latitude && l.longitude);
-  const center: [number, number] = firstLeaderWithCoords
-    ? [firstLeaderWithCoords.latitude, firstLeaderWithCoords.longitude]
+  const allWithCoords = [
+    ...(stats?.leadersWithCounts || []),
+    ...(eleitores || [])
+  ].filter((p: any) => p.latitude && p.longitude);
+
+  const firstWithCoords = allWithCoords[0];
+  const center: [number, number] = firstWithCoords
+    ? [Number(firstWithCoords.latitude), Number(firstWithCoords.longitude)]
     : [-15.7801, -47.9292];
 
   if (loadingLiderancas || loadingEleitores) {
