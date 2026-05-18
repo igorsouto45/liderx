@@ -105,10 +105,12 @@ function MapaEstrategico() {
     }
   };
 
-  const allWithCoords = [
-    ...(stats?.leadersWithCounts || []),
-    ...(eleitores || [])
-  ].filter((p: any) => p.latitude && p.longitude);
+  const allWithCoords = useMemo(() => {
+    return [
+      ...(stats?.leadersWithCounts || []),
+      ...(eleitores || [])
+    ].filter((p: any) => p.latitude && p.longitude);
+  }, [stats, eleitores]);
 
   const firstWithCoords = allWithCoords[0];
   const center: [number, number] = firstWithCoords
