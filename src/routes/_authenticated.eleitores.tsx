@@ -39,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { cn, getLatLongFromCep } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/eleitores")({
   component: Eleitores,
@@ -62,6 +62,8 @@ type FormState = {
   local_votacao_nome: string;
   status: string;
   lgpd_consent: boolean;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 const initialForm: FormState = {
@@ -71,9 +73,11 @@ const initialForm: FormState = {
   zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
   status: "indeciso",
   lgpd_consent: false,
+  latitude: null,
+  longitude: null,
 };
 
-function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
+function onlyDigits(s: string) { return s ? s.replace(/\D/g, "") : ""; }
 
 function isValidCPF(cpf: string) {
   const cleanCPF = onlyDigits(cpf);
@@ -146,21 +150,28 @@ function Eleitores() {
     if (cep.length !== 8) return;
     setCepLoading(true);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (data.erro) {
+      // Parallel fetch for address and coordinates
+      const [viacepRes, coords] = await Promise.all([
+        fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()),
+        getLatLongFromCep(cep)
+      ]);
+
+      if (viacepRes.erro) {
         toast.error("CEP não encontrado");
         return;
       }
+
       setForm((f) => ({
         ...f,
         cep,
-        endereco: data.logradouro || f.endereco,
-        bairro: data.bairro || f.bairro,
-        cidade: data.localidade || f.cidade,
-        uf: data.uf || f.uf,
+        endereco: viacepRes.logradouro || f.endereco,
+        bairro: viacepRes.bairro || f.bairro,
+        cidade: viacepRes.localidade || f.cidade,
+        uf: viacepRes.uf || f.uf,
+        latitude: coords?.lat ?? f.latitude,
+        longitude: coords?.lng ?? f.longitude,
       }));
-      await lookupLocalVotacao(cep, data.bairro, data.localidade);
+      await lookupLocalVotacao(cep, viacepRes.bairro, viacepRes.localidade);
     } catch {
       toast.error("Erro ao consultar CEP");
     } finally {
@@ -240,6 +251,8 @@ function Eleitores() {
         status: form.status as "apoiador" | "indeciso" | "rejeição",
         origem_usuario_id: user.id,
         lgpd_consent: form.lgpd_consent,
+        latitude: form.latitude,
+        longitude: form.longitude,
       };
 
       console.log("Enviando dados do eleitor:", payload);
