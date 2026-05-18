@@ -12,6 +12,7 @@ const StrategicMapView = lazy(() => import("@/components/StrategicMapView"));
 
 export const Route = createFileRoute("/_authenticated/mapa")({
   component: MapaEstrategico,
+  ssr: false,
 });
 
 function MapaEstrategico() {
