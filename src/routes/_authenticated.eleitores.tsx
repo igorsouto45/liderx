@@ -206,7 +206,7 @@ function Eleitores() {
         zona_votacao: zona,
         secao_votacao: secao,
         local_votacao_nome: form.local_votacao_nome?.trim() || null,
-        status: form.status,
+        status: form.status as "apoiador" | "indeciso" | "rejeição",
         origem_usuario_id: user.id,
         lgpd_consent: form.lgpd_consent,
       };
