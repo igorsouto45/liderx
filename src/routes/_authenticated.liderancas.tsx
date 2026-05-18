@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { 
   Users, 
@@ -15,7 +16,8 @@ import {
   Phone,
   MapPin,
   TrendingUp,
-  Award
+  Award,
+  Info
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,6 +57,7 @@ type FormState = {
   zona_votacao: string;
   secao_votacao: string;
   local_votacao_nome: string;
+  lgpd_consent: boolean;
 };
 
 const initialForm: FormState = {
@@ -62,6 +65,7 @@ const initialForm: FormState = {
   cep: "", endereco: "", numero: "", complemento: "",
   bairro: "", cidade: "", uf: "",
   zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
+  lgpd_consent: false,
 };
 
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
@@ -89,6 +93,37 @@ function Liderancas() {
   const [saving, setSaving] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
+    let { data } = await supabase
+      .from("locais_votacao")
+      .select("zona, secao, local_nome, endereco, bairro")
+      .eq("cep", cep)
+      .limit(5);
+
+    if ((!data || data.length === 0) && bairro && cidade) {
+      const r = await supabase
+        .from("locais_votacao")
+        .select("zona, secao, local_nome, endereco, bairro")
+        .ilike("bairro", bairro)
+        .ilike("municipio", cidade)
+        .limit(5);
+      data = r.data;
+    }
+
+    if (data && data.length > 0) {
+      setSuggestions(data);
+      setForm((f) => ({
+        ...f,
+        zona_votacao: String(data![0].zona ?? ""),
+        secao_votacao: String(data![0].secao ?? ""),
+        local_votacao_nome: data![0].local_nome ?? "",
+      }));
+    } else {
+      setSuggestions([]);
+    }
+  };
 
   const handleCepBlur = async () => {
     const cep = onlyDigits(form.cep);
@@ -109,6 +144,7 @@ function Liderancas() {
         cidade: data.localidade || f.cidade,
         uf: data.uf || f.uf,
       }));
+      await lookupLocalVotacao(cep, data.bairro, data.localidade);
     } catch {
       toast.error("Erro ao consultar CEP");
     } finally {
@@ -120,6 +156,7 @@ function Liderancas() {
     e.preventDefault();
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (form.cpf && !isValidCPF(form.cpf)) return toast.error("CPF inválido");
+    if (!form.lgpd_consent) return toast.error("É necessário aceitar os termos da LGPD");
     
     setSaving(true);
     try {
@@ -229,8 +266,12 @@ function Liderancas() {
                 <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
               </div>
               <div className="space-y-2">
-                <Label>Telefone</Label>
-                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" />
+                <Label>Telefone *</Label>
+                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Nascimento</Label>
+                <Input type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>CPF</Label>
@@ -238,15 +279,112 @@ function Liderancas() {
               </div>
               <div className="space-y-2">
                 <Label>CEP</Label>
-                <Input value={form.cep} onChange={(e) => setForm({ ...form, cep: e.target.value })} onBlur={handleCepBlur} />
+                <Input value={form.cep} onChange={(e) => setForm({ ...form, cep: e.target.value })} onBlur={handleCepBlur} placeholder="00000-000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Endereço</Label>
+                <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Complemento</Label>
+                <Input value={form.complemento} onChange={(e) => setForm({ ...form, complemento: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Bairro</Label>
                 <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Local de Votação</Label>
-                <Input value={form.local_votacao_nome} onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} />
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input value={form.uf} maxLength={2} onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })} />
+              </div>
+
+              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-primary">Local de Votação</p>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-white/5 px-2 py-0.5 rounded">Ajuste manual</span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Zona</Label>
+                    <Input 
+                      className="h-8 bg-black/40" 
+                      value={form.zona_votacao} 
+                      onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Seção</Label>
+                    <Input 
+                      className="h-8 bg-black/40" 
+                      value={form.secao_votacao} 
+                      onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} 
+                    />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Local</Label>
+                    <Input 
+                      className="h-8 bg-black/40" 
+                      value={form.local_votacao_nome} 
+                      onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} 
+                    />
+                  </div>
+                </div>
+
+                {suggestions.length > 1 && (
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Outras sugestões:</Label>
+                    <div className="grid gap-2">
+                      {suggestions.slice(1).map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setForm({
+                            ...form,
+                            zona_votacao: String(s.zona),
+                            secao_votacao: String(s.secao),
+                            local_votacao_nome: s.local_nome
+                          })}
+                          className="text-left p-2 rounded bg-black/20 hover:bg-black/40 border border-white/5 transition-colors text-xs"
+                        >
+                          <div className="font-medium text-white/80">{s.local_nome}</div>
+                          <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="md:col-span-2 flex items-start space-x-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+                <Checkbox 
+                  id="lgpd-lider" 
+                  checked={form.lgpd_consent}
+                  onCheckedChange={(checked) => setForm({ ...form, lgpd_consent: !!checked })}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label 
+                    htmlFor="lgpd-lider" 
+                    className="text-sm font-medium leading-none cursor-pointer"
+                  >
+                    Consentimento LGPD
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    O líder declara estar ciente e de acordo em ceder seus dados pessoais conforme a Lei Geral de Proteção de Dados (LGPD).
+                  </p>
+                </div>
               </div>
             </div>
             <DialogFooter>
