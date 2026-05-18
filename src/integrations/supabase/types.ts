@@ -26,6 +26,7 @@ export type Database = {
           endereco: string | null
           id: string
           latitude: number | null
+          lgpd_consent: boolean | null
           local_votacao_nome: string | null
           longitude: number | null
           nome: string
@@ -48,6 +49,7 @@ export type Database = {
           endereco?: string | null
           id?: string
           latitude?: number | null
+          lgpd_consent?: boolean | null
           local_votacao_nome?: string | null
           longitude?: number | null
           nome: string
@@ -70,6 +72,7 @@ export type Database = {
           endereco?: string | null
           id?: string
           latitude?: number | null
+          lgpd_consent?: boolean | null
           local_votacao_nome?: string | null
           longitude?: number | null
           nome?: string
@@ -135,6 +138,7 @@ export type Database = {
           endereco: string | null
           id: string
           latitude: number | null
+          lgpd_consent: boolean | null
           local_votacao_nome: string | null
           longitude: number | null
           nome: string
@@ -156,6 +160,7 @@ export type Database = {
           endereco?: string | null
           id?: string
           latitude?: number | null
+          lgpd_consent?: boolean | null
           local_votacao_nome?: string | null
           longitude?: number | null
           nome: string
@@ -177,6 +182,7 @@ export type Database = {
           endereco?: string | null
           id?: string
           latitude?: number | null
+          lgpd_consent?: boolean | null
           local_votacao_nome?: string | null
           longitude?: number | null
           nome?: string
