@@ -102,6 +102,8 @@ function isValidCPF(cpf: string) {
 function Eleitores() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingEleitor, setViewingEleitor] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
@@ -166,8 +168,37 @@ function Eleitores() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setForm(initialForm);
+    setSuggestions([]);
+    setOpen(true);
+  };
+
+  const handleEdit = (eleitor: any) => {
+    setEditingId(eleitor.id);
+    setForm({
+      nome: eleitor.nome || "",
+      telefone: eleitor.telefone || "",
+      data_nascimento: eleitor.data_nascimento || "",
+      cpf: eleitor.cpf || "",
+      cep: eleitor.cep || "",
+      endereco: eleitor.endereco || "",
+      numero: eleitor.numero || "",
+      complemento: eleitor.complemento || "",
+      bairro: eleitor.bairro || "",
+      cidade: eleitor.cidade || "",
+      uf: eleitor.uf || "",
+      zona_votacao: eleitor.zona_votacao ? String(eleitor.zona_votacao) : "",
+      secao_votacao: eleitor.secao_votacao ? String(eleitor.secao_votacao) : "",
+      local_votacao_nome: eleitor.local_votacao_nome || "",
+      status: eleitor.status || "indeciso",
+      lgpd_consent: eleitor.lgpd_consent || false,
+    });
+    setOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
     if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
@@ -211,22 +242,28 @@ function Eleitores() {
         lgpd_consent: form.lgpd_consent,
       };
 
-      console.log("Enviando cadastro de eleitor:", payload);
+      console.log("Enviando dados do eleitor:", payload);
 
-      const { data, error } = await supabase
-        .from("eleitores")
-        .insert(payload)
-        .select();
-
-      if (error) {
-        console.error("Erro do Supabase ao inserir:", error);
-        throw error;
+      if (editingId) {
+        const { error } = await supabase
+          .from("eleitores")
+          .update(payload)
+          .eq("id", editingId);
+        
+        if (error) throw error;
+        toast.success("Eleitor atualizado com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from("eleitores")
+          .insert(payload);
+        
+        if (error) throw error;
+        toast.success("Eleitor cadastrado com sucesso!");
       }
 
-      console.log("Sucesso ao inserir:", data);
-      toast.success("Eleitor cadastrado com sucesso!");
       setForm(initialForm);
       setOpen(false);
+      setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
       console.error("Erro completo no cadastro:", error);
@@ -277,7 +314,7 @@ function Eleitores() {
             <Filter className="mr-2 h-4 w-4" />
             Filtros
           </Button>
-          <Button className="shadow-lg shadow-primary/20" onClick={() => setOpen(true)}>
+          <Button className="shadow-lg shadow-primary/20" onClick={handleOpenCreate}>
             <UserPlus className="mr-2 h-4 w-4" />
             Cadastrar Eleitor
           </Button>
@@ -355,13 +392,28 @@ function Eleitores() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 border-white/10 bg-card/90 backdrop-blur-xl">
-                        <DropdownMenuItem className="gap-2">
+                        <DropdownMenuItem className="gap-2" onClick={() => setViewingEleitor(eleitor)}>
                           <Users className="h-4 w-4" /> Ver Perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={() => handleEdit(eleitor)}>
+                          <Info className="h-4 w-4" /> Editar Dados
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2">
                           <MessageSquare className="h-4 w-4" /> Enviar Mensagem
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
+                        <DropdownMenuItem 
+                          className="gap-2 text-destructive focus:text-destructive"
+                          onClick={async () => {
+                            if (confirm("Tem certeza que deseja remover este eleitor?")) {
+                              const { error } = await supabase.from("eleitores").delete().eq("id", eleitor.id);
+                              if (error) toast.error("Erro ao remover");
+                              else {
+                                toast.success("Eleitor removido");
+                                queryClient.invalidateQueries({ queryKey: ["eleitores"] });
+                              }
+                            }
+                          }}
+                        >
                           Remover Registro
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -377,9 +429,9 @@ function Eleitores() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Cadastrar Eleitor</DialogTitle>
+            <DialogTitle>{editingId ? "Editar Eleitor" : "Cadastrar Eleitor"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2 md:col-span-2">
                 <Label>Nome *</Label>
@@ -532,9 +584,80 @@ function Eleitores() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Cadastrar"}</Button>
+              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : (editingId ? "Atualizar" : "Cadastrar")}</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewingEleitor} onOpenChange={(o) => !o && setViewingEleitor(null)}>
+        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10 max-w-md">
+          <DialogHeader>
+            <DialogTitle>Perfil do Eleitor</DialogTitle>
+          </DialogHeader>
+          {viewingEleitor && (
+            <div className="space-y-6 py-4">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
+                  {viewingEleitor.nome[0]}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{viewingEleitor.nome}</h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    {getStatusBadge(viewingEleitor.status)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">WhatsApp</p>
+                    <p className="text-sm flex items-center gap-2"><Phone className="h-3 w-3" /> {viewingEleitor.telefone}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">CPF</p>
+                    <p className="text-sm">{viewingEleitor.cpf || "Não informado"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Nascimento</p>
+                    <p className="text-sm">{viewingEleitor.data_nascimento ? new Date(viewingEleitor.data_nascimento).toLocaleDateString('pt-BR') : "---"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Cadastrado por</p>
+                    <p className="text-sm font-medium">{viewingEleitor.perfis?.nome || "Campanha Direta"}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-white/5">
+                  <p className="text-xs text-muted-foreground uppercase font-bold">Endereço</p>
+                  <div className="text-sm space-y-1">
+                    <p>{viewingEleitor.endereco}{viewingEleitor.numero ? `, ${viewingEleitor.numero}` : ""}</p>
+                    <p>{viewingEleitor.bairro} - {viewingEleitor.cidade}/{viewingEleitor.uf}</p>
+                    <p className="text-muted-foreground text-xs">{viewingEleitor.cep}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-white/5">
+                  <p className="text-xs text-muted-foreground uppercase font-bold">Local de Votação</p>
+                  <div className="text-sm space-y-1">
+                    <p className="font-medium">{viewingEleitor.local_votacao_nome || "Não definido"}</p>
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      <span>Zona: {viewingEleitor.zona_votacao || "---"}</span>
+                      <span>Seção: {viewingEleitor.secao_votacao || "---"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingEleitor(null)}>Fechar</Button>
+            <Button onClick={() => {
+              handleEdit(viewingEleitor);
+              setViewingEleitor(null);
+            }}>Editar Dados</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
