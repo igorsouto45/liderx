@@ -175,6 +175,7 @@ function Liderancas() {
         zona_votacao: form.zona_votacao ? parseInt(onlyDigits(form.zona_votacao)) : null,
         secao_votacao: form.secao_votacao ? parseInt(onlyDigits(form.secao_votacao)) : null,
         local_votacao_nome: form.local_votacao_nome,
+        lgpd_consent: form.lgpd_consent,
       });
 
       if (error) throw error;

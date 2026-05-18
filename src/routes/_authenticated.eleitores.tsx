@@ -206,6 +206,7 @@ function Eleitores() {
         local_votacao_nome: form.local_votacao_nome || null,
         status: form.status as any,
         origem_usuario_id: user.id,
+        lgpd_consent: form.lgpd_consent,
       });
 
       if (error) throw error;
