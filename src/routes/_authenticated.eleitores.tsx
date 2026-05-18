@@ -205,6 +205,8 @@ function Eleitores() {
       local_votacao_nome: eleitor.local_votacao_nome || "",
       status: eleitor.status || "indeciso",
       lgpd_consent: eleitor.lgpd_consent || false,
+      latitude: eleitor.latitude || null,
+      longitude: eleitor.longitude || null,
     });
     setOpen(true);
   };
