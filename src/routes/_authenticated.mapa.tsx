@@ -60,7 +60,12 @@ function MapaEstrategico() {
       if (liderancas) {
         for (const leader of liderancas) {
           if ((!leader.latitude || !leader.longitude) && leader.cep) {
-            const coords = await getLatLongFromCep(leader.cep);
+            const coords = await getLatLongFromCep(
+              leader.cep, 
+              leader.endereco || undefined, 
+              leader.bairro || undefined, 
+              leader.cidade || undefined
+            );
             if (coords) {
               await supabase.from("liderancas").update({ latitude: coords.lat, longitude: coords.lng }).eq("id", leader.id);
               updatedCount++;
@@ -71,7 +76,12 @@ function MapaEstrategico() {
       if (eleitores) {
         for (const eleitor of eleitores) {
           if ((!eleitor.latitude || !eleitor.longitude) && eleitor.cep) {
-            const coords = await getLatLongFromCep(eleitor.cep);
+            const coords = await getLatLongFromCep(
+              eleitor.cep, 
+              eleitor.endereco || undefined, 
+              eleitor.bairro || undefined, 
+              eleitor.cidade || undefined
+            );
             if (coords) {
               await supabase.from("eleitores").update({ latitude: coords.lat, longitude: coords.lng }).eq("id", eleitor.id);
               updatedCount++;
@@ -94,9 +104,14 @@ function MapaEstrategico() {
     }
   };
 
-  const firstLeaderWithCoords = stats?.leadersWithCounts?.find((l: any) => l.latitude && l.longitude);
-  const center: [number, number] = firstLeaderWithCoords
-    ? [firstLeaderWithCoords.latitude, firstLeaderWithCoords.longitude]
+  const allWithCoords = [
+    ...(stats?.leadersWithCounts || []),
+    ...(eleitores || [])
+  ].filter((p: any) => p.latitude && p.longitude);
+
+  const firstWithCoords = allWithCoords[0];
+  const center: [number, number] = firstWithCoords
+    ? [Number(firstWithCoords.latitude), Number(firstWithCoords.longitude)]
     : [-15.7801, -47.9292];
 
   if (loadingLiderancas || loadingEleitores) {
