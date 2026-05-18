@@ -186,37 +186,50 @@ function Eleitores() {
       if (!user) throw new Error("Usuário não autenticado");
 
       // Validate numeric fields to avoid NaN errors
-      const zona = form.zona_votacao ? parseInt(onlyDigits(form.zona_votacao)) : null;
-      const secao = form.secao_votacao ? parseInt(onlyDigits(form.secao_votacao)) : null;
+      const zonaStr = onlyDigits(form.zona_votacao);
+      const secaoStr = onlyDigits(form.secao_votacao);
+      const zona = zonaStr ? parseInt(zonaStr) : null;
+      const secao = secaoStr ? parseInt(secaoStr) : null;
 
-      const { error } = await supabase.from("eleitores").insert({
-        nome: form.nome,
-        telefone: form.telefone,
-        data_nascimento: form.data_nascimento,
+      const payload = {
+        nome: form.nome.trim(),
+        telefone: form.telefone.trim(),
+        data_nascimento: form.data_nascimento || null,
         cpf: form.cpf ? onlyDigits(form.cpf) : null,
         cep: form.cep ? onlyDigits(form.cep) : null,
-        endereco: form.endereco || null,
-        numero: form.numero || null,
-        complemento: form.complemento || null,
-        bairro: form.bairro || null,
-        cidade: form.cidade || null,
-        uf: form.uf || null,
+        endereco: form.endereco?.trim() || null,
+        numero: form.numero?.trim() || null,
+        complemento: form.complemento?.trim() || null,
+        bairro: form.bairro?.trim() || null,
+        cidade: form.cidade?.trim() || null,
+        uf: form.uf?.trim().toUpperCase() || null,
         zona_votacao: zona,
         secao_votacao: secao,
-        local_votacao_nome: form.local_votacao_nome || null,
-        status: form.status as any,
+        local_votacao_nome: form.local_votacao_nome?.trim() || null,
+        status: form.status as "apoiador" | "indeciso" | "rejeição",
         origem_usuario_id: user.id,
         lgpd_consent: form.lgpd_consent,
-      });
+      };
 
-      if (error) throw error;
+      console.log("Enviando cadastro de eleitor:", payload);
 
+      const { data, error } = await supabase
+        .from("eleitores")
+        .insert(payload)
+        .select();
+
+      if (error) {
+        console.error("Erro do Supabase ao inserir:", error);
+        throw error;
+      }
+
+      console.log("Sucesso ao inserir:", data);
       toast.success("Eleitor cadastrado com sucesso!");
       setForm(initialForm);
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
-      console.error("Erro no cadastro:", error);
+      console.error("Erro completo no cadastro:", error);
       toast.error("Erro ao cadastrar: " + (error.message || "Tente novamente"));
     } finally {
       setSaving(false);
