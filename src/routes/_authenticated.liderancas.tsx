@@ -138,15 +138,19 @@ function Liderancas() {
     if (cep.length !== 8) return;
     setCepLoading(true);
     try {
-      const [viacepRes, coords] = await Promise.all([
-        fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()),
-        getLatLongFromCep(cep)
-      ]);
+      const viacepRes = await fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json());
 
       if (viacepRes.erro) {
         toast.error("CEP não encontrado");
         return;
       }
+
+      const coords = await getLatLongFromCep(
+        cep,
+        viacepRes.logradouro,
+        viacepRes.bairro,
+        viacepRes.localidade
+      );
 
       setForm((f) => ({
         ...f,
@@ -159,7 +163,8 @@ function Liderancas() {
         longitude: coords?.lng ?? f.longitude,
       }));
       await lookupLocalVotacao(cep, viacepRes.bairro, viacepRes.localidade);
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Erro ao consultar CEP");
     } finally {
       setCepLoading(false);
