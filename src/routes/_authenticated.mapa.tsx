@@ -60,7 +60,12 @@ function MapaEstrategico() {
       if (liderancas) {
         for (const leader of liderancas) {
           if ((!leader.latitude || !leader.longitude) && leader.cep) {
-            const coords = await getLatLongFromCep(leader.cep, leader.endereco, leader.bairro, leader.cidade);
+            const coords = await getLatLongFromCep(
+              leader.cep, 
+              leader.endereco || undefined, 
+              leader.bairro || undefined, 
+              leader.cidade || undefined
+            );
             if (coords) {
               await supabase.from("liderancas").update({ latitude: coords.lat, longitude: coords.lng }).eq("id", leader.id);
               updatedCount++;
@@ -71,7 +76,12 @@ function MapaEstrategico() {
       if (eleitores) {
         for (const eleitor of eleitores) {
           if ((!eleitor.latitude || !eleitor.longitude) && eleitor.cep) {
-            const coords = await getLatLongFromCep(eleitor.cep, eleitor.endereco, eleitor.bairro, eleitor.cidade);
+            const coords = await getLatLongFromCep(
+              eleitor.cep, 
+              eleitor.endereco || undefined, 
+              eleitor.bairro || undefined, 
+              eleitor.cidade || undefined
+            );
             if (coords) {
               await supabase.from("eleitores").update({ latitude: coords.lat, longitude: coords.lng }).eq("id", eleitor.id);
               updatedCount++;
