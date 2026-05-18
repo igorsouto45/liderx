@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { 
   Users, 
@@ -17,7 +18,8 @@ import {
   ArrowUpDown,
   Phone,
   MapPin,
-  Circle
+  Circle,
+  Info
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,6 +61,7 @@ type FormState = {
   secao_votacao: string;
   local_votacao_nome: string;
   status: string;
+  lgpd_consent: boolean;
 };
 
 const initialForm: FormState = {
@@ -67,6 +70,7 @@ const initialForm: FormState = {
   bairro: "", cidade: "", uf: "",
   zona_votacao: "", secao_votacao: "", local_votacao_nome: "",
   status: "indeciso",
+  lgpd_consent: false,
 };
 
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
@@ -101,30 +105,37 @@ function Eleitores() {
   const [saving, setSaving] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
     // Try exact CEP match first
     let { data } = await supabase
       .from("locais_votacao")
-      .select("zona, secao, local_nome")
+      .select("zona, secao, local_nome, endereco, bairro")
       .eq("cep", cep)
-      .limit(1);
+      .limit(5);
+
     if ((!data || data.length === 0) && bairro && cidade) {
       const r = await supabase
         .from("locais_votacao")
-        .select("zona, secao, local_nome")
+        .select("zona, secao, local_nome, endereco, bairro")
         .ilike("bairro", bairro)
         .ilike("municipio", cidade)
-        .limit(1);
+        .limit(5);
       data = r.data;
     }
-    if (data && data[0]) {
+
+    if (data && data.length > 0) {
+      setSuggestions(data);
+      // Auto-fill with the first one
       setForm((f) => ({
         ...f,
         zona_votacao: String(data![0].zona ?? ""),
         secao_votacao: String(data![0].secao ?? ""),
         local_votacao_nome: data![0].local_nome ?? "",
       }));
+    } else {
+      setSuggestions([]);
     }
   };
 
@@ -163,6 +174,10 @@ function Eleitores() {
     
     if (form.cpf && !isValidCPF(form.cpf)) {
       return toast.error("CPF inválido. Verifique os números informados.");
+    }
+
+    if (!form.lgpd_consent) {
+      return toast.error("É necessário aceitar os termos da LGPD para prosseguir.");
     }
 
     setSaving(true);
@@ -415,7 +430,10 @@ function Eleitores() {
               </div>
               <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-primary">Local de Votação</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-primary">Local de Votação</p>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </div>
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-white/5 px-2 py-0.5 rounded">Ajuste manual disponível</span>
                 </div>
                 
@@ -448,9 +466,54 @@ function Eleitores() {
                     />
                   </div>
                 </div>
+
+                {suggestions.length > 1 && (
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Outras sugestões encontradas:</Label>
+                    <div className="grid gap-2">
+                      {suggestions.slice(1).map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setForm({
+                            ...form,
+                            zona_votacao: String(s.zona),
+                            secao_votacao: String(s.secao),
+                            local_votacao_nome: s.local_nome
+                          })}
+                          className="text-left p-2 rounded bg-black/20 hover:bg-black/40 border border-white/5 transition-colors text-xs"
+                        >
+                          <div className="font-medium text-white/80">{s.local_nome}</div>
+                          <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao} • {s.bairro}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <p className="text-[10px] text-muted-foreground italic">
                   * Os campos acima são preenchidos automaticamente pelo CEP, mas podem ser alterados se necessário.
                 </p>
+              </div>
+
+              <div className="md:col-span-2 flex items-start space-x-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+                <Checkbox 
+                  id="lgpd" 
+                  checked={form.lgpd_consent}
+                  onCheckedChange={(checked) => setForm({ ...form, lgpd_consent: !!checked })}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label 
+                    htmlFor="lgpd" 
+                    className="text-sm font-medium leading-none cursor-pointer"
+                  >
+                    Consentimento LGPD
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    O eleitor declara estar ciente e de acordo em ceder seus dados pessoais para fins de mobilização política, conforme a Lei Geral de Proteção de Dados (LGPD).
+                  </p>
+                </div>
               </div>
             </div>
             <DialogFooter>
