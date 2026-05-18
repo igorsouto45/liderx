@@ -51,6 +51,8 @@ function MapRecenter({ coords }: { coords: [number, number] }) {
 
 function MapaEstrategico() {
   const [updating, setUpdating] = useState(false);
+  const [showLeaders, setShowLeaders] = useState(true);
+  const [showVoters, setShowVoters] = useState(true);
 
   const { data: liderancas, isLoading: loadingLiderancas, refetch: refetchLiderancas } = useQuery({
     queryKey: ["liderancas-mapa"],
@@ -159,16 +161,38 @@ function MapaEstrategico() {
           <h1 className="text-3xl font-bold tracking-tight">Mapa Estratégico</h1>
           <p className="text-muted-foreground">Visualização geográfica de líderes e eleitores.</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={updateCoordinates} 
-          disabled={updating}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${updating ? "animate-spin" : ""}`} />
-          Atualizar Coordenadas
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
+            <Button 
+              variant={showLeaders ? "secondary" : "ghost"} 
+              size="sm" 
+              onClick={() => setShowLeaders(!showLeaders)}
+              className="h-8 text-xs gap-2"
+            >
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              Líderes
+            </Button>
+            <Button 
+              variant={showVoters ? "secondary" : "ghost"} 
+              size="sm" 
+              onClick={() => setShowVoters(!showVoters)}
+              className="h-8 text-xs gap-2"
+            >
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              Eleitores
+            </Button>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={updateCoordinates} 
+            disabled={updating}
+            className="gap-2 h-8"
+          >
+            <RefreshCw className={`h-4 w-4 ${updating ? "animate-spin" : ""}`} />
+            Sincronizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -226,7 +250,7 @@ function MapaEstrategico() {
             />
             
             {/* Lideranças */}
-            {stats?.leadersWithCounts.map((leader) => (
+            {showLeaders && stats?.leadersWithCounts.map((leader) => (
               leader.latitude && leader.longitude && (
                 <Marker 
                   key={`leader-${leader.id}`} 
@@ -256,7 +280,7 @@ function MapaEstrategico() {
             ))}
 
             {/* Eleitores */}
-            {eleitores?.map((eleitor) => (
+            {showVoters && eleitores?.map((eleitor) => (
               eleitor.latitude && eleitor.longitude && (
                 <Marker 
                   key={`eleitor-${eleitor.id}`} 
