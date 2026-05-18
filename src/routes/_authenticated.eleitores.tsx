@@ -553,6 +553,22 @@ function Eleitores() {
                           <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao} • {s.bairro}</div>
                         </button>
                       ))}
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm({
+                            ...form,
+                            zona_votacao: "",
+                            secao_votacao: "",
+                            local_votacao_nome: ""
+                          });
+                          setSuggestions([]);
+                        }}
+                        className="text-[10px] text-primary hover:underline font-medium"
+                      >
+                        Não voto em nenhum desses locais
+                      </button>
                     </div>
                   </div>
                 )}
