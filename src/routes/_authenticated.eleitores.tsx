@@ -354,10 +354,12 @@ function Eleitores() {
             <Input 
               placeholder="Buscar por nome, telefone ou bairro..." 
               className="pl-10 bg-black/20 border-white/10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{eleitores?.length || 0} eleitores encontrados</span>
+            <span>{filteredEleitores?.length || 0} eleitores encontrados</span>
           </div>
         </div>
 
