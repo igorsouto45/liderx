@@ -63,11 +63,15 @@ interface Props {
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 
-function MapUpdater({ center }: { center: [number, number] }) {
+function MapUpdater({ center, bounds }: { center: [number, number], bounds?: L.LatLngBounds }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
+    if (bounds && bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+      map.setView(center, map.getZoom());
+    }
+  }, [center, bounds, map]);
   return null;
 }
 
