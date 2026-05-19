@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<{nome: string, email: string, tipo: 'admin' | 'líder' | 'operador' | ''}>({ nome: "", email: "", tipo: "" });
+  const [profile, setProfile] = useState<{nome: string, email: string, tipo: string}>({ nome: "", email: "", tipo: "" });
   const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
