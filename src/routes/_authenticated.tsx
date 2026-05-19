@@ -27,6 +27,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
@@ -34,35 +35,87 @@ function AuthenticatedLayout() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
         navigate({ to: "/login" });
         return;
       }
-      setSession(session);
+      setSession(currentSession);
       
-      const { data: profile } = await supabase
+      const { data: currentProfile } = await supabase
         .from("perfis")
         .select("*")
-        .eq("id", session.user.id)
+        .eq("id", currentSession.user.id)
         .single();
       
-      setProfile(profile);
+      setProfile(currentProfile);
       setLoading(false);
+
+      if (currentProfile) {
+        fetchUnreadCount(currentSession.user.id, currentProfile.tipo);
+      }
+    };
+
+    const fetchUnreadCount = async (userId: string, tipo: string) => {
+      const { count: unreadDirect } = await supabase
+        .from("mensagens")
+        .select("*", { count: 'exact', head: true })
+        .eq("destinatario_id", userId)
+        .eq("lida", false);
+
+      let unreadBroadcast = 0;
+      if (tipo === 'líder') {
+        const { data: readBroadcasts } = await supabase
+          .from("mensagens_lidas")
+          .select("mensagem_id")
+          .eq("perfil_id", userId);
+        
+        const readIds = readBroadcasts?.map(rb => rb.mensagem_id) || [];
+        
+        const query = supabase
+          .from("mensagens")
+          .select("*", { count: 'exact', head: true })
+          .is("destinatario_id", null);
+        
+        if (readIds.length > 0) {
+          query.not("id", "in", `(${readIds.join(",")})`);
+        }
+        
+        const { count: broadcastCount } = await query;
+        unreadBroadcast = broadcastCount || 0;
+      }
+
+      setUnreadCount((unreadDirect || 0) + unreadBroadcast);
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    const channel = supabase
+      .channel('unread-messages-global')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mensagens' },
+        () => {
+          if (session?.user?.id && profile) {
+            fetchUnreadCount(session.user.id, profile.tipo);
+          }
+        }
+      )
+      .subscribe();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!newSession) {
         navigate({ to: "/login" });
       } else {
-        setSession(session);
+        setSession(newSession);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
+  }, [navigate, session?.user?.id, profile?.tipo]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -80,6 +133,7 @@ function AuthenticatedLayout() {
     { label: "Mapa Estratégico", icon: Map, to: "/mapa", roles: ["admin", "operador"] },
     { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
     { label: "Interações IA", icon: MessageSquare, to: "/interacoes", roles: ["admin", "operador"] },
+    { label: "Mensagens", icon: MessageSquare, to: "/mensagens", roles: ["admin", "líder"] },
     { label: "Configurações", icon: Settings, to: "/settings", roles: ["admin"] },
   ];
 
@@ -132,7 +186,12 @@ function AuthenticatedLayout() {
                 )}
               >
                 <item.icon className={cn("h-5 w-5", location.pathname === item.to ? "text-primary" : "text-muted-foreground")} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.to === "/mensagens" && unreadCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

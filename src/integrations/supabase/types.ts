@@ -257,6 +257,69 @@ export type Database = {
         }
         Relationships: []
       }
+      mensagens: {
+        Row: {
+          conteudo: string
+          created_at: string
+          destinatario_id: string | null
+          id: string
+          lida: boolean
+          remetente_id: string
+          titulo: string | null
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          destinatario_id?: string | null
+          id?: string
+          lida?: boolean
+          remetente_id: string
+          titulo?: string | null
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          destinatario_id?: string | null
+          id?: string
+          lida?: boolean
+          remetente_id?: string
+          titulo?: string | null
+        }
+        Relationships: []
+      }
+      mensagens_lidas: {
+        Row: {
+          lida_em: string | null
+          mensagem_id: string
+          perfil_id: string
+        }
+        Insert: {
+          lida_em?: string | null
+          mensagem_id: string
+          perfil_id: string
+        }
+        Update: {
+          lida_em?: string | null
+          mensagem_id?: string
+          perfil_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_lidas_mensagem_id_fkey"
+            columns: ["mensagem_id"]
+            isOneToOne: false
+            referencedRelation: "mensagens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_lidas_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfis: {
         Row: {
           created_at: string | null
