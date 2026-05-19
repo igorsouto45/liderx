@@ -86,7 +86,7 @@ function SettingsPage() {
     try {
       const { error } = await supabase
         .from("perfis")
-        .update({ tipo: newRole })
+        .update({ tipo: newRole as any })
         .eq("id", userId);
 
       if (error) throw error;
