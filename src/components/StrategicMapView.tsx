@@ -60,7 +60,7 @@ interface Props {
   voters: Voter[];
 }
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useMap } from "react-leaflet";
 
 function MapUpdater({ center, bounds }: { center: [number, number], bounds?: L.LatLngBounds }) {
