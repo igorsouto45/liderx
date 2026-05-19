@@ -80,6 +80,7 @@ function AuthenticatedLayout() {
     { label: "Mapa Estratégico", icon: Map, to: "/mapa", roles: ["admin", "operador"] },
     { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
     { label: "Interações IA", icon: MessageSquare, to: "/interacoes", roles: ["admin", "operador"] },
+    { label: "Mensagens", icon: MessageSquare, to: "/mensagens", roles: ["admin", "líder"] },
     { label: "Configurações", icon: Settings, to: "/settings", roles: ["admin"] },
   ];
 
