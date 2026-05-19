@@ -27,6 +27,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
