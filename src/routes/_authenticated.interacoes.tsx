@@ -20,6 +20,7 @@ type Message = {
   created_at: string;
 };
 
+
 function Interacoes() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
