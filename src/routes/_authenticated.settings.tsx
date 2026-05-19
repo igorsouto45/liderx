@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
-import { Settings, Shield, Bell, User } from "lucide-react";
+import { Settings, Shield, Bell, User, Mail, UserCog } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
