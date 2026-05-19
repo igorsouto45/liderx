@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedPrioridadesRouteImport } from './routes/_authenticated.prioridades'
+import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated.mensagens'
 import { Route as AuthenticatedMapaRouteImport } from './routes/_authenticated.mapa'
 import { Route as AuthenticatedLiderancasRouteImport } from './routes/_authenticated.liderancas'
 import { Route as AuthenticatedInteracoesRouteImport } from './routes/_authenticated.interacoes'
@@ -52,6 +53,11 @@ const AuthenticatedPrioridadesRoute =
     path: '/prioridades',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMensagensRoute = AuthenticatedMensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMapaRoute = AuthenticatedMapaRouteImport.update({
   id: '/mapa',
   path: '/mapa',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/interacoes': typeof AuthenticatedInteracoesRoute
   '/liderancas': typeof AuthenticatedLiderancasRoute
   '/mapa': typeof AuthenticatedMapaRoute
+  '/mensagens': typeof AuthenticatedMensagensRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/interacoes': typeof AuthenticatedInteracoesRoute
   '/liderancas': typeof AuthenticatedLiderancasRoute
   '/mapa': typeof AuthenticatedMapaRoute
+  '/mensagens': typeof AuthenticatedMensagensRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/interacoes': typeof AuthenticatedInteracoesRoute
   '/_authenticated/liderancas': typeof AuthenticatedLiderancasRoute
   '/_authenticated/mapa': typeof AuthenticatedMapaRoute
+  '/_authenticated/mensagens': typeof AuthenticatedMensagensRoute
   '/_authenticated/prioridades': typeof AuthenticatedPrioridadesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/interacoes'
     | '/liderancas'
     | '/mapa'
+    | '/mensagens'
     | '/prioridades'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/interacoes'
     | '/liderancas'
     | '/mapa'
+    | '/mensagens'
     | '/prioridades'
     | '/settings'
   id:
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/interacoes'
     | '/_authenticated/liderancas'
     | '/_authenticated/mapa'
+    | '/_authenticated/mensagens'
     | '/_authenticated/prioridades'
     | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
@@ -218,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrioridadesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mensagens': {
+      id: '/_authenticated/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof AuthenticatedMensagensRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/mapa': {
       id: '/_authenticated/mapa'
       path: '/mapa'
@@ -270,6 +289,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInteracoesRoute: typeof AuthenticatedInteracoesRoute
   AuthenticatedLiderancasRoute: typeof AuthenticatedLiderancasRoute
   AuthenticatedMapaRoute: typeof AuthenticatedMapaRoute
+  AuthenticatedMensagensRoute: typeof AuthenticatedMensagensRoute
   AuthenticatedPrioridadesRoute: typeof AuthenticatedPrioridadesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -281,6 +301,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInteracoesRoute: AuthenticatedInteracoesRoute,
   AuthenticatedLiderancasRoute: AuthenticatedLiderancasRoute,
   AuthenticatedMapaRoute: AuthenticatedMapaRoute,
+  AuthenticatedMensagensRoute: AuthenticatedMensagensRoute,
   AuthenticatedPrioridadesRoute: AuthenticatedPrioridadesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
@@ -298,3 +319,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
