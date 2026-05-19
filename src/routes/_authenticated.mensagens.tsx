@@ -366,20 +366,26 @@ function MensagensPage() {
               </ScrollArea>
 
               {/* Responder */}
-              {(selectedMessage.remetente_id !== currentUser.id || selectedMessage.destinatario_id) && (
+              {(selectedMessage.remetente_id !== currentUser.id) && (
                 <div className="mt-6 pt-6 border-t border-white/5">
                   <div className="flex gap-2">
                     <Textarea 
                       placeholder="Escreva uma resposta..." 
                       className="min-h-[80px] bg-black/20 border-white/10"
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && e.ctrlKey) {
-                          // Submit reply logic here if needed
+                          handleSendReply();
                         }
                       }}
                     />
-                    <Button className="h-auto">
-                      <Send className="h-4 w-4" />
+                    <Button 
+                      className="h-auto" 
+                      onClick={handleSendReply}
+                      disabled={sendingReply || !replyContent}
+                    >
+                      {sendingReply ? "..." : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-2">Pressione Ctrl + Enter para enviar rapidamente.</p>
