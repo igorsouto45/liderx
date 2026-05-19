@@ -80,6 +80,13 @@ export default function StrategicMapView({ center, showLeaders, showVoters, lead
   const leadersWithCoords = leaders.filter((l) => Number.isFinite(l.latitude) && Number.isFinite(l.longitude));
   const votersWithCoords = voters.filter((v) => Number.isFinite(v.latitude) && Number.isFinite(v.longitude));
 
+  const bounds = useMemo(() => {
+    const points: L.LatLngExpression[] = [];
+    if (showLeaders) leadersWithCoords.forEach(l => points.push([l.latitude!, l.longitude!]));
+    if (showVoters) votersWithCoords.forEach(v => points.push([v.latitude!, v.longitude!]));
+    return points.length > 0 ? L.latLngBounds(points) : undefined;
+  }, [showLeaders, showVoters, leadersWithCoords, votersWithCoords]);
+
   return (
     <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
       <TileLayer
@@ -87,7 +94,7 @@ export default function StrategicMapView({ center, showLeaders, showVoters, lead
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapUpdater center={center} />
+      <MapUpdater center={center} bounds={bounds} />
 
       {showLeaders &&
         leadersWithCoords.map(
