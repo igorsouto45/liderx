@@ -380,14 +380,14 @@ function Eleitores() {
                   Carregando eleitores...
                 </TableCell>
               </TableRow>
-            ) : eleitores?.length === 0 ? (
+            ) : filteredEleitores?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                   Nenhum eleitor encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              eleitores?.map((eleitor) => (
+              filteredEleitores?.map((eleitor) => (
                 <TableRow key={eleitor.id} className="border-white/5 hover:bg-white/5 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-3">
