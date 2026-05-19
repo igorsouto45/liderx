@@ -82,7 +82,7 @@ function Interacoes() {
         .single();
 
       if (userErr) throw userErr;
-      setMessages((prev) => [...prev, userMsg]);
+      setMessages((prev) => [...prev, userMsg as any]);
 
       // 2. Chamar Edge Function
       const history = messages.slice(-5).map((m) => ({
