@@ -108,7 +108,7 @@ function Interacoes() {
         .single();
 
       if (assistantErr) throw assistantErr;
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, assistantMsg as any]);
     } catch (error) {
       console.error("Erro na interação:", error);
       toast.error("Erro ao processar sua solicitação.");
