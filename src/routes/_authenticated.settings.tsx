@@ -17,9 +17,11 @@ function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({ nome: "", email: "", tipo: "" });
+  const [activeTab, setActiveTab] = useState("perfil");
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data, error } = await supabase
@@ -34,12 +36,20 @@ function SettingsPage() {
             email: user.email || "",
             tipo: data.tipo || ""
           });
+
+          if (data.tipo === 'admin') {
+            const { data: allUsers } = await supabase
+              .from("perfis")
+              .select("*")
+              .order('nome');
+            setUsers(allUsers || []);
+          }
         }
       }
       setLoading(false);
     };
 
-    fetchProfile();
+    fetchData();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
