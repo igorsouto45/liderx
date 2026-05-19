@@ -43,7 +43,7 @@ function SettingsPage() {
           setProfile({
             nome: data.nome || "",
             email: user.email || "",
-            tipo: data.tipo || ""
+            tipo: data.tipo as any
           });
 
           if (data.tipo === 'admin') {
