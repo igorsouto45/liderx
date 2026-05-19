@@ -53,6 +53,8 @@ function MensagensPage() {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
