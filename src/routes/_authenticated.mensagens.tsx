@@ -156,6 +156,35 @@ function MensagensPage() {
     }
   };
 
+  const handleSendReply = async () => {
+    if (!replyContent || !selectedMessage) return;
+
+    setSendingReply(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const { error } = await supabase
+        .from("mensagens")
+        .insert({
+          remetente_id: user.id,
+          destinatario_id: selectedMessage.remetente_id, // Reply goes to sender
+          titulo: `Re: ${selectedMessage.titulo || "Mensagem"}`,
+          conteudo: replyContent,
+        });
+
+      if (error) throw error;
+
+      toast.success("Resposta enviada!");
+      setReplyContent("");
+      fetchMessages();
+    } catch (error: any) {
+      toast.error("Erro ao responder: " + error.message);
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
   const markAsRead = async (message: any) => {
     if (message.remetente_id === currentUser?.id) return;
     if (message.lida) return;
