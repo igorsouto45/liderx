@@ -186,7 +186,12 @@ function AuthenticatedLayout() {
                 )}
               >
                 <item.icon className={cn("h-5 w-5", location.pathname === item.to ? "text-primary" : "text-muted-foreground")} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.to === "/mensagens" && unreadCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
