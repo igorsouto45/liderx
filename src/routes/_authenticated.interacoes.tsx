@@ -49,7 +49,7 @@ function Interacoes() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages((data as any) || []);
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
       toast.error("Não foi possível carregar o histórico.");
