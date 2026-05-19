@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -16,24 +15,13 @@ serve(async (req) => {
     const { message, history } = await req.json()
     const authHeader = req.headers.get('Authorization')!
     
-    // Create Supabase client to fetch context
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    // Get current user to ensure they are authenticated
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) {
-      throw new Error('Não autorizado')
-    }
-
-    // Get campaign context
-    const { data: summary, error: rpcError } = await supabaseClient.rpc('get_campaign_summary')
-    if (rpcError) {
-      console.error('Erro ao buscar resumo:', rpcError)
-    }
+    const { data: summary } = await supabaseClient.rpc('get_campaign_summary')
 
     const systemPrompt = `Você é o LiderX AI, um assistente estratégico especializado em campanhas eleitorais no Brasil.
 Seu objetivo é ajudar o administrador da campanha a tomar decisões baseadas em dados e otimizar a comunicação.
@@ -44,11 +32,10 @@ DADOS ATUAIS DA CAMPANHA:
 - Top 5 Bairros com mais eleitores: ${JSON.stringify(summary?.top_neighborhoods || [])}
 
 ORIENTAÇÕES:
-1. Seja analítico e estratégico. Se perguntarem sobre bairros, sugira ações específicas para os bairros com mais eleitores ou onde há poucos registros.
+1. Seja analítico e estratégico.
 2. Ajude a criar textos para redes sociais, scripts de vídeos e mensagens para os líderes.
 3. Use um tom profissional, motivador e focado em resultados.
-4. Responda sempre em Português do Brasil.
-5. Se não tiver dados específicos para uma pergunta, diga o que o usuário pode fazer no sistema para obter essa informação.`
+4. Responda sempre em Português do Brasil.`
 
     const apiResponse = await fetch('https://api.lovable.dev/v1/ai/chat/completions', {
       method: 'POST',
@@ -66,12 +53,6 @@ ORIENTAÇÕES:
       }),
     })
 
-    if (!apiResponse.ok) {
-      const errorData = await apiResponse.json()
-      console.error('Erro na AI Gateway:', errorData)
-      throw new Error('Erro ao processar resposta da IA')
-    }
-
     const data = await apiResponse.json()
     const aiMessage = data.choices[0].message.content
 
@@ -80,7 +61,6 @@ ORIENTAÇÕES:
       status: 200,
     })
   } catch (error) {
-    console.error('Erro na função campaign-ai:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
