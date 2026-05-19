@@ -112,6 +112,7 @@ function Eleitores() {
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
 
   const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
     // Try exact CEP match first
@@ -308,6 +309,12 @@ function Eleitores() {
     }
   });
 
+  const filteredEleitores = eleitores?.filter(e => 
+    e.nome.toLowerCase().includes(search.toLowerCase()) ||
+    e.telefone?.includes(search) ||
+    e.bairro?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "apoiador":
@@ -347,10 +354,12 @@ function Eleitores() {
             <Input 
               placeholder="Buscar por nome, telefone ou bairro..." 
               className="pl-10 bg-black/20 border-white/10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{eleitores?.length || 0} eleitores encontrados</span>
+            <span>{filteredEleitores?.length || 0} eleitores encontrados</span>
           </div>
         </div>
 
@@ -371,14 +380,14 @@ function Eleitores() {
                   Carregando eleitores...
                 </TableCell>
               </TableRow>
-            ) : eleitores?.length === 0 ? (
+            ) : filteredEleitores?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                   Nenhum eleitor encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              eleitores?.map((eleitor) => (
+              filteredEleitores?.map((eleitor) => (
                 <TableRow key={eleitor.id} className="border-white/5 hover:bg-white/5 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-3">
