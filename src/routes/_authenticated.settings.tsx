@@ -119,28 +119,38 @@ function SettingsPage() {
           </form>
         </Card>
 
-        <Card className="p-6 bg-card/50 backdrop-blur-xl border-white/10 opacity-60 cursor-not-allowed">
+        <Card className={`p-6 bg-card/50 backdrop-blur-xl border-white/10 ${profile.tipo !== 'admin' ? 'opacity-60 cursor-not-allowed' : ''}`}>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-lg bg-primary/10">
               <Shield className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h3 className="font-bold">Acesso e Permissões</h3>
-              <p className="text-sm text-muted-foreground">Gerencie níveis de acesso (Disponível apenas para Administradores).</p>
+              <p className="text-sm text-muted-foreground">Gerencie níveis de acesso e permissões dos usuários.</p>
             </div>
           </div>
+          {profile.tipo === 'admin' && (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <Button variant="outline" size="sm">Configurar Permissões</Button>
+            </div>
+          )}
         </Card>
 
-        <Card className="p-6 bg-card/50 backdrop-blur-xl border-white/10 opacity-60 cursor-not-allowed">
+        <Card className={`p-6 bg-card/50 backdrop-blur-xl border-white/10 ${profile.tipo !== 'admin' ? 'opacity-60 cursor-not-allowed' : ''}`}>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-lg bg-primary/10">
               <Bell className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h3 className="font-bold">Notificações</h3>
-              <p className="text-sm text-muted-foreground">Configure como você deseja receber alertas do sistema.</p>
+              <p className="text-sm text-muted-foreground">Configure alertas e notificações do sistema.</p>
             </div>
           </div>
+          {profile.tipo === 'admin' && (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <Button variant="outline" size="sm">Gerenciar Alertas</Button>
+            </div>
+          )}
         </Card>
       </div>
     </div>
