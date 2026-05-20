@@ -58,13 +58,16 @@ function Dashboard() {
       });
 
       eleitores?.forEach(e => {
-        const createdAt = new Date(e.created_at).toISOString().split("T")[0];
-        const day = last7Days.find(d => d.date === createdAt);
-        if (day) day.cadastros++;
+        if (e.created_at) {
+          const createdAt = new Date(e.created_at).toISOString().split("T")[0];
+          const day = last7Days.find(d => d.date === createdAt);
+          if (day) day.cadastros++;
+        }
       });
 
       // Calculate trends
       const lastWeekCount = eleitores?.filter(e => {
+        if (!e.created_at) return false;
         const date = new Date(e.created_at);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
@@ -72,6 +75,7 @@ function Dashboard() {
       }).length || 0;
 
       const previousWeekCount = eleitores?.filter(e => {
+        if (!e.created_at) return false;
         const date = new Date(e.created_at);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
