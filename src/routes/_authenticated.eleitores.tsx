@@ -316,7 +316,7 @@ function Eleitores() {
       
       if (error) throw error;
 
-      const profileIds = [...new Set((data || []).map((eleitor) => eleitor.origem_usuario_id).filter(Boolean))];
+      const profileIds = [...new Set((data || []).map((eleitor) => eleitor.origem_usuario_id).filter((id): id is string => Boolean(id)))];
 
       if (profileIds.length === 0) {
         return data || [];
@@ -334,7 +334,7 @@ function Eleitores() {
       return (data || []).map((eleitor) => ({
         ...eleitor,
         perfis: eleitor.origem_usuario_id ? perfisMap.get(eleitor.origem_usuario_id) || null : null,
-      }));
+      })) as any[];
     }
   });
 
