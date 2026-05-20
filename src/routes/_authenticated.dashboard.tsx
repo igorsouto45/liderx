@@ -35,9 +35,10 @@ function Dashboard() {
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ["dashboard-data"],
     queryFn: async () => {
-      const { data: eleitores } = await supabase
-        .from("eleitores")
-        .select("status, created_at, bairro");
+      const [{ data: eleitores }, { data: metas }] = await Promise.all([
+        supabase.from("eleitores").select("status, created_at, bairro, cidade"),
+        supabase.from("metas_votos").select("*")
+      ]);
       
       const counts = {
         total: eleitores?.length || 0,
