@@ -17,7 +17,12 @@ import {
   MapPin,
   TrendingUp,
   Award,
-  Info
+  Info,
+  Upload,
+  File,
+  X as XIcon,
+  Download,
+  Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
