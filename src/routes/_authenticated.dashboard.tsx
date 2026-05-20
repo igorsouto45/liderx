@@ -107,7 +107,8 @@ function Dashboard() {
           indecisos: "+0%",
           rejeicao: "+0%",
         },
-        topBairro
+        topBairro,
+        metas: metas || []
       };
     }
   });
