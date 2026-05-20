@@ -98,11 +98,13 @@ function Prioridades() {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       const { error } = await supabase.from("metas_votos").insert({
-        tipo: metaForm.tipo,
+        tipo: metaForm.tipo as 'geral' | 'bairro' | 'municipio',
         nome: metaForm.tipo === "geral" ? "Geral" : metaForm.nome,
         meta: parseInt(metaForm.meta),
-        lider_id: user?.id,
+        lider_id: user.id,
       });
 
       if (error) throw error;
