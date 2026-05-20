@@ -96,7 +96,7 @@ function Prioridades() {
       const { error } = await supabase.from("prioridades").insert({
         titulo: form.titulo,
         descricao: form.descricao,
-        lider_id: form.lider_id || user.id,
+        lider_id: (isAdmin && form.lider_id && form.lider_id !== "null") ? form.lider_id : user.id,
       });
 
       if (error) throw error;
@@ -122,12 +122,11 @@ function Prioridades() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Admin can set meta for a specific leader if metaForm.lider_id is provided, otherwise defaults to current user
       const { error } = await supabase.from("metas_votos").insert({
         tipo: metaForm.tipo as 'geral' | 'bairro' | 'municipio',
         nome: metaForm.tipo === "geral" ? "Geral" : metaForm.nome,
         meta: parseInt(metaForm.meta),
-        lider_id: metaForm.lider_id || user.id,
+        lider_id: (isAdmin && metaForm.lider_id && metaForm.lider_id !== "null") ? metaForm.lider_id : user.id,
       });
 
       if (error) throw error;
@@ -214,54 +213,39 @@ function Prioridades() {
                       <Plus className="h-4 w-4" /> Nova Prioridade
                     </Button>
                   </DialogTrigger>
+                  <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+                    <DialogHeader><DialogTitle>Adicionar Prioridade</DialogTitle></DialogHeader>
+                    <form onSubmit={handleCreate} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Título *</Label>
+                        <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Organizar reunião no bairro" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Descrição</Label>
+                        <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes da demanda..." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Líder Responsável (Opcional)</Label>
+                        <Select value={form.lider_id} onValueChange={(v) => setForm({ ...form, lider_id: v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um líder" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">Nenhum (Geral)</SelectItem>
+                            {liderancas?.map(l => (
+                              <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                        <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Criar"}</Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               )}
-            </div>
-                <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
-                  <DialogHeader><DialogTitle>Adicionar Prioridade</DialogTitle></DialogHeader>
-                  <form onSubmit={handleCreate} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Título *</Label>
-                      <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Organizar reunião no bairro" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Descrição</Label>
-                      <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes da demanda..." />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Líder Responsável (Opcional)</Label>
-                      <Select value={form.lider_id} onValueChange={(v) => setForm({ ...form, lider_id: v })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um líder" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="null">Nenhum (Geral)</SelectItem>
-                          {liderancas?.map(l => (
-                            <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Líder Alocado (Opcional)</Label>
-                      <Select value={metaForm.lider_id} onValueChange={(v) => setMetaForm({ ...metaForm, lider_id: v })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um líder" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="null">Nenhum (Geral)</SelectItem>
-                          {liderancas?.map(l => (
-                            <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                      <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Criar"}</Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -304,55 +288,69 @@ function Prioridades() {
                       <Plus className="h-4 w-4" /> Nova Meta
                     </Button>
                   </DialogTrigger>
-              )}
-            </div>
-                <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
-                  <DialogHeader><DialogTitle>Configurar Meta de Votos</DialogTitle></DialogHeader>
-                  <form onSubmit={handleCreateMeta} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Tipo de Meta</Label>
-                      <Select value={metaForm.tipo} onValueChange={(v) => setMetaForm({ ...metaForm, tipo: v })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="geral">Geral (Toda Campanha)</SelectItem>
-                          <SelectItem value="bairro">Por Bairro</SelectItem>
-                          <SelectItem value="municipio">Por Município</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {metaForm.tipo !== "geral" && (
+                  <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+                    <DialogHeader><DialogTitle>Configurar Meta de Votos</DialogTitle></DialogHeader>
+                    <form onSubmit={handleCreateMeta} className="space-y-4">
                       <div className="space-y-2">
-                        <Label>{metaForm.tipo === "bairro" ? "Nome do Bairro" : "Nome do Município"}</Label>
+                        <Label>Tipo de Meta</Label>
+                        <Select value={metaForm.tipo} onValueChange={(v) => setMetaForm({ ...metaForm, tipo: v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="geral">Geral (Toda Campanha)</SelectItem>
+                            <SelectItem value="bairro">Por Bairro</SelectItem>
+                            <SelectItem value="municipio">Por Município</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {metaForm.tipo !== "geral" && (
+                        <div className="space-y-2">
+                          <Label>{metaForm.tipo === "bairro" ? "Nome do Bairro" : "Nome do Município"}</Label>
+                          <Input 
+                            value={metaForm.nome} 
+                            onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })} 
+                            placeholder={metaForm.tipo === "bairro" ? "Ex: Centro" : "Ex: São Paulo"} 
+                            required 
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label>Quantidade de Votos (Meta)</Label>
                         <Input 
-                          value={metaForm.nome} 
-                          onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })} 
-                          placeholder={metaForm.tipo === "bairro" ? "Ex: Centro" : "Ex: São Paulo"} 
+                          type="number" 
+                          value={metaForm.meta} 
+                          onChange={(e) => setMetaForm({ ...metaForm, meta: e.target.value })} 
+                          placeholder="Ex: 500" 
                           required 
                         />
                       </div>
-                    )}
 
-                    <div className="space-y-2">
-                      <Label>Quantidade de Votos (Meta)</Label>
-                      <Input 
-                        type="number" 
-                        value={metaForm.meta} 
-                        onChange={(e) => setMetaForm({ ...metaForm, meta: e.target.value })} 
-                        placeholder="Ex: 500" 
-                        required 
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <Label>Líder Alocado (Opcional)</Label>
+                        <Select value={metaForm.lider_id} onValueChange={(v) => setMetaForm({ ...metaForm, lider_id: v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um líder" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">Nenhum (Geral)</SelectItem>
+                            {liderancas?.map(l => (
+                              <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setOpenMeta(false)}>Cancelar</Button>
-                      <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Meta"}</Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setOpenMeta(false)}>Cancelar</Button>
+                        <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Meta"}</Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
