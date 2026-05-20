@@ -200,6 +200,11 @@ function AuthenticatedLayout() {
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    setSidebarOpen(false);
+                  }
+                }}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-white/5",
                   location.pathname === item.to ? "bg-primary/10 text-primary shadow-[inset_0_0_10px_rgba(108,43,217,0.1)]" : "text-muted-foreground"
