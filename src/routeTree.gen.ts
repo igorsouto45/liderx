@@ -10,10 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CadastroLiderRouteImport } from './routes/cadastro-lider'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
+import { Route as AuthenticatedQrcodeLiderRouteImport } from './routes/_authenticated.qrcode-lider'
 import { Route as AuthenticatedPrioridadesRouteImport } from './routes/_authenticated.prioridades'
 import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated.mensagens'
 import { Route as AuthenticatedMapaRouteImport } from './routes/_authenticated.mapa'
@@ -27,6 +29,11 @@ import { Route as AuthenticatedCapturaRouteImport } from './routes/_authenticate
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroLiderRoute = CadastroLiderRouteImport.update({
+  id: '/cadastro-lider',
+  path: '/cadastro-lider',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroRoute = CadastroRouteImport.update({
@@ -48,6 +55,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedQrcodeLiderRoute =
+  AuthenticatedQrcodeLiderRouteImport.update({
+    id: '/qrcode-lider',
+    path: '/qrcode-lider',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPrioridadesRoute =
   AuthenticatedPrioridadesRouteImport.update({
     id: '/prioridades',
@@ -99,6 +112,7 @@ const AuthenticatedCapturaRoute = AuthenticatedCapturaRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/cadastro-lider': typeof CadastroLiderRoute
   '/login': typeof LoginRoute
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -109,11 +123,13 @@ export interface FileRoutesByFullPath {
   '/mapa': typeof AuthenticatedMapaRoute
   '/mensagens': typeof AuthenticatedMensagensRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
+  '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/cadastro-lider': typeof CadastroLiderRoute
   '/login': typeof LoginRoute
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -124,6 +140,7 @@ export interface FileRoutesByTo {
   '/mapa': typeof AuthenticatedMapaRoute
   '/mensagens': typeof AuthenticatedMensagensRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
+  '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesById {
@@ -131,6 +148,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/cadastro': typeof CadastroRoute
+  '/cadastro-lider': typeof CadastroLiderRoute
   '/login': typeof LoginRoute
   '/_authenticated/captura': typeof AuthenticatedCapturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -141,6 +159,7 @@ export interface FileRoutesById {
   '/_authenticated/mapa': typeof AuthenticatedMapaRoute
   '/_authenticated/mensagens': typeof AuthenticatedMensagensRoute
   '/_authenticated/prioridades': typeof AuthenticatedPrioridadesRoute
+  '/_authenticated/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRouteTypes {
@@ -148,6 +167,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cadastro'
+    | '/cadastro-lider'
     | '/login'
     | '/captura'
     | '/dashboard'
@@ -158,11 +178,13 @@ export interface FileRouteTypes {
     | '/mapa'
     | '/mensagens'
     | '/prioridades'
+    | '/qrcode-lider'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cadastro'
+    | '/cadastro-lider'
     | '/login'
     | '/captura'
     | '/dashboard'
@@ -173,12 +195,14 @@ export interface FileRouteTypes {
     | '/mapa'
     | '/mensagens'
     | '/prioridades'
+    | '/qrcode-lider'
     | '/settings'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/cadastro'
+    | '/cadastro-lider'
     | '/login'
     | '/_authenticated/captura'
     | '/_authenticated/dashboard'
@@ -189,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mapa'
     | '/_authenticated/mensagens'
     | '/_authenticated/prioridades'
+    | '/_authenticated/qrcode-lider'
     | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +221,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CadastroRoute: typeof CadastroRoute
+  CadastroLiderRoute: typeof CadastroLiderRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -206,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-lider': {
+      id: '/cadastro-lider'
+      path: '/cadastro-lider'
+      fullPath: '/cadastro-lider'
+      preLoaderRoute: typeof CadastroLiderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro': {
@@ -234,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/qrcode-lider': {
+      id: '/_authenticated/qrcode-lider'
+      path: '/qrcode-lider'
+      fullPath: '/qrcode-lider'
+      preLoaderRoute: typeof AuthenticatedQrcodeLiderRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/prioridades': {
@@ -312,6 +352,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMapaRoute: typeof AuthenticatedMapaRoute
   AuthenticatedMensagensRoute: typeof AuthenticatedMensagensRoute
   AuthenticatedPrioridadesRoute: typeof AuthenticatedPrioridadesRoute
+  AuthenticatedQrcodeLiderRoute: typeof AuthenticatedQrcodeLiderRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
@@ -325,6 +366,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMapaRoute: AuthenticatedMapaRoute,
   AuthenticatedMensagensRoute: AuthenticatedMensagensRoute,
   AuthenticatedPrioridadesRoute: AuthenticatedPrioridadesRoute,
+  AuthenticatedQrcodeLiderRoute: AuthenticatedQrcodeLiderRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
@@ -336,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CadastroRoute: CadastroRoute,
+  CadastroLiderRoute: CadastroLiderRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
