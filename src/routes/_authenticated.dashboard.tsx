@@ -128,6 +128,10 @@ function Dashboard() {
     { text: "Sincronize seus contatos para aumentar a base eleitoral.", type: "award", icon: Zap },
   ];
 
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-[50vh]">Carregando Painel de Guerra...</div>;
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header Info */}
