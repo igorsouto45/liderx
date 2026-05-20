@@ -520,7 +520,77 @@ function Liderancas() {
               <div className="space-y-2">
                 <Label>Bairro</Label>
                 <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
+            </div>
+
+            {editingId && (
+              <div className="md:col-span-2 space-y-3 pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-primary">Documentos e Contratos</Label>
+                  <div className="relative">
+                    <Input
+                      type="file"
+                      className="hidden"
+                      id="file-upload"
+                      onChange={handleUploadFile}
+                      disabled={uploading}
+                    />
+                    <Label
+                      htmlFor="file-upload"
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium cursor-pointer hover:bg-primary/20 transition-colors",
+                        uploading && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      {uploading ? "Enviando..." : "Subir Arquivo"}
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  {documentos && documentos.length > 0 ? (
+                    documentos.map((doc: any) => (
+                      <div key={doc.id} className="flex items-center justify-between p-2 rounded bg-black/20 border border-white/5 group">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <File className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="text-xs font-medium truncate">{doc.nome_arquivo}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {(doc.tamanho_arquivo / 1024).toFixed(1)} KB • {new Date(doc.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7"
+                            onClick={() => handleDownloadFile(doc)}
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteFile(doc)}
+                          >
+                            <XIcon className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic text-center py-4 border border-dashed border-white/10 rounded">
+                      Nenhum documento anexado.
+                    </p>
+                  )}
+                </div>
               </div>
+            )}
+
               <div className="space-y-2">
                 <Label>Cidade</Label>
                 <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
