@@ -30,7 +30,7 @@ function AuthenticatedLayout() {
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed, will update in useEffect
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -118,8 +118,13 @@ function AuthenticatedLayout() {
     };
   }, [navigate, session?.user?.id, profile?.tipo]);
 
-  // Handle resizing to close/open sidebar automatically
+  // Handle initial state and resizing to close/open sidebar automatically
   useEffect(() => {
+    // Set initial state on mount
+    if (window.innerWidth >= 1024) {
+      setSidebarOpen(true);
+    }
+
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setSidebarOpen(true);
