@@ -107,6 +107,100 @@ function Liderancas() {
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const { data: documentos, refetch: refetchDocumentos } = useQuery({
+    queryKey: ["documentos-lideranca", editingId],
+    queryFn: async () => {
+      if (!editingId) return [];
+      const { data, error } = await supabase
+        .from("documentos_lideranca")
+        .select("*")
+        .eq("lider_id", editingId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!editingId,
+  });
+
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingId) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${editingId}/${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documentos-liderancas')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from('documentos_lideranca')
+        .insert({
+          lider_id: editingId,
+          nome_arquivo: file.name,
+          caminho_arquivo: filePath,
+          tipo_arquivo: file.type,
+          tamanho_arquivo: file.size
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success("Arquivo enviado com sucesso!");
+      refetchDocumentos();
+    } catch (error: any) {
+      toast.error("Erro no upload: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteFile = async (doc: any) => {
+    if (!confirm("Excluir este arquivo?")) return;
+
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('documentos-liderancas')
+        .remove([doc.caminho_arquivo]);
+
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from('documentos_lideranca')
+        .delete()
+        .eq('id', doc.id);
+
+      if (dbError) throw dbError;
+
+      toast.success("Arquivo removido");
+      refetchDocumentos();
+    } catch (error: any) {
+      toast.error("Erro ao excluir: " + error.message);
+    }
+  };
+
+  const handleDownloadFile = async (doc: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documentos-liderancas')
+        .download(doc.caminho_arquivo);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.nome_arquivo;
+      a.click();
+    } catch (error: any) {
+      toast.error("Erro no download: " + error.message);
+    }
+  };
 
   const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
     let { data } = await supabase
