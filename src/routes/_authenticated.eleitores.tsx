@@ -311,14 +311,30 @@ function Eleitores() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("eleitores")
-        .select(`
-          *,
-          perfis (nome)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data;
+
+      const profileIds = [...new Set((data || []).map((eleitor) => eleitor.origem_usuario_id).filter(Boolean))];
+
+      if (profileIds.length === 0) {
+        return data || [];
+      }
+
+      const { data: perfisData, error: perfisError } = await supabase
+        .from("perfis")
+        .select("id, nome")
+        .in("id", profileIds);
+
+      if (perfisError) throw perfisError;
+
+      const perfisMap = new Map((perfisData || []).map((perfil) => [perfil.id, perfil]));
+
+      return (data || []).map((eleitor) => ({
+        ...eleitor,
+        perfis: eleitor.origem_usuario_id ? perfisMap.get(eleitor.origem_usuario_id) || null : null,
+      }));
     }
   });
 
