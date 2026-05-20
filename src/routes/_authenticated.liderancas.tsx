@@ -42,7 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { onlyDigits, getLatLongFromCep } from "@/lib/utils";
+import { onlyDigits, getLatLongFromCep, cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/liderancas")({
   component: Liderancas,
