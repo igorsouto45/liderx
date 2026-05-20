@@ -24,8 +24,30 @@ function Prioridades() {
   const [open, setOpen] = useState(false);
   const [openMeta, setOpenMeta] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ titulo: "", descricao: "" });
+  const [form, setForm] = useState({ titulo: "", descricao: "", lider_id: "" });
   const [metaForm, setMetaForm] = useState({ tipo: "geral", nome: "", meta: "", lider_id: "" });
+
+  const { data: profile } = useQuery({
+    queryKey: ["perfil-atual"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase.from("perfis").select("*").eq("id", user.id).single();
+      return data;
+    }
+  });
+
+  const isAdmin = profile?.tipo === 'admin' || profile?.tipo === 'operador';
+
+  const { data: liderancas } = useQuery({
+    queryKey: ["liderancas-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("liderancas").select("id, nome").order("nome");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin
+  });
 
   const { data: prioridades, isLoading: loadingPrioridades } = useQuery({
     queryKey: ["prioridades"],
@@ -74,13 +96,13 @@ function Prioridades() {
       const { error } = await supabase.from("prioridades").insert({
         titulo: form.titulo,
         descricao: form.descricao,
-        lider_id: user.id,
+        lider_id: form.lider_id || user.id,
       });
 
       if (error) throw error;
 
       toast.success("Prioridade registrada!");
-      setForm({ titulo: "", descricao: "" });
+      setForm({ titulo: "", descricao: "", lider_id: "" });
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["prioridades"] });
     } catch (error: any) {
@@ -111,7 +133,7 @@ function Prioridades() {
       if (error) throw error;
 
       toast.success("Meta registrada!");
-      setMetaForm({ tipo: "geral", nome: "", meta: "" });
+      setMetaForm({ tipo: "geral", nome: "", meta: "", lider_id: "" });
       setOpenMeta(false);
       queryClient.invalidateQueries({ queryKey: ["metas_votos"] });
     } catch (error: any) {
@@ -185,12 +207,15 @@ function Prioridades() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">Prioridades Estratégicas</h2>
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2 shadow-lg shadow-primary/20">
-                    <Plus className="h-4 w-4" /> Nova Prioridade
-                  </Button>
-                </DialogTrigger>
+              {isAdmin && (
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2 shadow-lg shadow-primary/20">
+                      <Plus className="h-4 w-4" /> Nova Prioridade
+                    </Button>
+                  </DialogTrigger>
+              )}
+            </div>
                 <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
                   <DialogHeader><DialogTitle>Adicionar Prioridade</DialogTitle></DialogHeader>
                   <form onSubmit={handleCreate} className="space-y-4">
@@ -201,6 +226,34 @@ function Prioridades() {
                     <div className="space-y-2">
                       <Label>Descrição</Label>
                       <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes da demanda..." />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Líder Responsável (Opcional)</Label>
+                      <Select value={form.lider_id} onValueChange={(v) => setForm({ ...form, lider_id: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um líder" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="null">Nenhum (Geral)</SelectItem>
+                          {liderancas?.map(l => (
+                            <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Líder Alocado (Opcional)</Label>
+                      <Select value={metaForm.lider_id} onValueChange={(v) => setMetaForm({ ...metaForm, lider_id: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um líder" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="null">Nenhum (Geral)</SelectItem>
+                          {liderancas?.map(l => (
+                            <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
@@ -244,12 +297,15 @@ function Prioridades() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">Metas de Votos</h2>
-              <Dialog open={openMeta} onOpenChange={setOpenMeta}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2 shadow-lg shadow-primary/20">
-                    <Plus className="h-4 w-4" /> Nova Meta
-                  </Button>
-                </DialogTrigger>
+              {isAdmin && (
+                <Dialog open={openMeta} onOpenChange={setOpenMeta}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2 shadow-lg shadow-primary/20">
+                      <Plus className="h-4 w-4" /> Nova Meta
+                    </Button>
+                  </DialogTrigger>
+              )}
+            </div>
                 <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
                   <DialogHeader><DialogTitle>Configurar Meta de Votos</DialogTitle></DialogHeader>
                   <form onSubmit={handleCreateMeta} className="space-y-4">
@@ -325,9 +381,11 @@ function Prioridades() {
                             <p className="text-xs text-muted-foreground uppercase">{meta.tipo}</p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeta(meta.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isAdmin && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeta(meta.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
 
                       <div className="space-y-3">
