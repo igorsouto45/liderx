@@ -382,6 +382,36 @@ export type Database = {
           },
         ]
       }
+      metas_votos: {
+        Row: {
+          created_at: string
+          id: string
+          lider_id: string
+          meta: number
+          nome: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lider_id: string
+          meta?: number
+          nome?: string | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lider_id?: string
+          meta?: number
+          nome?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       perfis: {
         Row: {
           created_at: string | null
