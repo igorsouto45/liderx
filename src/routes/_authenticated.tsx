@@ -176,14 +176,14 @@ function AuthenticatedLayout() {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 lg:w-72 flex-col border-r border-white/5 bg-card/40 backdrop-blur-2xl transition-transform duration-300 lg:static lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] lg:w-72 flex-col border-r border-white/5 bg-card/95 backdrop-blur-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
         !sidebarOpen && "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between px-6 border-b border-white/5">
