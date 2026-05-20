@@ -427,6 +427,7 @@ export type Database = {
         Args: { user_email: string; user_nome: string; user_password: string }
         Returns: string
       }
+      get_campaign_summary: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -30,7 +30,7 @@ function AuthenticatedLayout() {
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed, will update in useEffect
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -118,6 +118,25 @@ function AuthenticatedLayout() {
     };
   }, [navigate, session?.user?.id, profile?.tipo]);
 
+  // Handle initial state and resizing to close/open sidebar automatically
+  useEffect(() => {
+    // Set initial state on mount
+    if (window.innerWidth >= 1024) {
+      setSidebarOpen(true);
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Sessão encerrada");
@@ -151,16 +170,16 @@ function AuthenticatedLayout() {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile Sidebar Overlay */}
-      {!sidebarOpen && (
+      {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/5 bg-card/40 backdrop-blur-2xl transition-transform duration-300 lg:static lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex w-64 lg:w-72 flex-col border-r border-white/5 bg-card/40 backdrop-blur-2xl transition-transform duration-300 lg:static lg:translate-x-0",
         !sidebarOpen && "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between px-6 border-b border-white/5">
@@ -181,6 +200,11 @@ function AuthenticatedLayout() {
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    setSidebarOpen(false);
+                  }
+                }}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-white/5",
                   location.pathname === item.to ? "bg-primary/10 text-primary shadow-[inset_0_0_10px_rgba(108,43,217,0.1)]" : "text-muted-foreground"
@@ -221,12 +245,12 @@ function AuthenticatedLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="flex h-16 items-center justify-between px-8 border-b border-white/5 bg-background/50 backdrop-blur-xl">
+        <header className="flex h-16 items-center justify-between px-4 md:px-8 border-b border-white/5 bg-background/50 backdrop-blur-xl shrink-0">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-6 w-6" />
           </Button>
-          <div className="flex-1 px-4">
-            <h2 className="text-lg font-semibold tracking-tight">
+          <div className="flex-1 px-2 md:px-4">
+            <h2 className="text-base md:text-lg font-semibold tracking-tight truncate">
               {menuItems.find(item => item.to === location.pathname)?.label || "Dashboard"}
             </h2>
           </div>
@@ -241,7 +265,7 @@ function AuthenticatedLayout() {
         <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,var(--primary)_0%,transparent_40%)] opacity-[0.03] absolute inset-0 pointer-events-none" />
         
         <ScrollArea className="flex-1">
-          <div className="p-8">
+          <div className="p-4 md:p-8">
             <Outlet />
           </div>
         </ScrollArea>
