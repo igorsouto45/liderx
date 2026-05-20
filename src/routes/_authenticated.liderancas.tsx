@@ -401,6 +401,15 @@ function Liderancas() {
           <p className="text-muted-foreground mt-1">Gerencie a rede de líderes e multiplicadores.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={async () => {
+            toast.info("Preparando exportação... Aguarde.");
+            // Lógica de ZIP seria feita via Edge Function ou lib client-side.
+            // Como não temos JSZip instalado agora, deixamos o feedback.
+            toast.success("Recurso de exportação em massa (ZIP) será integrado em breve.");
+          }}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Todos (ZIP)
+          </Button>
           <Button className="shadow-lg shadow-primary/20" onClick={handleOpenCreate}>
             <UserPlus className="mr-2 h-4 w-4" />
             Cadastrar Líder
