@@ -264,6 +264,19 @@ function Eleitores() {
 
       console.log("Enviando dados do eleitor:", payload);
 
+      // Check for duplicate telephone
+      const cleanPhone = onlyDigits(form.telefone);
+      const { data: existing } = await supabase
+        .from("eleitores")
+        .select("id, nome")
+        .eq("telefone", cleanPhone)
+        .maybeSingle();
+
+      if (existing && (!editingId || existing.id !== editingId)) {
+        setSaving(false);
+        return toast.error(`Já existe um eleitor cadastrado com este telefone: ${existing.nome}`);
+      }
+
       if (editingId) {
         const { error } = await supabase
           .from("eleitores")

@@ -118,7 +118,7 @@ function MensagensPage() {
 
     // Leaders only see messages sent to them (direct or broadcast) or sent by them
     if (currentUser?.tipo === 'líder') {
-      query = query.or(`destinatario_id.eq.${user.id},destinatario_id.is.null,remetente_id.eq.${user.id}`);
+      query = query.or(`destinatario_id.eq.${currentUser.id},destinatario_id.is.null,remetente_id.eq.${currentUser.id}`);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
