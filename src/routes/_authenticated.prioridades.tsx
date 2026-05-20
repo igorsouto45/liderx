@@ -69,10 +69,12 @@ function Prioridades() {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       const { error } = await supabase.from("prioridades").insert({
         titulo: form.titulo,
         descricao: form.descricao,
-        lider_id: user?.id,
+        lider_id: user.id,
       });
 
       if (error) throw error;
