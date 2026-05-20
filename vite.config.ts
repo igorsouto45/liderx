@@ -4,13 +4,16 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/",
   plugins: [
     TanStackRouterVite(),
     react(),
     tailwindcss(),
+    tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
