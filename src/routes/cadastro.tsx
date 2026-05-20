@@ -75,9 +75,23 @@ function CadastroPublico() {
     try {
       const coords = await getLatLongFromCep(form.cep, form.endereco, form.bairro, form.cidade);
       
+      const cleanPhone = onlyDigits(form.telefone);
+      
+      // Check for duplicate telephone
+      const { data: existing } = await supabase
+        .from("eleitores")
+        .select("id, nome")
+        .eq("telefone", cleanPhone)
+        .maybeSingle();
+
+      if (existing) {
+        setLoading(false);
+        return toast.error("Este telefone já possui um cadastro realizado.");
+      }
+
       const { error } = await supabase.from("eleitores").insert({
         nome: form.nome,
-        telefone: onlyDigits(form.telefone),
+        telefone: cleanPhone,
         data_nascimento: form.data_nascimento,
         cep: onlyDigits(form.cep),
         endereco: form.endereco,
