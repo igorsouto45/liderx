@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Shield, CheckCircle2, Upload, File, X, Loader2 } from "lucide-react";
+import { Shield, CheckCircle2, Upload, File, X, Loader2, Info } from "lucide-react";
 import { onlyDigits, getLatLongFromCep, cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro-lider")({
