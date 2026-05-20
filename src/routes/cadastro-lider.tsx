@@ -20,6 +20,7 @@ function CadastroLider() {
   const [success, setSuccess] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<{file: File, id: string, name: string}[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     nome: "",
@@ -34,8 +35,41 @@ function CadastroLider() {
     uf: "",
     numero: "",
     complemento: "",
+    zona_votacao: "",
+    secao_votacao: "",
+    local_votacao_nome: "",
     lgpd_consent: false,
   });
+
+  const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
+    let { data } = await supabase
+      .from("locais_votacao")
+      .select("zona, secao, local_nome, endereco, bairro")
+      .eq("cep", cep)
+      .limit(5);
+
+    if ((!data || data.length === 0) && bairro && cidade) {
+      const r = await supabase
+        .from("locais_votacao")
+        .select("zona, secao, local_nome, endereco, bairro")
+        .ilike("bairro", bairro)
+        .ilike("municipio", cidade)
+        .limit(5);
+      data = r.data;
+    }
+
+    if (data && data.length > 0) {
+      setSuggestions(data);
+      setForm((f) => ({
+        ...f,
+        zona_votacao: String(data![0].zona ?? ""),
+        secao_votacao: String(data![0].secao ?? ""),
+        local_votacao_nome: data![0].local_nome ?? "",
+      }));
+    } else {
+      setSuggestions([]);
+    }
+  };
 
   const handleCepBlur = async () => {
     const cep = onlyDigits(form.cep);
@@ -50,6 +84,7 @@ function CadastroLider() {
           cidade: res.localidade,
           uf: res.uf,
         }));
+        await lookupLocalVotacao(cep, res.bairro, res.localidade);
       }
     } catch (e) {
       console.error(e);
