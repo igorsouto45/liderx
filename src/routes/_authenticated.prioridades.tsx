@@ -22,16 +22,41 @@ export const Route = createFileRoute("/_authenticated/prioridades")({
 function Prioridades() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [openMeta, setOpenMeta] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "" });
+  const [metaForm, setMetaForm] = useState({ tipo: "geral", nome: "", meta: "" });
 
-  const { data: prioridades, isLoading } = useQuery({
+  const { data: prioridades, isLoading: loadingPrioridades } = useQuery({
     queryKey: ["prioridades"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prioridades")
         .select("*")
         .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: metas, isLoading: loadingMetas } = useQuery({
+    queryKey: ["metas_votos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("metas_votos")
+        .select("*")
+        .order("tipo", { ascending: true });
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: eleitoresStats } = useQuery({
+    queryKey: ["eleitores-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("eleitores")
+        .select("bairro, cidade");
       if (error) throw error;
       return data;
     }
