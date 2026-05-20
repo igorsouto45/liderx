@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Shield, CheckCircle2, Upload, File, X, Loader2 } from "lucide-react";
+import { Shield, CheckCircle2, Upload, File, X, Loader2, Info } from "lucide-react";
 import { onlyDigits, getLatLongFromCep, cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro-lider")({
@@ -20,6 +20,7 @@ function CadastroLider() {
   const [success, setSuccess] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<{file: File, id: string, name: string}[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     nome: "",
@@ -34,8 +35,41 @@ function CadastroLider() {
     uf: "",
     numero: "",
     complemento: "",
+    zona_votacao: "",
+    secao_votacao: "",
+    local_votacao_nome: "",
     lgpd_consent: false,
   });
+
+  const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
+    let { data } = await supabase
+      .from("locais_votacao")
+      .select("zona, secao, local_nome, endereco, bairro")
+      .eq("cep", cep)
+      .limit(5);
+
+    if ((!data || data.length === 0) && bairro && cidade) {
+      const r = await supabase
+        .from("locais_votacao")
+        .select("zona, secao, local_nome, endereco, bairro")
+        .ilike("bairro", bairro)
+        .ilike("municipio", cidade)
+        .limit(5);
+      data = r.data;
+    }
+
+    if (data && data.length > 0) {
+      setSuggestions(data);
+      setForm((f) => ({
+        ...f,
+        zona_votacao: String(data![0].zona ?? ""),
+        secao_votacao: String(data![0].secao ?? ""),
+        local_votacao_nome: data![0].local_nome ?? "",
+      }));
+    } else {
+      setSuggestions([]);
+    }
+  };
 
   const handleCepBlur = async () => {
     const cep = onlyDigits(form.cep);
@@ -50,6 +84,7 @@ function CadastroLider() {
           cidade: res.localidade,
           uf: res.uf,
         }));
+        await lookupLocalVotacao(cep, res.bairro, res.localidade);
       }
     } catch (e) {
       console.error(e);
@@ -111,6 +146,9 @@ function CadastroLider() {
         uf: form.uf,
         numero: form.numero,
         complemento: form.complemento,
+        zona_votacao: form.zona_votacao ? parseInt(onlyDigits(form.zona_votacao)) : null,
+        secao_votacao: form.secao_votacao ? parseInt(onlyDigits(form.secao_votacao)) : null,
+        local_votacao_nome: form.local_votacao_nome,
         auth_user_id: authUserId,
         lgpd_consent: form.lgpd_consent,
         latitude: coords?.lat,
@@ -279,6 +317,67 @@ function CadastroLider() {
                     <Input value={form.uf} maxLength={2} onChange={e => setForm({...form, uf: e.target.value.toUpperCase()})} />
                   </div>
                 </div>
+              </div>
+              
+              <div className="space-y-4 border-t border-white/5 pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-primary font-bold">Local de Votação</Label>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-white/5 px-2 py-0.5 rounded">Ajuste manual</span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Zona</Label>
+                    <Input 
+                      className="h-9 bg-black/40" 
+                      value={form.zona_votacao} 
+                      onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Seção</Label>
+                    <Input 
+                      className="h-9 bg-black/40" 
+                      value={form.secao_votacao} 
+                      onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} 
+                    />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Local</Label>
+                    <Input 
+                      className="h-9 bg-black/40" 
+                      value={form.local_votacao_nome} 
+                      onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} 
+                    />
+                  </div>
+                </div>
+
+                {suggestions.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Sugestões de locais:</Label>
+                    <div className="grid gap-2">
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setForm({
+                            ...form,
+                            zona_votacao: String(s.zona),
+                            secao_votacao: String(s.secao),
+                            local_votacao_nome: s.local_nome
+                          })}
+                          className="text-left p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-xs"
+                        >
+                          <div className="font-medium text-white/80">{s.local_nome}</div>
+                          <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 border-t border-white/5 pt-4">
