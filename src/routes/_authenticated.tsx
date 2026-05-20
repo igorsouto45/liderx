@@ -155,6 +155,7 @@ function AuthenticatedLayout() {
     { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
     { label: "Interações IA", icon: Bot, to: "/interacoes", roles: ["admin", "operador"] },
     { label: "Mensagens", icon: MessageSquare, to: "/mensagens", roles: ["admin", "líder"] },
+    { label: "Emissão de Contrato", icon: FileSignature, to: "/emissao-contrato", roles: ["admin"] },
     { label: "Configurações", icon: Settings, to: "/settings", roles: ["admin"] },
   ];
 
