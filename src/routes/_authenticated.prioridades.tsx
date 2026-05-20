@@ -161,62 +161,186 @@ function Prioridades() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Prioridades Estratégicas</h1>
-          <p className="text-muted-foreground mt-1">Defina e acompanhe os objetivos da sua base.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Estratégia e Metas</h1>
+          <p className="text-muted-foreground mt-1">Planeje e acompanhe os objetivos da sua campanha.</p>
         </div>
-        
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 shadow-lg shadow-primary/20">
-              <Plus className="h-4 w-4" /> Nova Prioridade
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
-            <DialogHeader><DialogTitle>Adicionar Prioridade</DialogTitle></DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Título *</Label>
-                <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Organizar reunião no bairro" required />
-              </div>
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes da demanda..." />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Criar"}</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          <p>Carregando...</p>
-        ) : prioridades?.length === 0 ? (
-          <Card className="p-12 text-center col-span-full bg-card/40 border-dashed border-white/10">
-            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <p className="text-muted-foreground">Nenhuma prioridade definida ainda.</p>
-          </Card>
-        ) : (
-          prioridades?.map((item) => (
-            <Card key={item.id} className="p-6 bg-card/50 backdrop-blur-xl border-white/10 flex flex-col justify-between group hover:border-primary/30 transition-all">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <h3 className="font-bold text-lg leading-tight">{item.titulo}</h3>
-                  {getStatusIcon(item.status || "pendente")}
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-3">{item.descricao}</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                <Badge variant="outline" className="capitalize">{item.status || "pendente"}</Badge>
-                <span className="text-[10px] text-muted-foreground">{new Date(item.created_at || "").toLocaleDateString()}</span>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+      <Tabs defaultValue="metas" className="w-full">
+        <TabsList className="bg-card/50 border border-white/5 p-1 mb-6">
+          <TabsTrigger value="metas" className="gap-2">
+            <Target className="h-4 w-4" /> Metas de Votos
+          </TabsTrigger>
+          <TabsTrigger value="prioridades" className="gap-2">
+            <Flag className="h-4 w-4" /> Prioridades Estratégicas
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="prioridades">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Prioridades Estratégicas</h2>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 shadow-lg shadow-primary/20">
+                    <Plus className="h-4 w-4" /> Nova Prioridade
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+                  <DialogHeader><DialogTitle>Adicionar Prioridade</DialogTitle></DialogHeader>
+                  <form onSubmit={handleCreate} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Título *</Label>
+                      <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Organizar reunião no bairro" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Descrição</Label>
+                      <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes da demanda..." />
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                      <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Criar"}</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {loadingPrioridades ? (
+                <p>Carregando...</p>
+              ) : prioridades?.length === 0 ? (
+                <Card className="p-12 text-center col-span-full bg-card/40 border-dashed border-white/10">
+                  <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                  <p className="text-muted-foreground">Nenhuma prioridade definida ainda.</p>
+                </Card>
+              ) : (
+                prioridades?.map((item) => (
+                  <Card key={item.id} className="p-6 bg-card/50 backdrop-blur-xl border-white/10 flex flex-col justify-between group hover:border-primary/30 transition-all">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-bold text-lg leading-tight">{item.titulo}</h3>
+                        {getStatusIcon(item.status || "pendente")}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-3">{item.descricao}</p>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                      <Badge variant="outline" className="capitalize">{item.status || "pendente"}</Badge>
+                      <span className="text-[10px] text-muted-foreground">{new Date(item.created_at || "").toLocaleDateString()}</span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="metas">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Metas de Votos</h2>
+              <Dialog open={openMeta} onOpenChange={setOpenMeta}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 shadow-lg shadow-primary/20">
+                    <Plus className="h-4 w-4" /> Nova Meta
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
+                  <DialogHeader><DialogTitle>Configurar Meta de Votos</DialogTitle></DialogHeader>
+                  <form onSubmit={handleCreateMeta} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Tipo de Meta</Label>
+                      <Select value={metaForm.tipo} onValueChange={(v) => setMetaForm({ ...metaForm, tipo: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="geral">Geral (Toda Campanha)</SelectItem>
+                          <SelectItem value="bairro">Por Bairro</SelectItem>
+                          <SelectItem value="municipio">Por Município</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {metaForm.tipo !== "geral" && (
+                      <div className="space-y-2">
+                        <Label>{metaForm.tipo === "bairro" ? "Nome do Bairro" : "Nome do Município"}</Label>
+                        <Input 
+                          value={metaForm.nome} 
+                          onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })} 
+                          placeholder={metaForm.tipo === "bairro" ? "Ex: Centro" : "Ex: São Paulo"} 
+                          required 
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label>Quantidade de Votos (Meta)</Label>
+                      <Input 
+                        type="number" 
+                        value={metaForm.meta} 
+                        onChange={(e) => setMetaForm({ ...metaForm, meta: e.target.value })} 
+                        placeholder="Ex: 500" 
+                        required 
+                      />
+                    </div>
+
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setOpenMeta(false)}>Cancelar</Button>
+                      <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Meta"}</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {loadingMetas ? (
+                <p>Carregando metas...</p>
+              ) : metas?.length === 0 ? (
+                <Card className="p-12 text-center col-span-full bg-card/40 border-dashed border-white/10">
+                  <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                  <p className="text-muted-foreground">Nenhuma meta configurada ainda.</p>
+                </Card>
+              ) : (
+                metas?.map((meta) => {
+                  const progress = getProgress(meta);
+                  const count = getCount(meta);
+                  return (
+                    <Card key={meta.id} className="p-6 bg-card/50 backdrop-blur-xl border-white/10 flex flex-col group hover:border-primary/30 transition-all">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            {meta.tipo === "geral" ? <Flag className="h-4 w-4 text-primary" /> : 
+                             meta.tipo === "bairro" ? <MapPin className="h-4 w-4 text-primary" /> : 
+                             <Building2 className="h-4 w-4 text-primary" />}
+                          </div>
+                          <div>
+                            <h3 className="font-bold leading-tight">{meta.nome}</h3>
+                            <p className="text-xs text-muted-foreground uppercase">{meta.tipo}</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeta(meta.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Progresso</span>
+                          <span className="font-bold">{count} / {meta.meta}</span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
+                        <p className="text-[10px] text-right text-muted-foreground">{progress}% da meta alcançada</p>
+                      </div>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
