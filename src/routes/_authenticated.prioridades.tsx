@@ -25,7 +25,7 @@ function Prioridades() {
   const [openMeta, setOpenMeta] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "" });
-  const [metaForm, setMetaForm] = useState({ tipo: "geral", nome: "", meta: "" });
+  const [metaForm, setMetaForm] = useState({ tipo: "geral", nome: "", meta: "", lider_id: "" });
 
   const { data: prioridades, isLoading: loadingPrioridades } = useQuery({
     queryKey: ["prioridades"],
@@ -100,11 +100,12 @@ function Prioridades() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      // Admin can set meta for a specific leader if metaForm.lider_id is provided, otherwise defaults to current user
       const { error } = await supabase.from("metas_votos").insert({
         tipo: metaForm.tipo as 'geral' | 'bairro' | 'municipio',
         nome: metaForm.tipo === "geral" ? "Geral" : metaForm.nome,
         meta: parseInt(metaForm.meta),
-        lider_id: user.id,
+        lider_id: metaForm.lider_id || user.id,
       });
 
       if (error) throw error;
