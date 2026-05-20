@@ -150,7 +150,7 @@ function AuthenticatedLayout() {
   const allMenuItems = [
     { label: "Painel de Guerra", icon: LayoutDashboard, to: "/dashboard", roles: ["admin", "operador"] },
     { label: "Eleitores", icon: Users, to: "/eleitores", roles: ["admin", "operador", "líder"] },
-    { label: "Prioridades", icon: Award, to: "/prioridades", roles: ["admin", "operador", "líder"] },
+    { label: "Estratégia", icon: Target, to: "/prioridades", roles: ["admin", "operador", "líder"] },
     { label: "Lideranças", icon: TrendingUp, to: "/liderancas", roles: ["admin", "operador"] },
     { label: "Mapa Estratégico", icon: Map, to: "/mapa", roles: ["admin", "operador"] },
     { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
