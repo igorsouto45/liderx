@@ -90,7 +90,8 @@ function MensagensPage() {
       .eq("id", user.id)
       .single();
 
-    setCurrentUser({ ...user, ...profile });
+    const resolvedCurrentUser = { ...user, ...profile };
+    setCurrentUser(resolvedCurrentUser);
 
     if (profile?.tipo === 'admin') {
       const { data: leadersData } = await supabase
@@ -100,25 +101,21 @@ function MensagensPage() {
       setLeaders(leadersData || []);
     }
 
-    await fetchMessages();
+    await fetchMessages(resolvedCurrentUser);
     setLoading(false);
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (activeUser = currentUser) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     let query = supabase
       .from("mensagens")
-      .select(`
-        *,
-        remetente:perfis!mensagens_remetente_id_fkey(nome, tipo),
-        destinatario:perfis!mensagens_destinatario_id_fkey(nome, tipo)
-      `);
+      .select("*");
 
     // Leaders only see messages sent to them (direct or broadcast) or sent by them
-    if (currentUser?.tipo === 'líder') {
-      query = query.or(`destinatario_id.eq.${currentUser.id},destinatario_id.is.null,remetente_id.eq.${currentUser.id}`);
+    if (activeUser?.tipo === 'líder') {
+      query = query.or(`destinatario_id.eq.${activeUser.id},destinatario_id.is.null,remetente_id.eq.${activeUser.id}`);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -126,7 +123,33 @@ function MensagensPage() {
     if (error) {
       console.error("Erro ao buscar mensagens:", error);
     } else {
-      setMessages(data || []);
+      const profileIds = [...new Set((data || [])
+        .flatMap((message) => [message.remetente_id, message.destinatario_id])
+        .filter((id): id is string => Boolean(id)))];
+
+      if (profileIds.length === 0) {
+        setMessages(data || []);
+        return;
+      }
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("perfis")
+        .select("id, nome, tipo")
+        .in("id", profileIds);
+
+      if (profilesError) {
+        console.error("Erro ao buscar perfis das mensagens:", profilesError);
+        setMessages(data || []);
+        return;
+      }
+
+      const profilesMap = new Map((profilesData || []).map((profile) => [profile.id, profile]));
+
+      setMessages((data || []).map((message) => ({
+        ...message,
+        remetente: profilesMap.get(message.remetente_id) || null,
+        destinatario: message.destinatario_id ? profilesMap.get(message.destinatario_id) || null : null,
+      })));
     }
   };
 
