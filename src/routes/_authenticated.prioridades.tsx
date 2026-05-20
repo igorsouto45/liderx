@@ -88,6 +88,67 @@ function Prioridades() {
     }
   };
 
+  const handleCreateMeta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!metaForm.meta) return toast.error("Meta é obrigatória");
+    if (metaForm.tipo !== "geral" && !metaForm.nome.trim()) return toast.error("Nome é obrigatório para metas por local");
+    
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("metas_votos").insert({
+        tipo: metaForm.tipo,
+        nome: metaForm.tipo === "geral" ? "Geral" : metaForm.nome,
+        meta: parseInt(metaForm.meta),
+        lider_id: user?.id,
+      });
+
+      if (error) throw error;
+
+      toast.success("Meta registrada!");
+      setMetaForm({ tipo: "geral", nome: "", meta: "" });
+      setOpenMeta(false);
+      queryClient.invalidateQueries({ queryKey: ["metas_votos"] });
+    } catch (error: any) {
+      toast.error("Erro ao salvar meta: " + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteMeta = async (id: string) => {
+    try {
+      const { error } = await supabase.from("metas_votos").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Meta removida");
+      queryClient.invalidateQueries({ queryKey: ["metas_votos"] });
+    } catch (error: any) {
+      toast.error("Erro ao remover: " + error.message);
+    }
+  };
+
+  const getProgress = (meta: any) => {
+    if (!eleitoresStats) return 0;
+    let count = 0;
+    if (meta.tipo === "geral") {
+      count = eleitoresStats.length;
+    } else if (meta.tipo === "bairro") {
+      count = eleitoresStats.filter(e => e.bairro?.toLowerCase() === meta.nome?.toLowerCase()).length;
+    } else if (meta.tipo === "municipio") {
+      count = eleitoresStats.filter(e => e.cidade?.toLowerCase() === meta.nome?.toLowerCase()).length;
+    }
+    const percent = (count / meta.meta) * 100;
+    return Math.min(Math.round(percent), 100);
+  };
+
+  const getCount = (meta: any) => {
+    if (!eleitoresStats) return 0;
+    if (meta.tipo === "geral") return eleitoresStats.length;
+    if (meta.tipo === "bairro") return eleitoresStats.filter(e => e.bairro?.toLowerCase() === meta.nome?.toLowerCase()).length;
+    if (meta.tipo === "municipio") return eleitoresStats.filter(e => e.cidade?.toLowerCase() === meta.nome?.toLowerCase()).length;
+    return 0;
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "concluido": return <CheckCircle2 className="h-5 w-5 text-green-500" />;
