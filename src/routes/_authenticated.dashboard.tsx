@@ -148,28 +148,28 @@ function Dashboard() {
           label="Total de Eleitores" 
           value={stats?.total || 0} 
           icon={Users} 
-          trend="+15%" 
+          trend={trends?.total || "0%"} 
           color="primary"
         />
         <StatCard 
           label="Apoiadores (Sim)" 
           value={stats?.apoiadores || 0} 
           icon={UserCheck} 
-          trend="+8%" 
+          trend={trends?.apoiadores || "0%"} 
           color="green"
         />
         <StatCard 
           label="Indecisos" 
           value={stats?.indecisos || 0} 
           icon={BarChart} 
-          trend="-2%" 
+          trend={trends?.indecisos || "0%"} 
           color="amber"
         />
         <StatCard 
           label="Rejeição" 
           value={stats?.rejeicao || 0} 
           icon={UserMinus} 
-          trend="+1%" 
+          trend={trends?.rejeicao || "0%"} 
           color="red"
         />
       </div>
