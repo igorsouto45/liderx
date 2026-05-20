@@ -32,10 +32,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["dashboard-stats"],
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ["dashboard-data"],
     queryFn: async () => {
-      const { data: eleitores } = await supabase.from("eleitores").select("status");
+      const { data: eleitores } = await supabase
+        .from("eleitores")
+        .select("status, created_at, bairro");
       
       const counts = {
         total: eleitores?.length || 0,
@@ -44,19 +46,74 @@ function Dashboard() {
         rejeicao: eleitores?.filter(e => e.status === "rejeição").length || 0,
       };
 
-      return counts;
+      // Process chart data for last 7 days
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return {
+          date: d.toISOString().split("T")[0],
+          name: d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
+          cadastros: 0
+        };
+      });
+
+      eleitores?.forEach(e => {
+        if (e.created_at) {
+          const createdAt = new Date(e.created_at).toISOString().split("T")[0];
+          const day = last7Days.find(d => d.date === createdAt);
+          if (day) day.cadastros++;
+        }
+      });
+
+      // Calculate trends
+      const lastWeekCount = eleitores?.filter(e => {
+        if (!e.created_at) return false;
+        const date = new Date(e.created_at);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return date > weekAgo;
+      }).length || 0;
+
+      const previousWeekCount = eleitores?.filter(e => {
+        if (!e.created_at) return false;
+        const date = new Date(e.created_at);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        return date > twoWeeksAgo && date <= weekAgo;
+      }).length || 0;
+
+      const calculateTrend = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? `+${current}` : "0%";
+        const diff = ((current - previous) / previous) * 100;
+        return `${diff > 0 ? "+" : ""}${diff.toFixed(0)}%`;
+      };
+
+      // Most active neighborhood
+      const bairrosCount: Record<string, number> = {};
+      eleitores?.forEach(e => {
+        if (e.bairro) bairrosCount[e.bairro] = (bairrosCount[e.bairro] || 0) + 1;
+      });
+      const topBairro = Object.entries(bairrosCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+      return {
+        stats: counts,
+        chartData: last7Days,
+        trends: {
+          total: calculateTrend(lastWeekCount, previousWeekCount),
+          apoiadores: "+0%",
+          indecisos: "+0%",
+          rejeicao: "+0%",
+        },
+        topBairro
+      };
     }
   });
 
-  const chartData = [
-    { name: "Seg", cadastros: 12 },
-    { name: "Ter", cadastros: 19 },
-    { name: "Qua", cadastros: 15 },
-    { name: "Qui", cadastros: 22 },
-    { name: "Sex", cadastros: 30 },
-    { name: "Sáb", cadastros: 25 },
-    { name: "Dom", cadastros: 18 },
-  ];
+  const stats = dashboardData?.stats;
+  const chartData = dashboardData?.chartData || [];
+  const trends = dashboardData?.trends;
 
   const pieData = [
     { name: "Apoiadores", value: stats?.apoiadores || 0, color: "#10b981" },
@@ -65,11 +122,15 @@ function Dashboard() {
   ];
 
   const insights = [
-    { text: "Você precisa de 4.200 votos para atingir sua meta.", type: "target", icon: Target },
-    { text: "O bairro Centro possui alto número de indecisos (62%).", type: "alert", icon: AlertCircle },
-    { text: "A campanha está crescendo 12% ao dia nesta semana.", type: "trend", icon: TrendingUp },
-    { text: "O líder Marcos Oliveira está convertendo mais eleitores.", type: "award", icon: Zap },
+    { text: `O bairro ${dashboardData?.topBairro || "Centro"} possui o maior número de registros.`, type: "alert", icon: AlertCircle },
+    { text: "Você precisa definir uma meta de votos nas configurações.", type: "target", icon: Target },
+    { text: `A campanha teve ${chartData.reduce((acc, curr) => acc + curr.cadastros, 0)} novos cadastros nos últimos 7 dias.`, type: "trend", icon: TrendingUp },
+    { text: "Sincronize seus contatos para aumentar a base eleitoral.", type: "award", icon: Zap },
   ];
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-[50vh]">Carregando Painel de Guerra...</div>;
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -91,28 +152,28 @@ function Dashboard() {
           label="Total de Eleitores" 
           value={stats?.total || 0} 
           icon={Users} 
-          trend="+15%" 
+          trend={trends?.total || "0%"} 
           color="primary"
         />
         <StatCard 
           label="Apoiadores (Sim)" 
           value={stats?.apoiadores || 0} 
           icon={UserCheck} 
-          trend="+8%" 
+          trend={trends?.apoiadores || "0%"} 
           color="green"
         />
         <StatCard 
           label="Indecisos" 
           value={stats?.indecisos || 0} 
           icon={BarChart} 
-          trend="-2%" 
+          trend={trends?.indecisos || "0%"} 
           color="amber"
         />
         <StatCard 
           label="Rejeição" 
           value={stats?.rejeicao || 0} 
           icon={UserMinus} 
-          trend="+1%" 
+          trend={trends?.rejeicao || "0%"} 
           color="red"
         />
       </div>
