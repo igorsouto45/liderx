@@ -108,14 +108,20 @@ function MensagensPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("mensagens")
       .select(`
         *,
         remetente:perfis!mensagens_remetente_id_fkey(nome, tipo),
         destinatario:perfis!mensagens_destinatario_id_fkey(nome, tipo)
-      `)
-      .order('created_at', { ascending: false });
+      `);
+
+    // Leaders only see messages sent to them (direct or broadcast) or sent by them
+    if (currentUser?.tipo === 'líder') {
+      query = query.or(`destinatario_id.eq.${user.id},destinatario_id.is.null,remetente_id.eq.${user.id}`);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error("Erro ao buscar mensagens:", error);
