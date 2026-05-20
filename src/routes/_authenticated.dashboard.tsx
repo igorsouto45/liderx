@@ -123,9 +123,18 @@ function Dashboard() {
     { name: "Rejeição", value: stats?.rejeicao || 0, color: "#ef4444" },
   ];
 
+  const metaGeral = dashboardData?.metas?.find(m => m.tipo === 'geral');
+  const metaGeralPercent = metaGeral ? Math.round(((stats?.total || 0) / metaGeral.meta) * 100) : 0;
+
   const insights = [
     { text: `O bairro ${dashboardData?.topBairro || "Centro"} possui o maior número de registros.`, type: "alert", icon: AlertCircle },
-    { text: "Você precisa definir uma meta de votos nas configurações.", type: "target", icon: Target },
+    { 
+      text: metaGeral 
+        ? `Você atingiu ${metaGeralPercent}% da sua meta geral de ${metaGeral.meta} votos.` 
+        : "Você precisa definir uma meta de votos na aba Estratégia.", 
+      type: "target", 
+      icon: Target 
+    },
     { text: `A campanha teve ${chartData.reduce((acc, curr) => acc + curr.cadastros, 0)} novos cadastros nos últimos 7 dias.`, type: "trend", icon: TrendingUp },
     { text: "Sincronize seus contatos para aumentar a base eleitoral.", type: "award", icon: Zap },
   ];
