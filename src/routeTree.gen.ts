@@ -19,6 +19,7 @@ import { Route as AuthenticatedMensagensRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMapaRouteImport } from './routes/_authenticated.mapa'
 import { Route as AuthenticatedLiderancasRouteImport } from './routes/_authenticated.liderancas'
 import { Route as AuthenticatedInteracoesRouteImport } from './routes/_authenticated.interacoes'
+import { Route as AuthenticatedEmissaoContratoRouteImport } from './routes/_authenticated.emissao-contrato'
 import { Route as AuthenticatedEleitoresRouteImport } from './routes/_authenticated.eleitores'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCapturaRouteImport } from './routes/_authenticated.captura'
@@ -73,6 +74,12 @@ const AuthenticatedInteracoesRoute = AuthenticatedInteracoesRouteImport.update({
   path: '/interacoes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEmissaoContratoRoute =
+  AuthenticatedEmissaoContratoRouteImport.update({
+    id: '/emissao-contrato',
+    path: '/emissao-contrato',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedEleitoresRoute = AuthenticatedEleitoresRouteImport.update({
   id: '/eleitores',
   path: '/eleitores',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
+  '/emissao-contrato': typeof AuthenticatedEmissaoContratoRoute
   '/interacoes': typeof AuthenticatedInteracoesRoute
   '/liderancas': typeof AuthenticatedLiderancasRoute
   '/mapa': typeof AuthenticatedMapaRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
+  '/emissao-contrato': typeof AuthenticatedEmissaoContratoRoute
   '/interacoes': typeof AuthenticatedInteracoesRoute
   '/liderancas': typeof AuthenticatedLiderancasRoute
   '/mapa': typeof AuthenticatedMapaRoute
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated/captura': typeof AuthenticatedCapturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eleitores': typeof AuthenticatedEleitoresRoute
+  '/_authenticated/emissao-contrato': typeof AuthenticatedEmissaoContratoRoute
   '/_authenticated/interacoes': typeof AuthenticatedInteracoesRoute
   '/_authenticated/liderancas': typeof AuthenticatedLiderancasRoute
   '/_authenticated/mapa': typeof AuthenticatedMapaRoute
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/captura'
     | '/dashboard'
     | '/eleitores'
+    | '/emissao-contrato'
     | '/interacoes'
     | '/liderancas'
     | '/mapa'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/captura'
     | '/dashboard'
     | '/eleitores'
+    | '/emissao-contrato'
     | '/interacoes'
     | '/liderancas'
     | '/mapa'
@@ -171,6 +183,7 @@ export interface FileRouteTypes {
     | '/_authenticated/captura'
     | '/_authenticated/dashboard'
     | '/_authenticated/eleitores'
+    | '/_authenticated/emissao-contrato'
     | '/_authenticated/interacoes'
     | '/_authenticated/liderancas'
     | '/_authenticated/mapa'
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInteracoesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/emissao-contrato': {
+      id: '/_authenticated/emissao-contrato'
+      path: '/emissao-contrato'
+      fullPath: '/emissao-contrato'
+      preLoaderRoute: typeof AuthenticatedEmissaoContratoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/eleitores': {
       id: '/_authenticated/eleitores'
       path: '/eleitores'
@@ -286,6 +306,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCapturaRoute: typeof AuthenticatedCapturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEleitoresRoute: typeof AuthenticatedEleitoresRoute
+  AuthenticatedEmissaoContratoRoute: typeof AuthenticatedEmissaoContratoRoute
   AuthenticatedInteracoesRoute: typeof AuthenticatedInteracoesRoute
   AuthenticatedLiderancasRoute: typeof AuthenticatedLiderancasRoute
   AuthenticatedMapaRoute: typeof AuthenticatedMapaRoute
@@ -298,6 +319,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCapturaRoute: AuthenticatedCapturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEleitoresRoute: AuthenticatedEleitoresRoute,
+  AuthenticatedEmissaoContratoRoute: AuthenticatedEmissaoContratoRoute,
   AuthenticatedInteracoesRoute: AuthenticatedInteracoesRoute,
   AuthenticatedLiderancasRoute: AuthenticatedLiderancasRoute,
   AuthenticatedMapaRoute: AuthenticatedMapaRoute,

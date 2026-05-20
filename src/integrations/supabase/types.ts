@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      documentos_lideranca: {
+        Row: {
+          caminho_arquivo: string
+          created_at: string
+          id: string
+          lider_id: string
+          nome_arquivo: string
+          tamanho_arquivo: number | null
+          tipo_arquivo: string | null
+        }
+        Insert: {
+          caminho_arquivo: string
+          created_at?: string
+          id?: string
+          lider_id: string
+          nome_arquivo: string
+          tamanho_arquivo?: number | null
+          tipo_arquivo?: string | null
+        }
+        Update: {
+          caminho_arquivo?: string
+          created_at?: string
+          id?: string
+          lider_id?: string
+          nome_arquivo?: string
+          tamanho_arquivo?: number | null
+          tipo_arquivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_lideranca_lider_id_fkey"
+            columns: ["lider_id"]
+            isOneToOne: false
+            referencedRelation: "liderancas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eleitores: {
         Row: {
           bairro: string | null

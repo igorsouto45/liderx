@@ -17,7 +17,12 @@ import {
   MapPin,
   TrendingUp,
   Award,
-  Info
+  Info,
+  Upload,
+  File,
+  X as XIcon,
+  Download,
+  Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { onlyDigits, getLatLongFromCep } from "@/lib/utils";
+import { onlyDigits, getLatLongFromCep, cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/liderancas")({
   component: Liderancas,
@@ -102,6 +107,100 @@ function Liderancas() {
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const { data: documentos, refetch: refetchDocumentos } = useQuery({
+    queryKey: ["documentos-lideranca", editingId],
+    queryFn: async () => {
+      if (!editingId) return [];
+      const { data, error } = await supabase
+        .from("documentos_lideranca")
+        .select("*")
+        .eq("lider_id", editingId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!editingId,
+  });
+
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingId) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${editingId}/${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documentos-liderancas')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from('documentos_lideranca')
+        .insert({
+          lider_id: editingId,
+          nome_arquivo: file.name,
+          caminho_arquivo: filePath,
+          tipo_arquivo: file.type,
+          tamanho_arquivo: file.size
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success("Arquivo enviado com sucesso!");
+      refetchDocumentos();
+    } catch (error: any) {
+      toast.error("Erro no upload: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteFile = async (doc: any) => {
+    if (!confirm("Excluir este arquivo?")) return;
+
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('documentos-liderancas')
+        .remove([doc.caminho_arquivo]);
+
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from('documentos_lideranca')
+        .delete()
+        .eq('id', doc.id);
+
+      if (dbError) throw dbError;
+
+      toast.success("Arquivo removido");
+      refetchDocumentos();
+    } catch (error: any) {
+      toast.error("Erro ao excluir: " + error.message);
+    }
+  };
+
+  const handleDownloadFile = async (doc: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documentos-liderancas')
+        .download(doc.caminho_arquivo);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.nome_arquivo;
+      a.click();
+    } catch (error: any) {
+      toast.error("Erro no download: " + error.message);
+    }
+  };
 
   const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
     let { data } = await supabase
@@ -302,6 +401,15 @@ function Liderancas() {
           <p className="text-muted-foreground mt-1">Gerencie a rede de líderes e multiplicadores.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={async () => {
+            toast.info("Preparando exportação... Aguarde.");
+            // Lógica de ZIP seria feita via Edge Function ou lib client-side.
+            // Como não temos JSZip instalado agora, deixamos o feedback.
+            toast.success("Recurso de exportação em massa (ZIP) será integrado em breve.");
+          }}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Todos (ZIP)
+          </Button>
           <Button className="shadow-lg shadow-primary/20" onClick={handleOpenCreate}>
             <UserPlus className="mr-2 h-4 w-4" />
             Cadastrar Líder
@@ -412,7 +520,77 @@ function Liderancas() {
               <div className="space-y-2">
                 <Label>Bairro</Label>
                 <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
+            </div>
+
+            {editingId && (
+              <div className="md:col-span-2 space-y-3 pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-primary">Documentos e Contratos</Label>
+                  <div className="relative">
+                    <Input
+                      type="file"
+                      className="hidden"
+                      id="file-upload"
+                      onChange={handleUploadFile}
+                      disabled={uploading}
+                    />
+                    <Label
+                      htmlFor="file-upload"
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium cursor-pointer hover:bg-primary/20 transition-colors",
+                        uploading && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      {uploading ? "Enviando..." : "Subir Arquivo"}
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  {documentos && documentos.length > 0 ? (
+                    documentos.map((doc: any) => (
+                      <div key={doc.id} className="flex items-center justify-between p-2 rounded bg-black/20 border border-white/5 group">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <File className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="text-xs font-medium truncate">{doc.nome_arquivo}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {(doc.tamanho_arquivo / 1024).toFixed(1)} KB • {new Date(doc.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7"
+                            onClick={() => handleDownloadFile(doc)}
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteFile(doc)}
+                          >
+                            <XIcon className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic text-center py-4 border border-dashed border-white/10 rounded">
+                      Nenhum documento anexado.
+                    </p>
+                  )}
+                </div>
               </div>
+            )}
+
               <div className="space-y-2">
                 <Label>Cidade</Label>
                 <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
