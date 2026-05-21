@@ -290,17 +290,21 @@ function Eleitores() {
           .from("eleitores")
           .insert(payload);
         
-        if (error) throw error;
-        toast.success("Eleitor cadastrado com sucesso!");
+        if (error) {
+          console.error("Erro retornado pelo Supabase no insert/update:", error);
+          throw error;
+        }
+        toast.success(editingId ? "Eleitor atualizado com sucesso!" : "Eleitor cadastrado com sucesso!");
       }
 
       setForm(initialForm);
       setOpen(false);
       setEditingId(null);
-      queryClient.invalidateQueries({ queryKey: ["eleitores"] });
+      await queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
       console.error("Erro completo no cadastro:", error);
-      toast.error("Erro ao cadastrar: " + (error.message || "Tente novamente"));
+      const detail = error.details || error.message || "Tente novamente";
+      toast.error(`Erro ao salvar: ${detail}`);
     } finally {
       setSaving(false);
     }
