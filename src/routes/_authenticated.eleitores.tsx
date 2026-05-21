@@ -288,36 +288,26 @@ function Eleitores() {
         return toast.error(`Já existe um eleitor cadastrado com este telefone: ${existing.nome}`);
       }
 
+      let error;
       if (editingId) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from("eleitores")
           .update(payload)
           .eq("id", editingId);
-        
-        if (error) {
-          console.error("ERRO NO UPDATE:", error);
-          throw error;
-        }
-        toast.success("Eleitor atualizado com sucesso!");
+        error = updateError;
+        if (!error) toast.success("Eleitor atualizado com sucesso!");
       } else {
         console.log("Iniciando INSERT com payload:", payload);
-        const { data: insertData, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from("eleitores")
-          .insert([payload]) // Wrap in array for explicit multi-insert compatibility though payload is single
-          .select();
-        
-        if (insertError) {
-          console.error("ERRO CRÍTICO NO INSERT:", {
-            code: insertError.code,
-            message: insertError.message,
-            details: insertError.details,
-            hint: insertError.hint
-          });
-          throw insertError;
-        }
-        
-        console.log("INSERT realizado com sucesso:", insertData);
-        toast.success("Eleitor cadastrado com sucesso!");
+          .insert(payload); // Single object for insert
+        error = insertError;
+        if (!error) toast.success("Eleitor cadastrado com sucesso!");
+      }
+      
+      if (error) {
+        console.error("ERRO NO BANCO:", error);
+        throw error;
       }
 
       setForm(initialForm);
