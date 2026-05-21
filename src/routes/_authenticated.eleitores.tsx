@@ -268,7 +268,6 @@ function Eleitores() {
       console.log("Enviando dados do eleitor:", payload);
 
       // Check for duplicate telephone
-      const cleanPhone = onlyDigits(form.telefone);
       const { data: existing } = await supabase
         .from("eleitores")
         .select("id, nome")
