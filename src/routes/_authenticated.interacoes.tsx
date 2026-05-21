@@ -112,9 +112,9 @@ function Interacoes() {
 
       if (assistantErr) throw assistantErr;
       setMessages((prev) => [...prev, assistantMsg as any]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro na interação:", error);
-      toast.error("Erro ao processar sua solicitação.");
+      toast.error(error.message || "Erro ao processar sua solicitação.");
     } finally {
       setIsLoading(false);
     }
