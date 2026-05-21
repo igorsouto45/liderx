@@ -304,7 +304,7 @@ function Eleitores() {
       setEditingId(null);
       await queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
-      console.error("Erro completo no cadastro:", error);
+      console.error("Erro detalhado no cadastro:", error);
       const detail = error.details || error.message || "Tente novamente";
       toast.error(`Erro ao salvar: ${detail}`);
     } finally {
