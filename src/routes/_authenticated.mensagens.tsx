@@ -106,23 +106,35 @@ function MensagensPage() {
   };
 
   const fetchMessages = async (activeUser = currentUser) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    let query = supabase
-      .from("mensagens")
-      .select("*");
+      const userId = user.id;
+      const userType = activeUser?.tipo || profile?.tipo;
 
-    // Leaders only see messages sent to them (direct or broadcast) or sent by them
-    if (activeUser?.tipo === 'líder') {
-      query = query.or(`destinatario_id.eq.${activeUser.id},destinatario_id.is.null,remetente_id.eq.${activeUser.id}`);
-    }
+      console.log("Buscando mensagens para usuário:", { userId, userType });
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+      let query = supabase
+        .from("mensagens")
+        .select("*");
 
-    if (error) {
-      console.error("Erro ao buscar mensagens:", error);
-    } else {
+      // Leaders only see messages sent to them (direct or broadcast) or sent by them
+      if (userType === 'líder') {
+        // More robust query using multiple conditions
+        query = query.or(`destinatario_id.eq.${userId},destinatario_id.is.null,remetente_id.eq.${userId}`);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Erro ao buscar mensagens:", error);
+        toast.error("Erro ao carregar mensagens");
+        return;
+      }
+
+      console.log(`Encontradas ${data?.length || 0} mensagens`);
+
       const profileIds = [...new Set((data || [])
         .flatMap((message) => [message.remetente_id, message.destinatario_id])
         .filter((id): id is string => Boolean(id)))];
@@ -150,6 +162,8 @@ function MensagensPage() {
         remetente: profilesMap.get(message.remetente_id) || null,
         destinatario: message.destinatario_id ? profilesMap.get(message.destinatario_id) || null : null,
       })));
+    } catch (err) {
+      console.error("Erro inesperado em fetchMessages:", err);
     }
   };
 
