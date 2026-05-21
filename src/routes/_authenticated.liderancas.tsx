@@ -374,8 +374,18 @@ function Liderancas() {
       setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["liderancas"] });
     } catch (error: any) {
-      console.error("Erro no cadastro:", error);
-      toast.error("Erro ao cadastrar: " + (error.message || "Tente novamente"));
+      console.error("Erro detalhado na gestão de liderança:", error);
+      let errorMessage = "Erro inesperado ao salvar.";
+      
+      if (error.code === "23505") {
+        errorMessage = "Este E-mail ou CPF já está em uso.";
+      } else if (error.code === "42501") {
+        errorMessage = "Você não tem permissão para esta operação.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(`Falha ao salvar liderança: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
