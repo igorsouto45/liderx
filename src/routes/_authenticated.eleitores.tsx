@@ -266,6 +266,9 @@ function Eleitores() {
       };
 
       console.log("Enviando dados do eleitor:", payload);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Sessão atual:", session?.user?.id);
 
       // Check for duplicate telephone
       const { data: existing } = await supabase
@@ -293,7 +296,8 @@ function Eleitores() {
           .insert(payload);
         
         if (error) {
-          console.error("Erro retornado pelo Supabase no insert/update:", error);
+          console.error("ERRO COMPLETO NO INSERT:", error);
+          toast.error(`Erro do banco: ${error.message} (${error.code})`);
           throw error;
         }
         toast.success(editingId ? "Eleitor atualizado com sucesso!" : "Eleitor cadastrado com sucesso!");
