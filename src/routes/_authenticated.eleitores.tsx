@@ -316,8 +316,21 @@ function Eleitores() {
       await queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
       console.error("Erro detalhado no cadastro:", error);
-      const detail = error.details || error.message || "Tente novamente";
-      toast.error(`Erro ao salvar: ${detail}`);
+      // Extrai a mensagem de erro mais útil possível
+      let errorMessage = "Erro inesperado ao salvar.";
+      
+      if (error.code === "42501") {
+        errorMessage = "Você não tem permissão para realizar esta operação (RLS Error).";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      const detail = error.details ? ` (${error.details})` : "";
+      const code = error.code ? ` [${error.code}]` : "";
+      
+      toast.error(`Falha no cadastro: ${errorMessage}${detail}${code}`, {
+        duration: 8000, // Deixa o erro visível por mais tempo
+      });
     } finally {
       setSaving(false);
     }
