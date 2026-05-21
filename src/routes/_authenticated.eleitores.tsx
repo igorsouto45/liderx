@@ -268,14 +268,20 @@ function Eleitores() {
       console.log("Enviando dados do eleitor:", payload);
       
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("Sessão atual:", session?.user?.id);
+      if (!session) throw new Error("Sessão expirada. Faça login novamente.");
+      
+      console.log("Sessão atual (auth.uid()):", session.user.id);
 
       // Check for duplicate telephone
-      const { data: existing } = await supabase
+      const { data: existing, error: checkError } = await supabase
         .from("eleitores")
         .select("id, nome")
         .eq("telefone", cleanPhone)
         .maybeSingle();
+
+      if (checkError) {
+        console.error("Erro ao verificar duplicidade:", checkError);
+      }
 
       if (existing && (!editingId || existing.id !== editingId)) {
         setSaving(false);
@@ -288,19 +294,30 @@ function Eleitores() {
           .update(payload)
           .eq("id", editingId);
         
-        if (error) throw error;
-        toast.success("Eleitor atualizado com sucesso!");
-      } else {
-        const { error } = await supabase
-          .from("eleitores")
-          .insert(payload);
-        
         if (error) {
-          console.error("ERRO COMPLETO NO INSERT:", error);
-          toast.error(`Erro do banco: ${error.message} (${error.code})`);
+          console.error("ERRO NO UPDATE:", error);
           throw error;
         }
-        toast.success(editingId ? "Eleitor atualizado com sucesso!" : "Eleitor cadastrado com sucesso!");
+        toast.success("Eleitor atualizado com sucesso!");
+      } else {
+        console.log("Iniciando INSERT com payload:", payload);
+        const { data: insertData, error: insertError } = await supabase
+          .from("eleitores")
+          .insert([payload]) // Wrap in array for explicit multi-insert compatibility though payload is single
+          .select();
+        
+        if (insertError) {
+          console.error("ERRO CRÍTICO NO INSERT:", {
+            code: insertError.code,
+            message: insertError.message,
+            details: insertError.details,
+            hint: insertError.hint
+          });
+          throw insertError;
+        }
+        
+        console.log("INSERT realizado com sucesso:", insertData);
+        toast.success("Eleitor cadastrado com sucesso!");
       }
 
       setForm(initialForm);
