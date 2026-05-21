@@ -111,7 +111,7 @@ function MensagensPage() {
       if (!user) return;
 
       const userId = user.id;
-      const userType = activeUser?.tipo || profile?.tipo;
+      const userType = activeUser?.tipo || currentUser?.tipo;
 
       console.log("Buscando mensagens para usuário:", { userId, userType });
 
