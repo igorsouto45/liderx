@@ -217,6 +217,8 @@ function Eleitores() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
     if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
@@ -239,10 +241,11 @@ function Eleitores() {
       const secaoStr = onlyDigits(form.secao_votacao);
       const zona = zonaStr ? parseInt(zonaStr) : null;
       const secao = secaoStr ? parseInt(secaoStr) : null;
+      const cleanPhone = onlyDigits(form.telefone);
 
       const payload = {
         nome: form.nome.trim(),
-        telefone: form.telefone.trim(),
+        telefone: cleanPhone,
         data_nascimento: form.data_nascimento || null,
         cpf: form.cpf ? onlyDigits(form.cpf) : null,
         cep: form.cep ? onlyDigits(form.cep) : null,
@@ -265,7 +268,6 @@ function Eleitores() {
       console.log("Enviando dados do eleitor:", payload);
 
       // Check for duplicate telephone
-      const cleanPhone = onlyDigits(form.telefone);
       const { data: existing } = await supabase
         .from("eleitores")
         .select("id, nome")
@@ -302,7 +304,7 @@ function Eleitores() {
       setEditingId(null);
       await queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
-      console.error("Erro completo no cadastro:", error);
+      console.error("Erro detalhado no cadastro:", error);
       const detail = error.details || error.message || "Tente novamente";
       toast.error(`Erro ao salvar: ${detail}`);
     } finally {
