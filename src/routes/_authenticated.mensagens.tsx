@@ -195,7 +195,11 @@ function MensagensPage() {
       setIsDialogOpen(false);
       fetchMessages();
     } catch (error: any) {
-      toast.error("Erro ao enviar: " + error.message);
+      console.error("Erro ao enviar mensagem:", error);
+      let message = "Erro inesperado ao enviar.";
+      if (error.code === '42501') message = "Você não tem permissão para enviar mensagens.";
+      else if (error.message) message = error.message;
+      toast.error(message);
     }
   };
 
@@ -222,7 +226,8 @@ function MensagensPage() {
       setReplyContent("");
       fetchMessages();
     } catch (error: any) {
-      toast.error("Erro ao responder: " + error.message);
+      console.error("Erro ao responder mensagem:", error);
+      toast.error("Falha ao enviar resposta: " + (error.message || "Tente novamente"));
     } finally {
       setSendingReply(false);
     }

@@ -184,7 +184,17 @@ function CadastroLider() {
       setSuccess(true);
       toast.success("Cadastro realizado com sucesso!");
     } catch (error: any) {
-      toast.error("Erro ao cadastrar: " + error.message);
+      console.error("Erro no cadastro:", error);
+      let errorMessage = "Erro inesperado ao cadastrar.";
+      
+      if (error.code === "23505") {
+        errorMessage = "Este E-mail ou CPF já está cadastrado.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      const detail = error.details ? ` (${error.details})` : "";
+      toast.error(`Falha no cadastro: ${errorMessage}${detail}`);
     } finally {
       setLoading(false);
       setUploading(false);

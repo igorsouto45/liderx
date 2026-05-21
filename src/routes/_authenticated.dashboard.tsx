@@ -13,6 +13,7 @@ import {
   Zap,
   ArrowUpRight
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { 
   BarChart as ReBarChart, 
@@ -35,10 +36,21 @@ function Dashboard() {
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ["dashboard-data"],
     queryFn: async () => {
-      const [{ data: eleitores }, { data: metas }] = await Promise.all([
+      const [{ data: eleitores, error: eleitoresErr }, { data: metas, error: metasErr }] = await Promise.all([
         supabase.from("eleitores").select("status, created_at, bairro, cidade"),
         supabase.from("metas_votos").select("*")
       ]);
+      
+      if (eleitoresErr) {
+        console.error("Erro ao carregar eleitores no dashboard:", eleitoresErr);
+        toast.error("Falha ao carregar dados de eleitores.");
+        throw eleitoresErr;
+      }
+
+      if (metasErr) {
+        console.error("Erro ao carregar metas no dashboard:", metasErr);
+        // Não jogamos erro aqui para não quebrar o dashboard inteiro se apenas metas falharem
+      }
       
       const counts = {
         total: eleitores?.length || 0,

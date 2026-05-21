@@ -32,7 +32,14 @@ function LoginPage() {
       toast.success("Bem-vindo de volta!");
       navigate({ to: "/dashboard" });
     } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer login");
+      console.error("Erro no login:", error);
+      let message = "Erro ao fazer login. Tente novamente.";
+      if (error.code === 'invalid_credentials') {
+        message = "E-mail ou senha incorretos.";
+      } else if (error.message) {
+        message = error.message;
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }

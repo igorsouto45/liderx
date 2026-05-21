@@ -104,9 +104,9 @@ function MapaEstrategico() {
       } else {
         toast.info("Nenhuma nova coordenada encontrada para atualizar.");
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao atualizar coordenadas.");
+    } catch (error: any) {
+      console.error("Erro detalhado na sincronização de coordenadas:", error);
+      toast.error("Erro ao sincronizar: " + (error.message || "Verifique sua conexão."));
     } finally {
       setUpdating(false);
     }

@@ -94,7 +94,10 @@ function Interacoes() {
         body: { message: userMessageContent, history },
       });
 
-      if (aiError) throw aiError;
+      if (aiError) {
+        console.error("Erro na Edge Function campaign-ai:", aiError);
+        throw new Error("O assistente de IA está temporariamente indisponível.");
+      }
 
       // 3. Salvar resposta da IA
       const { data: assistantMsg, error: assistantErr } = await supabase
@@ -109,9 +112,9 @@ function Interacoes() {
 
       if (assistantErr) throw assistantErr;
       setMessages((prev) => [...prev, assistantMsg as any]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro na interação:", error);
-      toast.error("Erro ao processar sua solicitação.");
+      toast.error(error.message || "Erro ao processar sua solicitação.");
     } finally {
       setIsLoading(false);
     }

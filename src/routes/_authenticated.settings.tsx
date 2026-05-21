@@ -76,7 +76,8 @@ function SettingsPage() {
       if (error) throw error;
       toast.success("Perfil atualizado com sucesso!");
     } catch (error: any) {
-      toast.error("Erro ao salvar: " + error.message);
+      console.error("Erro ao salvar perfil:", error);
+      toast.error("Erro ao salvar: " + (error.message || "Tente novamente"));
     } finally {
       setSaving(false);
     }
@@ -94,7 +95,8 @@ function SettingsPage() {
       setUsers(users.map(u => u.id === userId ? { ...u, tipo: newRole } : u));
       toast.success("Nível de acesso atualizado!");
     } catch (error: any) {
-      toast.error("Erro ao atualizar nível: " + error.message);
+      console.error("Erro ao atualizar nível de acesso:", error);
+      toast.error("Erro ao atualizar nível: " + (error.message || "Tente novamente"));
     }
   };
 
