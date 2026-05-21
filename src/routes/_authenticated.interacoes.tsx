@@ -94,7 +94,10 @@ function Interacoes() {
         body: { message: userMessageContent, history },
       });
 
-      if (aiError) throw aiError;
+      if (aiError) {
+        console.error("Erro na Edge Function campaign-ai:", aiError);
+        throw new Error("O assistente de IA está temporariamente indisponível.");
+      }
 
       // 3. Salvar resposta da IA
       const { data: assistantMsg, error: assistantErr } = await supabase
