@@ -704,16 +704,17 @@ function Eleitores() {
               }}>Cancelar</Button>
               <Button 
                 type="button" 
+                className="w-full md:w-auto"
                 disabled={saving}
-                onClick={(e) => {
-                  console.log("Botão de submissão clicado via onClick");
-                  handleSubmit(e);
+                onClick={async (e) => {
+                  console.log("Ação manual de clique disparada");
+                  await handleSubmit(e);
                 }}
               >
-                {saving ? "Salvando..." : (editingId ? "Atualizar" : "Cadastrar")}
+                {saving ? "Processando..." : (editingId ? "Atualizar" : "Cadastrar Eleitor")}
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
