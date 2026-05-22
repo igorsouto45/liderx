@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Toaster } from "@/components/ui/sonner";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -190,6 +191,10 @@ function Eleitores() {
     setForm(initialForm);
     setSuggestions([]);
     setOpen(true);
+    // Pequeno atraso para garantir que o DOM renderizou antes do log
+    setTimeout(() => {
+      console.log("Modal aberto, estado 'open':", open);
+    }, 100);
   };
 
   const handleEdit = (eleitor: any) => {
@@ -390,6 +395,7 @@ function Eleitores() {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" richColors />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Base de Eleitores</h1>
@@ -704,14 +710,15 @@ function Eleitores() {
               }}>Cancelar</Button>
               <Button 
                 type="submit" 
-                className="w-full md:w-auto"
+                className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white font-bold"
                 disabled={saving}
                 onClick={async (e) => {
-                  console.log("Botão de submissão clicado");
+                  console.log("BOTÃO CLICADO - DISPARANDO SUBMISSÃO");
+                  alert("Iniciando cadastro..."); // Alerta para depuração visual forçada
                   await handleSubmit(e);
                 }}
               >
-                {saving ? "Processando..." : (editingId ? "Atualizar" : "Cadastrar Eleitor")}
+                {saving ? "Processando..." : (editingId ? "Atualizar Dados" : "FINALIZAR CADASTRO")}
               </Button>
             </DialogFooter>
           </div>
