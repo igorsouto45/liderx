@@ -217,8 +217,8 @@ function Eleitores() {
     setOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     console.log("Iniciando submissão do formulário...");
     
     // Validação básica
@@ -698,16 +698,16 @@ function Eleitores() {
               </div>
             </div>
             <DialogFooter className="sticky bottom-0 bg-card/95 pt-2 border-t border-white/5">
-              <Button type="button" variant="outline" onClick={() => {
+              <Button type="button" variant="outline" disabled={saving} onClick={() => {
                 console.log("Botão Cancelar clicado");
                 setOpen(false);
               }}>Cancelar</Button>
               <Button 
-                type="button" 
+                type="submit" 
                 className="w-full md:w-auto"
                 disabled={saving}
                 onClick={async (e) => {
-                  console.log("Ação manual de clique disparada");
+                  console.log("Botão de submissão clicado");
                   await handleSubmit(e);
                 }}
               >
