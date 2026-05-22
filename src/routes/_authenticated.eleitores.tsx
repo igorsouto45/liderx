@@ -532,16 +532,16 @@ function Eleitores() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2 md:col-span-2">
-                <Label>Nome *</Label>
-                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+                <Label htmlFor="nome">Nome *</Label>
+                <Input id="nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>WhatsApp *</Label>
-                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" />
+                <Label htmlFor="telefone">WhatsApp *</Label>
+                <Input id="telefone" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" />
               </div>
               <div className="space-y-2">
-                <Label>Data de Nascimento *</Label>
-                <Input type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} />
+                <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
+                <Input id="data_nascimento" type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>CPF (opcional)</Label>
