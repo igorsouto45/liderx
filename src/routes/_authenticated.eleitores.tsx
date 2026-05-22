@@ -697,9 +697,18 @@ function Eleitores() {
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : (editingId ? "Atualizar" : "Cadastrar")}</Button>
+            <DialogFooter className="sticky bottom-0 bg-card/95 pt-2 border-t border-white/5">
+              <Button type="button" variant="outline" onClick={() => {
+                console.log("Botão Cancelar clicado");
+                setOpen(false);
+              }}>Cancelar</Button>
+              <Button 
+                type="submit" 
+                disabled={saving}
+                onClick={() => console.log("Botão de submissão clicado, saving:", saving)}
+              >
+                {saving ? "Salvando..." : (editingId ? "Atualizar" : "Cadastrar")}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
