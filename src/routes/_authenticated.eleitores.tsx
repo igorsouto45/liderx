@@ -396,11 +396,21 @@ function Eleitores() {
           <p className="text-muted-foreground mt-1">Gerencie e acompanhe todos os eleitores cadastrados.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="border-white/10">
+          <Button 
+            variant="outline" 
+            className="border-white/10"
+            onClick={() => console.log("Botão Filtros clicado")}
+          >
             <Filter className="mr-2 h-4 w-4" />
             Filtros
           </Button>
-          <Button className="shadow-lg shadow-primary/20" onClick={handleOpenCreate}>
+          <Button 
+            className="shadow-lg shadow-primary/20" 
+            onClick={() => {
+              console.log("Botão Cadastrar Eleitor clicado");
+              handleOpenCreate();
+            }}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Cadastrar Eleitor
           </Button>
