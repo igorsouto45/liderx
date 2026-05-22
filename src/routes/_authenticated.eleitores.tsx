@@ -703,9 +703,12 @@ function Eleitores() {
                 setOpen(false);
               }}>Cancelar</Button>
               <Button 
-                type="submit" 
+                type="button" 
                 disabled={saving}
-                onClick={() => console.log("Botão de submissão clicado, saving:", saving)}
+                onClick={(e) => {
+                  console.log("Botão de submissão clicado via onClick");
+                  handleSubmit(e);
+                }}
               >
                 {saving ? "Salvando..." : (editingId ? "Atualizar" : "Cadastrar")}
               </Button>
