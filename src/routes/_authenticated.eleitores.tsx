@@ -185,6 +185,7 @@ function Eleitores() {
   };
 
   const handleOpenCreate = () => {
+    console.log("Abrindo modal de cadastro...");
     setEditingId(null);
     setForm(initialForm);
     setSuggestions([]);
