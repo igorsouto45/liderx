@@ -218,7 +218,9 @@ function Eleitores() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Iniciando submissão do formulário...");
     
+    // Validação básica
     if (!form.nome.trim()) return toast.error("Nome é obrigatório");
     if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
     if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
@@ -233,10 +235,13 @@ function Eleitores() {
 
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log("Obtendo usuário atual...");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Validate numeric fields to avoid NaN errors
+      console.log("Processando payload para", editingId ? "UPDATE" : "INSERT");
+      
       const zonaStr = onlyDigits(form.zona_votacao);
       const secaoStr = onlyDigits(form.secao_votacao);
       const zona = zonaStr ? parseInt(zonaStr) : null;
@@ -265,14 +270,9 @@ function Eleitores() {
         longitude: form.longitude,
       };
 
-      console.log("Enviando dados do eleitor:", payload);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Sessão expirada. Faça login novamente.");
-      
-      console.log("Sessão atual (auth.uid()):", session.user.id);
+      console.log("Payload preparado:", payload);
 
-      // Check for duplicate telephone
+      // Verificação de duplicidade (opcional, mas bom manter se não houver UNIQUE no banco)
       const { data: existing, error: checkError } = await supabase
         .from("eleitores")
         .select("id, nome")
@@ -280,56 +280,56 @@ function Eleitores() {
         .maybeSingle();
 
       if (checkError) {
-        console.error("Erro ao verificar duplicidade:", checkError);
+        console.warn("Aviso ao verificar duplicidade:", checkError);
       }
 
       if (existing && (!editingId || existing.id !== editingId)) {
+        console.log("Duplicidade detectada:", existing.nome);
         setSaving(false);
         return toast.error(`Já existe um eleitor cadastrado com este telefone: ${existing.nome}`);
       }
 
-      let error;
+      let resultError;
       if (editingId) {
-        const { error: updateError } = await supabase
+        console.log("Executando UPDATE no ID:", editingId);
+        const { error } = await supabase
           .from("eleitores")
           .update(payload)
           .eq("id", editingId);
-        error = updateError;
-        if (!error) toast.success("Eleitor atualizado com sucesso!");
+        resultError = error;
       } else {
-        console.log("Iniciando INSERT com payload:", payload);
-        const { error: insertError } = await supabase
+        console.log("Executando INSERT...");
+        const { error } = await supabase
           .from("eleitores")
-          .insert(payload); // Single object for insert
-        error = insertError;
-        if (!error) toast.success("Eleitor cadastrado com sucesso!");
+          .insert(payload);
+        resultError = error;
       }
       
-      if (error) {
-        console.error("ERRO NO BANCO:", error);
-        throw error;
+      if (resultError) {
+        console.error("Erro retornado pelo Supabase:", resultError);
+        throw resultError;
       }
 
+      console.log("Operação realizada com sucesso!");
+      toast.success(editingId ? "Eleitor atualizado!" : "Eleitor cadastrado!");
+      
       setForm(initialForm);
       setOpen(false);
       setEditingId(null);
       await queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
-      console.error("Erro detalhado no cadastro:", error);
-      // Extrai a mensagem de erro mais útil possível
-      let errorMessage = "Erro inesperado ao salvar.";
+      console.error("Erro capturado no handleSubmit:", error);
       
+      let msg = error.message || "Erro inesperado";
       if (error.code === "42501") {
-        errorMessage = "Você não tem permissão para realizar esta operação (RLS Error).";
-      } else if (error.message) {
-        errorMessage = error.message;
+        msg = "Sem permissão (Erro de RLS)";
       }
       
-      const detail = error.details ? ` (${error.details})` : "";
+      const detail = error.details ? ` - ${error.details}` : "";
       const code = error.code ? ` [${error.code}]` : "";
       
-      toast.error(`Falha no cadastro: ${errorMessage}${detail}${code}`, {
-        duration: 8000, // Deixa o erro visível por mais tempo
+      toast.error(`Erro ao salvar: ${msg}${detail}${code}`, {
+        duration: 10000
       });
     } finally {
       setSaving(false);
@@ -522,15 +522,15 @@ function Eleitores() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2 md:col-span-2">
                 <Label>Nome *</Label>
-                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
+                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>WhatsApp *</Label>
-                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" required />
+                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" />
               </div>
               <div className="space-y-2">
                 <Label>Data de Nascimento *</Label>
-                <Input type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} required />
+                <Input type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>CPF (opcional)</Label>
