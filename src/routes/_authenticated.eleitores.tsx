@@ -112,6 +112,7 @@ function Eleitores() {
   const [saving, setSaving] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState<FormState>(initialForm);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
@@ -222,32 +223,45 @@ function Eleitores() {
     setOpen(true);
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    console.log("Iniciando submissão do formulário...");
+  const handleSubmit = async (e: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log("Submit disparado via formulário");
+    setValidationError(null);
     
     // Validação básica
-    if (!form.nome.trim()) return toast.error("Nome é obrigatório");
-    if (!form.telefone.trim()) return toast.error("WhatsApp é obrigatório");
-    if (!form.data_nascimento) return toast.error("Data de nascimento é obrigatória");
+    if (!form.nome.trim()) {
+      setValidationError("O nome do eleitor é obrigatório.");
+      return toast.error("Nome é obrigatório");
+    }
+    if (!form.telefone.trim()) {
+      setValidationError("O WhatsApp é obrigatório para o cadastro.");
+      return toast.error("WhatsApp é obrigatório");
+    }
+    if (!form.data_nascimento) {
+      setValidationError("A data de nascimento é obrigatória.");
+      return toast.error("Data de nascimento é obrigatória");
+    }
     
     if (form.cpf && !isValidCPF(form.cpf)) {
-      return toast.error("CPF inválido. Verifique os números informados.");
+      setValidationError("O CPF informado é inválido.");
+      return toast.error("CPF inválido.");
     }
 
     if (!form.lgpd_consent) {
-      return toast.error("É necessário aceitar os termos da LGPD para prosseguir.");
+      setValidationError("Você precisa marcar o consentimento da LGPD.");
+      return toast.error("Aceite os termos da LGPD.");
     }
 
     setSaving(true);
     try {
-      console.log("Obtendo usuário atual...");
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) throw new Error("Sessão expirada. Por favor, faça login novamente.");
 
-      console.log("Processando payload para", editingId ? "UPDATE" : "INSERT");
-      
       const zonaStr = onlyDigits(form.zona_votacao);
       const secaoStr = onlyDigits(form.secao_votacao);
       const zona = zonaStr ? parseInt(zonaStr) : null;
@@ -276,67 +290,48 @@ function Eleitores() {
         longitude: form.longitude,
       };
 
-      console.log("Payload preparado:", payload);
-
-      // Verificação de duplicidade (opcional, mas bom manter se não houver UNIQUE no banco)
+      // Verificação de duplicidade por telefone
       const { data: existing, error: checkError } = await supabase
         .from("eleitores")
         .select("id, nome")
         .eq("telefone", cleanPhone)
         .maybeSingle();
 
-      if (checkError) {
-        console.warn("Aviso ao verificar duplicidade:", checkError);
-      }
-
       if (existing && (!editingId || existing.id !== editingId)) {
-        console.log("Duplicidade detectada:", existing.nome);
         setSaving(false);
-        return toast.error(`Já existe um eleitor cadastrado com este telefone: ${existing.nome}`);
+        setValidationError(`Este telefone já está cadastrado para: ${existing.nome}`);
+        return toast.error("Telefone já cadastrado");
       }
 
       let resultError;
       if (editingId) {
-        console.log("Executando UPDATE no ID:", editingId);
         const { error } = await supabase
           .from("eleitores")
           .update(payload)
           .eq("id", editingId);
         resultError = error;
       } else {
-        console.log("Executando INSERT...");
         const { error } = await supabase
           .from("eleitores")
           .insert(payload);
         resultError = error;
       }
       
-      if (resultError) {
-        console.error("Erro retornado pelo Supabase:", resultError);
-        throw resultError;
-      }
+      if (resultError) throw resultError;
 
-      console.log("Operação realizada com sucesso!");
-      toast.success(editingId ? "Eleitor atualizado!" : "Eleitor cadastrado!");
+      toast.success(editingId ? "Dados atualizados com sucesso!" : "Eleitor cadastrado com sucesso!");
       
       setForm(initialForm);
       setOpen(false);
       setEditingId(null);
       await queryClient.invalidateQueries({ queryKey: ["eleitores"] });
     } catch (error: any) {
-      console.error("Erro capturado no handleSubmit:", error);
+      console.error("Erro no cadastro:", error);
+      let msg = error.message || "Erro de conexão com o servidor.";
+      if (error.code === "42501") msg = "Você não tem permissão para realizar esta operação (RLS).";
       
-      let msg = error.message || "Erro inesperado";
-      if (error.code === "42501") {
-        msg = "Sem permissão (Erro de RLS)";
-      }
-      
-      const detail = error.details ? ` - ${error.details}` : "";
-      const code = error.code ? ` [${error.code}]` : "";
-      
-      toast.error(`Erro ao salvar: ${msg}${detail}${code}`, {
-        duration: 10000
-      });
+      setValidationError(msg);
+      toast.error(`Falha: ${msg}`);
     } finally {
       setSaving(false);
     }
@@ -530,198 +525,261 @@ function Eleitores() {
         </Table>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Editar Eleitor" : "Cadastrar Eleitor"}</DialogTitle>
+      <Dialog open={open} onOpenChange={(val) => {
+        if (!saving) {
+          setOpen(val);
+          if (!val) setValidationError(null);
+        }
+      }}>
+        <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10 max-w-2xl p-0 overflow-hidden flex flex-col max-h-[95vh] md:max-h-[90vh]">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-2xl">{editingId ? "Editar Eleitor" : "Novo Cadastro de Eleitor"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="nome">Nome *</Label>
-                <Input id="nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="telefone">WhatsApp *</Label>
-                <Input id="telefone" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(21) 99999-9999" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
-                <Input id="data_nascimento" type="date" value={form.data_nascimento} onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })} />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>CPF (opcional)</Label>
-                <Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
-              </div>
-              <div className="space-y-2">
-                <Label>CEP</Label>
-                <Input
-                  value={form.cep}
-                  onChange={(e) => setForm({ ...form, cep: e.target.value })}
-                  onBlur={handleCepBlur}
-                  placeholder="00000-000"
-                />
-                {cepLoading && <p className="text-xs text-muted-foreground">Buscando endereço...</p>}
-              </div>
-              <div className="space-y-2">
-                <Label>Número</Label>
-                <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Endereço</Label>
-                <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Complemento</Label>
-                <Input value={form.complemento} onChange={(e) => setForm({ ...form, complemento: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Bairro</Label>
-                <Input value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>UF</Label>
-                <Input value={form.uf} maxLength={2} onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="apoiador">Apoiador</SelectItem>
-                    <SelectItem value="indeciso">Indeciso</SelectItem>
-                    <SelectItem value="rejeição">Rejeição</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-primary">Local de Votação</p>
-                    <Info className="h-3 w-3 text-muted-foreground" />
-                  </div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-white/5 px-2 py-0.5 rounded">Ajuste manual disponível</span>
+          
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-2">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="nome">Nome Completo *</Label>
+                  <Input 
+                    id="nome" 
+                    value={form.nome} 
+                    onChange={(e) => setForm({ ...form, nome: e.target.value })} 
+                    placeholder="Nome completo do eleitor"
+                    className="bg-black/20 border-white/10"
+                    required
+                  />
                 </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Zona</Label>
-                    <Input 
-                      className="h-8 bg-black/40" 
-                      value={form.zona_votacao} 
-                      onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} 
-                      placeholder="Ex: 123"
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">WhatsApp *</Label>
+                  <Input 
+                    id="telefone" 
+                    value={form.telefone} 
+                    onChange={(e) => setForm({ ...form, telefone: e.target.value })} 
+                    placeholder="(00) 00000-0000"
+                    className="bg-black/20 border-white/10"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
+                  <Input 
+                    id="data_nascimento" 
+                    type="date" 
+                    value={form.data_nascimento} 
+                    onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })}
+                    className="bg-black/20 border-white/10"
+                    required
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>CPF (opcional)</Label>
+                  <Input 
+                    value={form.cpf} 
+                    onChange={(e) => setForm({ ...form, cpf: e.target.value })} 
+                    placeholder="000.000.000-00"
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CEP</Label>
+                  <div className="relative">
+                    <Input
+                      value={form.cep}
+                      onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                      onBlur={handleCepBlur}
+                      placeholder="00000-000"
+                      className="bg-black/20 border-white/10"
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Seção</Label>
-                    <Input 
-                      className="h-8 bg-black/40" 
-                      value={form.secao_votacao} 
-                      onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} 
-                      placeholder="Ex: 0456"
-                    />
-                  </div>
-                  <div className="space-y-1.5 col-span-2 md:col-span-2">
-                    <Label className="text-xs text-muted-foreground">Nome do Local</Label>
-                    <Input 
-                      className="h-8 bg-black/40" 
-                      value={form.local_votacao_nome} 
-                      onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} 
-                      placeholder="Nome da Escola ou Prédio"
-                    />
+                    {cepLoading && (
+                      <div className="absolute right-3 top-2.5">
+                        <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {suggestions.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Sugestões encontradas:</Label>
-                    <div className="grid gap-2">
-                      {suggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setForm({
-                            ...form,
-                            zona_votacao: String(s.zona),
-                            secao_votacao: String(s.secao),
-                            local_votacao_nome: s.local_nome
-                          })}
-                          className="text-left p-2 rounded bg-black/20 hover:bg-black/40 border border-white/5 transition-colors text-xs"
-                        >
-                          <div className="font-medium text-white/80">{s.local_nome}</div>
-                          <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao} • {s.bairro}</div>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex justify-end pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setForm({
-                            ...form,
-                            zona_votacao: "",
-                            secao_votacao: "",
-                            local_votacao_nome: ""
-                          });
-                          setSuggestions([]);
-                        }}
-                        className="text-[10px] text-primary hover:underline font-medium"
-                      >
-                        Não voto em nenhum desses locais
-                      </button>
+                <div className="space-y-2">
+                  <Label>Número</Label>
+                  <Input 
+                    value={form.numero} 
+                    onChange={(e) => setForm({ ...form, numero: e.target.value })} 
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Endereço</Label>
+                  <Input 
+                    value={form.endereco} 
+                    onChange={(e) => setForm({ ...form, endereco: e.target.value })} 
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Complemento</Label>
+                  <Input 
+                    value={form.complemento} 
+                    onChange={(e) => setForm({ ...form, complemento: e.target.value })} 
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bairro</Label>
+                  <Input 
+                    value={form.bairro} 
+                    onChange={(e) => setForm({ ...form, bairro: e.target.value })} 
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cidade</Label>
+                  <Input 
+                    value={form.cidade} 
+                    onChange={(e) => setForm({ ...form, cidade: e.target.value })} 
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>UF</Label>
+                  <Input 
+                    value={form.uf} 
+                    maxLength={2} 
+                    onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })} 
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status Político</Label>
+                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                    <SelectTrigger className="bg-black/20 border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="apoiador">Apoiador</SelectItem>
+                      <SelectItem value="indeciso">Indeciso</SelectItem>
+                      <SelectItem value="rejeição">Rejeição</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-primary">Informações de Votação</p>
+                      <Info className="h-3 w-3 text-muted-foreground" />
                     </div>
                   </div>
-                )}
-                
-                <p className="text-[10px] text-muted-foreground italic">
-                  * Os campos acima são preenchidos automaticamente pelo CEP, mas podem ser alterados se necessário.
-                </p>
-              </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Zona</Label>
+                      <Input 
+                        className="h-9 bg-black/40 border-white/5" 
+                        value={form.zona_votacao} 
+                        onChange={(e) => setForm({ ...form, zona_votacao: e.target.value })} 
+                        placeholder="Ex: 123"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Seção</Label>
+                      <Input 
+                        className="h-9 bg-black/40 border-white/5" 
+                        value={form.secao_votacao} 
+                        onChange={(e) => setForm({ ...form, secao_votacao: e.target.value })} 
+                        placeholder="Ex: 0456"
+                      />
+                    </div>
+                    <div className="space-y-1.5 col-span-2 md:col-span-2">
+                      <Label className="text-xs text-muted-foreground">Nome do Local</Label>
+                      <Input 
+                        className="h-9 bg-black/40 border-white/5" 
+                        value={form.local_votacao_nome} 
+                        onChange={(e) => setForm({ ...form, local_votacao_nome: e.target.value })} 
+                        placeholder="Nome da Escola ou Prédio"
+                      />
+                    </div>
+                  </div>
 
-              <div className="md:col-span-2 flex items-start space-x-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
-                <Checkbox 
-                  id="lgpd" 
-                  checked={form.lgpd_consent}
-                  onCheckedChange={(checked) => setForm({ ...form, lgpd_consent: !!checked })}
-                  className="mt-1"
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <Label 
-                    htmlFor="lgpd" 
-                    className="text-sm font-medium leading-none cursor-pointer"
-                  >
-                    Consentimento LGPD
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    O eleitor declara estar ciente e de acordo em ceder seus dados pessoais para fins de mobilização política, conforme a Lei Geral de Proteção de Dados (LGPD).
-                  </p>
+                  {suggestions.length > 0 && (
+                    <div className="space-y-2 pt-2 border-t border-white/5">
+                      <Label className="text-[10px] text-muted-foreground uppercase font-bold">Sugestões baseadas no CEP:</Label>
+                      <div className="grid gap-2">
+                        {suggestions.map((s, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setForm({
+                              ...form,
+                              zona_votacao: String(s.zona),
+                              secao_votacao: String(s.secao),
+                              local_votacao_nome: s.local_nome
+                            })}
+                            className="text-left p-2 rounded bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-colors text-xs"
+                          >
+                            <div className="font-medium text-white/90">{s.local_nome}</div>
+                            <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao} • {s.bairro}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="md:col-span-2 flex items-start space-x-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                  <Checkbox 
+                    id="lgpd" 
+                    checked={form.lgpd_consent}
+                    onCheckedChange={(checked) => setForm({ ...form, lgpd_consent: !!checked })}
+                    className="mt-1"
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label 
+                      htmlFor="lgpd" 
+                      className="text-sm font-bold leading-none cursor-pointer text-primary-foreground"
+                    >
+                      Autorizo o uso dos dados (LGPD) *
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      O eleitor consente com o tratamento de seus dados para fins de mobilização política.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-            <DialogFooter className="sticky bottom-0 bg-card/95 pt-2 border-t border-white/5">
-              <Button type="button" variant="outline" disabled={saving} onClick={() => {
-                console.log("Botão Cancelar clicado");
-                setOpen(false);
-              }}>Cancelar</Button>
-              <Button 
-                type="submit" 
-                className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white font-bold"
-                disabled={saving}
-                onClick={async (e) => {
-                  console.log("BOTÃO CLICADO - DISPARANDO SUBMISSÃO");
-                  alert("Iniciando cadastro..."); // Alerta para depuração visual forçada
-                  await handleSubmit(e);
-                }}
-              >
-                {saving ? "Processando..." : (editingId ? "Atualizar Dados" : "FINALIZAR CADASTRO")}
-              </Button>
-            </DialogFooter>
-          </div>
+
+            <div className="mt-8 sticky bottom-0 bg-card/95 backdrop-blur-sm pt-4 border-t border-white/10">
+              {validationError && (
+                <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium animate-in fade-in slide-in-from-top-1">
+                  {validationError}
+                </div>
+              )}
+              
+              <DialogFooter className="flex flex-row justify-end gap-3 pb-2">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="hover:bg-white/5"
+                  disabled={saving} 
+                  onClick={() => setOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-primary hover:bg-primary/90 text-white font-bold px-10 h-11 shadow-lg shadow-primary/20"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      <span>Processando...</span>
+                    </div>
+                  ) : (
+                    editingId ? "Salvar Alterações" : "FINALIZAR CADASTRO"
+                  )}
+                </Button>
+              </DialogFooter>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
