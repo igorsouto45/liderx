@@ -191,6 +191,10 @@ function Eleitores() {
     setForm(initialForm);
     setSuggestions([]);
     setOpen(true);
+    // Pequeno atraso para garantir que o DOM renderizou antes do log
+    setTimeout(() => {
+      console.log("Modal aberto, estado 'open':", open);
+    }, 100);
   };
 
   const handleEdit = (eleitor: any) => {
@@ -706,14 +710,15 @@ function Eleitores() {
               }}>Cancelar</Button>
               <Button 
                 type="submit" 
-                className="w-full md:w-auto"
+                className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white font-bold"
                 disabled={saving}
                 onClick={async (e) => {
-                  console.log("Botão de submissão clicado");
+                  console.log("BOTÃO CLICADO - DISPARANDO SUBMISSÃO");
+                  alert("Iniciando cadastro..."); // Alerta para depuração visual forçada
                   await handleSubmit(e);
                 }}
               >
-                {saving ? "Processando..." : (editingId ? "Atualizar" : "Cadastrar Eleitor")}
+                {saving ? "Processando..." : (editingId ? "Atualizar Dados" : "FINALIZAR CADASTRO")}
               </Button>
             </DialogFooter>
           </div>
