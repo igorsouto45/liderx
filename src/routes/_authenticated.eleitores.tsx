@@ -529,7 +529,7 @@ function Eleitores() {
           <DialogHeader>
             <DialogTitle>{editingId ? "Editar Eleitor" : "Cadastrar Eleitor"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="nome">Nome *</Label>
