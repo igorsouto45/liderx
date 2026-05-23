@@ -184,7 +184,7 @@ function AuthenticatedLayout() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] lg:w-72 flex-col border-r border-white/5 bg-card/95 backdrop-blur-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] lg:w-72 flex-col border-r border-white/5 bg-card/60 backdrop-blur-3xl transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] lg:static lg:translate-x-0 shadow-2xl",
         !sidebarOpen && "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between px-6 border-b border-white/5">
@@ -211,8 +211,8 @@ function AuthenticatedLayout() {
                   }
                 }}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-white/5",
-                  location.pathname === item.to ? "bg-primary/10 text-primary shadow-[inset_0_0_10px_rgba(108,43,217,0.1)]" : "text-muted-foreground"
+                  "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 hover:bg-white/5 group",
+                  location.pathname === item.to ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(108,43,217,0.15)] ring-1 ring-primary/20" : "text-muted-foreground/80 hover:text-foreground"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", location.pathname === item.to ? "text-primary" : "text-muted-foreground")} />
@@ -228,7 +228,7 @@ function AuthenticatedLayout() {
         </ScrollArea>
 
         <div className="border-t border-white/5 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 mb-4">
+          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 mb-4 ring-1 ring-white/5">
             <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold">
               {profile?.nome?.[0]?.toUpperCase() || session.user.email?.[0]?.toUpperCase()}
             </div>

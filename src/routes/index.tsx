@@ -14,7 +14,7 @@ function Index() {
   return (
     <div className="min-h-screen bg-background selection:bg-primary/30">
       {/* Navigation */}
-      <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
+      <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-background/60 backdrop-blur-2xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-[0_0_15px_-3px_var(--primary)]">
@@ -26,7 +26,7 @@ function Index() {
             <a href="#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Recursos</a>
             <a href="#about" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Sobre</a>
             <Button variant="ghost" className="text-sm font-medium" onClick={() => navigate({ to: "/login" })}>Login</Button>
-            <Button className="rounded-full px-6 shadow-primary/20 shadow-lg" onClick={() => navigate({ to: "/login" })}>Acessar Painel</Button>
+            <Button className="rounded-full px-8 h-10 shadow-primary/30 shadow-2xl hover:scale-105 transition-transform duration-300" onClick={() => navigate({ to: "/login" })}>Acessar Painel</Button>
           </div>
         </div>
       </nav>

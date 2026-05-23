@@ -163,7 +163,7 @@ function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Painel de Guerra</h1>
           <p className="text-muted-foreground mt-1">Inteligência estratégica em tempo real.</p>
         </div>
-        <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
+        <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl shadow-[0_0_20px_rgba(108,43,217,0.1)]">
           <Zap className="h-5 w-5 text-primary animate-pulse" />
           <span className="text-sm font-bold text-primary">IA Operacional Ativa</span>
         </div>
@@ -203,7 +203,7 @@ function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-7">
         {/* Main Chart */}
-        <Card className="lg:col-span-4 dashboard-card overflow-hidden">
+        <Card className="lg:col-span-4 dashboard-card overflow-hidden shadow-2xl border-white/5">
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <h3 className="font-bold">Evolução de Cadastros</h3>
             <span className="text-xs text-muted-foreground font-mono">ÚLTIMOS 7 DIAS</span>
@@ -276,7 +276,8 @@ function Dashboard() {
           </Card>
 
           {/* AI Insights Panel */}
-          <Card className="dashboard-card border-primary/20 bg-primary/5">
+          <Card className="dashboard-card border-primary/20 bg-primary/5 shadow-lg relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl -mr-16 -mt-16 rounded-full group-hover:bg-primary/20 transition-colors duration-500" />
             <div className="flex items-center gap-2 mb-4">
               <Zap className="h-5 w-5 text-primary" />
               <h3 className="font-bold">Insights da IA LiderX</h3>
