@@ -50,7 +50,7 @@ function LoginPage() {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,var(--primary)_0%,transparent_50%)] opacity-10" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_bottom_left,var(--primary)_0%,transparent_50%)] opacity-5" />
       
-      <Card className="w-full max-w-md border-white/5 bg-card/60 p-8 shadow-2xl backdrop-blur-xl">
+      <Card className="w-full max-w-md border-white/5 bg-card/40 p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] backdrop-blur-3xl ring-1 ring-white/10">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
             <Shield className="h-6 w-6 text-primary-foreground" />
