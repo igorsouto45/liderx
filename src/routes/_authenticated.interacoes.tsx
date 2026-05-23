@@ -150,7 +150,7 @@ function Interacoes() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">LiderX IA</h1>
-          <p className="text-muted-foreground">Seu consultor estratégico de campanha.</p>
+          <p className="text-muted-foreground">Seu consultor estratégico alimentado por dados reais.</p>
         </div>
         <Button variant="ghost" size="sm" onClick={clearChat} className="text-destructive hover:text-destructive hover:bg-destructive/10">
           <Trash2 className="h-4 w-4 mr-2" />
