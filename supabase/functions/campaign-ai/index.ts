@@ -37,14 +37,14 @@ SUAS DIRETRIZES DE ATUAÇÃO:
 5. FOCO: O objetivo final é converter cadastros em votos e aumentar a capilaridade da campanha via líderes.
 6. IDIOMA: Responda exclusivamente em Português do Brasil.`
 
-    const apiResponse = await fetch('https://api.lovable.dev/v1/ai/chat/completions', {
+    const apiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           ...history,
@@ -53,8 +53,24 @@ SUAS DIRETRIZES DE ATUAÇÃO:
       }),
     })
 
+    if (!apiResponse.ok) {
+      const errText = await apiResponse.text()
+      console.error('AI gateway error:', apiResponse.status, errText)
+      if (apiResponse.status === 429) {
+        return new Response(JSON.stringify({ error: 'Limite de requisições atingido. Tente novamente em instantes.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429,
+        })
+      }
+      if (apiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: 'Créditos da IA esgotados. Adicione créditos no workspace.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 402,
+        })
+      }
+      throw new Error(`Falha na IA: ${apiResponse.status}`)
+    }
+
     const data = await apiResponse.json()
-    const aiMessage = data.choices[0].message.content
+    const aiMessage = data.choices?.[0]?.message?.content ?? 'Sem resposta.'
 
     return new Response(JSON.stringify({ text: aiMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
