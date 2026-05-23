@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Shield, CheckCircle2 } from "lucide-react";
+import { Shield, CheckCircle2, Search, Info } from "lucide-react";
 import { onlyDigits, getLatLongFromCep } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({
@@ -24,6 +24,7 @@ function CadastroPublico() {
     nome: "",
     telefone: "",
     data_nascimento: "",
+    cpf: "",
     cep: "",
     endereco: "",
     bairro: "",
@@ -31,8 +32,14 @@ function CadastroPublico() {
     uf: "",
     numero: "",
     complemento: "",
+    zona_votacao: "",
+    secao_votacao: "",
+    local_votacao_nome: "",
     lgpd_consent: false,
   });
+
+  const [cepLoading, setCepLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (ref) {
@@ -48,22 +55,57 @@ function CadastroPublico() {
     }
   }, [ref]);
 
+  const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
+    let { data } = await supabase
+      .from("locais_votacao")
+      .select("zona, secao, local_nome, endereco, bairro")
+      .eq("cep", cep)
+      .limit(5);
+
+    if ((!data || data.length === 0) && bairro && cidade) {
+      const r = await supabase
+        .from("locais_votacao")
+        .select("zona, secao, local_nome, endereco, bairro")
+        .ilike("bairro", bairro)
+        .ilike("municipio", cidade)
+        .limit(5);
+      data = r.data;
+    }
+
+    if (data && data.length > 0) {
+      setSuggestions(data);
+      setForm((f) => ({
+        ...f,
+        zona_votacao: String(data![0].zona ?? ""),
+        secao_votacao: String(data![0].secao ?? ""),
+        local_votacao_nome: data![0].local_nome ?? "",
+      }));
+    } else {
+      setSuggestions([]);
+    }
+  };
+
   const handleCepBlur = async () => {
     const cep = onlyDigits(form.cep);
     if (cep.length !== 8) return;
+    setCepLoading(true);
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json());
       if (!res.erro) {
         setForm(f => ({
           ...f,
-          endereco: res.logradouro,
-          bairro: res.bairro,
-          cidade: res.localidade,
-          uf: res.uf,
+          endereco: res.logradouro || f.endereco,
+          bairro: res.bairro || f.bairro,
+          cidade: res.localidade || f.cidade,
+          uf: res.uf || f.uf,
         }));
+        await lookupLocalVotacao(cep, res.bairro, res.localidade);
       }
     } catch (e) {
       console.error(e);
+      toast.error("Erro ao consultar CEP");
+    } finally {
+      setCepLoading(false);
     }
   };
 
@@ -90,16 +132,20 @@ function CadastroPublico() {
       }
 
       const { error } = await supabase.from("eleitores").insert({
-        nome: form.nome,
+        nome: form.nome.trim(),
         telefone: cleanPhone,
-        data_nascimento: form.data_nascimento,
-        cep: onlyDigits(form.cep),
-        endereco: form.endereco,
-        bairro: form.bairro,
-        cidade: form.cidade,
-        uf: form.uf,
-        numero: form.numero,
-        complemento: form.complemento,
+        data_nascimento: form.data_nascimento || null,
+        cpf: form.cpf ? onlyDigits(form.cpf) : null,
+        cep: form.cep ? onlyDigits(form.cep) : null,
+        endereco: form.endereco?.trim() || null,
+        numero: form.numero?.trim() || null,
+        complemento: form.complemento?.trim() || null,
+        bairro: form.bairro?.trim() || null,
+        cidade: form.cidade?.trim() || null,
+        uf: form.uf?.trim().toUpperCase() || null,
+        zona_votacao: form.zona_votacao ? parseInt(onlyDigits(form.zona_votacao)) : null,
+        secao_votacao: form.secao_votacao ? parseInt(onlyDigits(form.secao_votacao)) : null,
+        local_votacao_nome: form.local_votacao_nome?.trim() || null,
         origem_usuario_id: ref || null,
         lgpd_consent: form.lgpd_consent,
         status: "indeciso",
