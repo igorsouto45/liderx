@@ -159,7 +159,8 @@ function Interacoes() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 flex-1 min-h-0">
-        <Card className="md:col-span-3 flex flex-col bg-card/50 backdrop-blur-xl border-white/10 overflow-hidden">
+        <Card className="md:col-span-3 flex flex-col bg-card/40 backdrop-blur-3xl border-white/5 overflow-hidden shadow-2xl relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
           <div className="p-4 border-b border-white/10 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
               <Bot className="h-6 w-6 text-primary" />
@@ -189,10 +190,10 @@ function Interacoes() {
                   <div
                     key={msg.id}
                     className={cn(
-                      "flex w-full max-w-[85%] flex-col gap-2 rounded-lg p-4 text-sm",
+                      "flex w-full max-w-[85%] flex-col gap-2 rounded-2xl p-4 text-sm shadow-sm",
                       msg.role === "user" 
-                        ? "ml-auto bg-primary text-primary-foreground" 
-                        : "bg-muted border border-white/5"
+                        ? "ml-auto bg-primary text-primary-foreground rounded-tr-none shadow-primary/20" 
+                        : "bg-muted/80 backdrop-blur-sm border border-white/5 rounded-tl-none"
                     )}
                   >
                     <div className="font-bold flex items-center gap-2">
@@ -218,7 +219,7 @@ function Interacoes() {
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-white/10 bg-background/30">
+          <div className="p-4 border-t border-white/5 bg-background/20 backdrop-blur-md">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -246,7 +247,7 @@ function Interacoes() {
             <Button
               key={action.label}
               variant="outline"
-              className="w-full justify-start h-auto py-4 px-4 bg-card/40 border-white/10 hover:bg-primary/10 hover:border-primary/30 transition-all text-left flex gap-3 group"
+              className="w-full justify-start h-auto py-4 px-4 bg-card/30 backdrop-blur-md border-white/5 hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 text-left flex gap-3 group rounded-2xl shadow-sm"
               onClick={() => handleSend(action.prompt)}
               disabled={isLoading}
             >
@@ -260,7 +261,8 @@ function Interacoes() {
             </Button>
           ))}
           
-          <Card className="p-4 bg-primary/5 border-primary/20 mt-6">
+          <Card className="p-5 bg-primary/10 border-primary/20 mt-6 shadow-inner relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/20 blur-2xl rounded-full" />
             <h5 className="text-xs font-bold text-primary flex items-center gap-2 mb-2">
               <Zap className="h-3 w-3" /> DICA IA
             </h5>
