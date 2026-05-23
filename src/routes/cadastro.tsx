@@ -214,7 +214,7 @@ function CadastroPublico() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>WhatsApp</Label>
                   <Input 
@@ -236,18 +236,34 @@ function CadastroPublico() {
               </div>
 
               <div className="space-y-2">
-                <Label>CEP</Label>
+                <Label>CPF (Opcional)</Label>
                 <Input 
-                  required 
-                  value={form.cep} 
-                  onChange={e => setForm({...form, cep: e.target.value})} 
-                  onBlur={handleCepBlur}
-                  placeholder="00000-000"
+                  value={form.cpf} 
+                  onChange={e => setForm({...form, cpf: e.target.value})} 
+                  placeholder="000.000.000-00"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <div className="relative">
+                  <Input 
+                    required 
+                    value={form.cep} 
+                    onChange={e => setForm({...form, cep: e.target.value})} 
+                    onBlur={handleCepBlur}
+                    placeholder="00000-000"
+                  />
+                  {cepLoading && (
+                    <div className="absolute right-3 top-2.5">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 space-y-2">
                   <Label>Endereço</Label>
                   <Input value={form.endereco} onChange={e => setForm({...form, endereco: e.target.value})} />
                 </div>
@@ -257,15 +273,79 @@ function CadastroPublico() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Bairro</Label>
                   <Input value={form.bairro} onChange={e => setForm({...form, bairro: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label>Cidade</Label>
-                  <Input value={form.cidade} onChange={e => setForm({...form, cidade: e.target.value})} />
+                  <div className="flex gap-2">
+                    <Input className="flex-1" value={form.cidade} onChange={e => setForm({...form, cidade: e.target.value})} />
+                    <Input className="w-16 uppercase" maxLength={2} value={form.uf} onChange={e => setForm({...form, uf: e.target.value.toUpperCase()})} />
+                  </div>
                 </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/5">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Search className="h-4 w-4 text-primary" />
+                  Local de Votação
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Zona</Label>
+                    <Input 
+                      value={form.zona_votacao} 
+                      onChange={e => setForm({...form, zona_votacao: e.target.value})} 
+                      placeholder="000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Seção</Label>
+                    <Input 
+                      value={form.secao_votacao} 
+                      onChange={e => setForm({...form, secao_votacao: e.target.value})} 
+                      placeholder="0000"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label>Nome do Local de Votação</Label>
+                  <Input 
+                    value={form.local_votacao_nome} 
+                    onChange={e => setForm({...form, local_votacao_nome: e.target.value})} 
+                    placeholder="Escola, Ginásio, etc."
+                  />
+                </div>
+
+                {suggestions.length > 0 && (
+                  <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-center gap-2 mb-2 text-xs font-bold text-primary uppercase tracking-wider">
+                      <Info className="h-3 w-3" /> Sugestões baseadas no CEP
+                    </div>
+                    <div className="space-y-2">
+                      {suggestions.map((s, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="w-full text-left p-2 rounded hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
+                          onClick={() => setForm(f => ({
+                            ...f,
+                            zona_votacao: String(s.zona ?? ""),
+                            secao_votacao: String(s.secao ?? ""),
+                            local_votacao_nome: s.local_nome ?? "",
+                          }))}
+                        >
+                          <div className="text-xs font-bold">{s.local_nome}</div>
+                          <div className="text-[10px] text-muted-foreground">Zona {s.zona} • Seção {s.secao}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-start space-x-3 pt-4">
