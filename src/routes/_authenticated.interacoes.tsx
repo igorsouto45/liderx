@@ -139,9 +139,10 @@ function Interacoes() {
   }
 
   const quickActions = [
-    { label: "Analisar Bairros", icon: BarChart2, prompt: "Quais são os bairros com mais eleitores e onde devo focar mais esforços?" },
-    { label: "Script de Discurso", icon: FileText, prompt: "Crie um script de 1 minuto para um vídeo de campanha focado em renovação e liderança." },
-    { label: "Dicas de Engajamento", icon: Zap, prompt: "Como posso motivar meus líderes a cadastrar mais eleitores nesta semana?" },
+    { label: "Análise de Bairros", icon: BarChart2, prompt: "Analise a distribuição dos eleitores por bairro. Quais são as prioridades estratégicas agora?" },
+    { label: "Desempenho de Líderes", icon: Zap, prompt: "Quem são meus líderes mais produtivos e como posso replicar o sucesso deles no restante da equipe?" },
+    { label: "Tendência de Crescimento", icon: BarChart2, prompt: "Como está meu ritmo de cadastro nos últimos meses? Estamos crescendo no tempo certo?" },
+    { label: "Script para WhatsApp", icon: FileText, prompt: "Crie uma mensagem motivadora para enviar aos líderes hoje, focada em aumentar os cadastros no bairro mais fraco." },
   ];
 
   return (
@@ -149,7 +150,7 @@ function Interacoes() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">LiderX IA</h1>
-          <p className="text-muted-foreground">Seu consultor estratégico de campanha.</p>
+          <p className="text-muted-foreground">Seu consultor estratégico alimentado por dados reais.</p>
         </div>
         <Button variant="ghost" size="sm" onClick={clearChat} className="text-destructive hover:text-destructive hover:bg-destructive/10">
           <Trash2 className="h-4 w-4 mr-2" />
