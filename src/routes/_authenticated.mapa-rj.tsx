@@ -28,7 +28,7 @@ const FAIXAS = [
 ];
 
 const RJ_CENTER: [number, number] = [-22.4, -42.7];
-const GEO = municipiosGeo as Record<string, [number, number]>;
+const GEO = municipiosGeo as unknown as Record<string, [number, number]>;
 
 interface MuniTotal { municipio: string; total: number; }
 interface DetalheRow { zona: number; secao: number; total: number; }
