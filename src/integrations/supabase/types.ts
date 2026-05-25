@@ -625,8 +625,11 @@ export type Database = {
           contact_name: string | null
           content: string
           created_at: string
+          external_id: string | null
           from_me: boolean
           id: string
+          instancia_id: string | null
+          message_type: string | null
           remote_jid: string
           status: string | null
           timestamp: string
@@ -636,8 +639,11 @@ export type Database = {
           contact_name?: string | null
           content: string
           created_at?: string
+          external_id?: string | null
           from_me?: boolean
           id?: string
+          instancia_id?: string | null
+          message_type?: string | null
           remote_jid: string
           status?: string | null
           timestamp?: string
@@ -647,14 +653,25 @@ export type Database = {
           contact_name?: string | null
           content?: string
           created_at?: string
+          external_id?: string | null
           from_me?: boolean
           id?: string
+          instancia_id?: string | null
+          message_type?: string | null
           remote_jid?: string
           status?: string | null
           timestamp?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_mensagens_instancia_id_fkey"
+            columns: ["instancia_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_instancias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
