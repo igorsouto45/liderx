@@ -588,6 +588,7 @@ export type Database = {
           owner_id: string | null
           qrcode_data: string | null
           status: string | null
+          tecnologia: string | null
           token: string | null
           updated_at: string | null
         }
@@ -600,6 +601,7 @@ export type Database = {
           owner_id?: string | null
           qrcode_data?: string | null
           status?: string | null
+          tecnologia?: string | null
           token?: string | null
           updated_at?: string | null
         }
@@ -612,6 +614,7 @@ export type Database = {
           owner_id?: string | null
           qrcode_data?: string | null
           status?: string | null
+          tecnologia?: string | null
           token?: string | null
           updated_at?: string | null
         }

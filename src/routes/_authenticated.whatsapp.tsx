@@ -33,6 +33,7 @@ function WhatsAppPage() {
   const [instances, setInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newInstanceName, setNewInstanceName] = useState("");
+  const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
   const [config, setConfig] = useState<any>({
     anti_ban_delay_min: 5,
@@ -48,12 +49,21 @@ function WhatsAppPage() {
 
   const fetchInstances = async () => {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast.error("Sessão não encontrada");
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("whatsapp_instancias")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("Erro ao buscar instâncias:", error);
       toast.error("Erro ao carregar instâncias");
     } else {
       setInstances(data || []);
@@ -70,16 +80,34 @@ function WhatsAppPage() {
       .from("whatsapp_configuracoes")
       .select("*")
       .eq("instancia_id", instanceId)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setConfig(data);
-    } else if (error && error.code !== "PGRST116") {
+    } else if (error) {
+      console.error("Erro ao buscar config:", error);
       toast.error("Erro ao carregar configurações");
+    } else {
+      // Create default config if not exists
+      setConfig({
+        instancia_id: instanceId,
+        anti_ban_delay_min: 5,
+        anti_ban_delay_max: 15,
+        anti_ban_batch_size: 50,
+        auto_responder_enabled: false,
+        auto_responder_brain: ""
+      });
     }
   };
 
   const createInstance = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
     if (!newInstanceName) {
       toast.error("Informe um nome para a instância");
       return;
@@ -89,17 +117,21 @@ function WhatsAppPage() {
       .from("whatsapp_instancias")
       .insert([{ 
         nome: newInstanceName,
-        status: "disconnected"
+        status: "disconnected",
+        tecnologia: newInstanceTech,
+        owner_id: session.user.id
       }])
       .select()
       .single();
 
     if (error) {
-      toast.error("Erro ao criar instância");
+      console.error("Erro ao criar instância:", error);
+      toast.error(`Erro ao criar instância: ${error.message}`);
     } else {
       toast.success("Instância criada com sucesso");
       setNewInstanceName("");
       fetchInstances();
+      setSelectedInstance(data);
     }
   };
 
@@ -114,6 +146,7 @@ function WhatsAppPage() {
       });
 
     if (error) {
+      console.error("Erro ao salvar config:", error);
       toast.error("Erro ao salvar configurações");
     } else {
       toast.success("Configurações salvas");
@@ -124,19 +157,29 @@ function WhatsAppPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">WhatsApp (Evolution API)</h1>
-          <p className="text-muted-foreground">Gerencie suas conexões, automações e cérebro do Líder-X.</p>
+          <h1 className="text-3xl font-bold tracking-tight">WhatsApp (Evolution GO)</h1>
+          <p className="text-muted-foreground">Gerencie suas conexões Baileys, automações e cérebro do Líder-X.</p>
         </div>
-        <div className="flex gap-2">
-          <Input 
-            placeholder="Nome da nova instância" 
-            value={newInstanceName}
-            onChange={(e) => setNewInstanceName(e.target.value)}
-            className="w-full md:w-64"
-          />
-          <Button onClick={createInstance} className="gap-2">
-            <Plus className="h-4 w-4" /> Nova Instância
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select 
+            className="bg-background border border-white/10 rounded-md px-3 py-2 text-sm"
+            value={newInstanceTech}
+            onChange={(e) => setNewInstanceTech(e.target.value)}
+          >
+            <option value="evolution_go">Evolution GO (Baileys)</option>
+            <option value="evolution_api">Evolution API (v2)</option>
+          </select>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Nome da instância" 
+              value={newInstanceName}
+              onChange={(e) => setNewInstanceName(e.target.value)}
+              className="w-full md:w-64"
+            />
+            <Button onClick={createInstance} className="gap-2">
+              <Plus className="h-4 w-4" /> Nova Instância
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -169,7 +212,10 @@ function WhatsAppPage() {
                     <span className="font-semibold text-sm">{inst.nome}</span>
                     <div className={`h-2 w-2 rounded-full ${inst.status === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
                   </div>
-                  <span className="text-xs opacity-70 uppercase tracking-tighter">{inst.status}</span>
+                  <div className="flex items-center justify-between opacity-70">
+                    <span className="text-[10px] uppercase tracking-tighter">{inst.status}</span>
+                    <span className="text-[10px] bg-white/10 px-1.5 rounded uppercase">{inst.tecnologia === 'evolution_go' ? 'GO' : 'API'}</span>
+                  </div>
                 </button>
               ))
             )}
@@ -285,16 +331,19 @@ function WhatsAppPage() {
               </TabsContent>
 
               <TabsContent value="brain" className="space-y-4">
-                <Card className="bg-card/50 border-white/10">
-                  <CardHeader>
-                    <CardTitle>Auto-Responder (Cérebro Líder-X)</CardTitle>
-                    <CardDescription>Configure como a IA deve responder automaticamente em nome do candidato.</CardDescription>
-                  </CardHeader>
+                <Card className="bg-card/50 border-white/10 overflow-hidden">
+                  <div className="bg-primary/10 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                    <Bot className="h-6 w-6 text-primary" />
+                    <div>
+                      <h3 className="font-bold">Cérebro Líder-X (Auto-Responder)</h3>
+                      <p className="text-xs text-muted-foreground">Personalidade e inteligência para respostas automáticas.</p>
+                    </div>
+                  </div>
                   <CardContent className="space-y-6 py-6">
                     <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                       <div className="space-y-1">
-                        <h4 className="font-semibold">Ativar Respostas Automáticas</h4>
-                        <p className="text-sm text-muted-foreground">A IA responderá dúvidas baseada no contexto abaixo.</p>
+                        <h4 className="font-semibold">Status do Robô</h4>
+                        <p className="text-sm text-muted-foreground">Ative para permitir que a IA responda automaticamente.</p>
                       </div>
                       <Switch 
                         checked={config.auto_responder_enabled}
@@ -303,10 +352,23 @@ function WhatsAppPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Contexto e Personalidade (Cérebro)</Label>
+                      <div className="flex justify-between items-center">
+                        <Label>Contexto e Personalidade</Label>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-xs text-primary"
+                          onClick={() => setConfig({
+                            ...config, 
+                            auto_responder_brain: "Você é o Líder-X, o assistente virtual oficial da campanha. Sua personalidade é prestativa, ética e entusiasmada. Responda dúvidas sobre propostas, agenda e como ajudar na campanha. Seja sempre cordial e use emojis moderadamente."
+                          })}
+                        >
+                          Usar Exemplo
+                        </Button>
+                      </div>
                       <Textarea 
-                        placeholder="Ex: Você é o assistente virtual do Candidato João Silva. Seu objetivo é falar sobre as propostas de educação e saúde..." 
-                        className="min-h-[200px] bg-white/5 border-white/10 resize-none"
+                        placeholder="Descreva aqui como o robô deve se comportar e quais informações ele deve dominar..." 
+                        className="min-h-[250px] bg-white/5 border-white/10 focus:ring-primary/20"
                         value={config.auto_responder_brain || ""}
                         onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
                       />
@@ -314,19 +376,22 @@ function WhatsAppPage() {
 
                     <div className="space-y-4">
                       <div className="flex justify-between">
-                        <Label>Limite de Respostas por Contato (por dia)</Label>
-                        <span className="font-mono text-primary">{config.auto_responder_limit_per_contact}</span>
+                        <Label>Limite Diário de Respostas (por contato)</Label>
+                        <span className="font-mono text-primary">{config.auto_responder_limit_per_contact || 10}</span>
                       </div>
                       <Slider 
                         value={[config.auto_responder_limit_per_contact || 10]} 
                         min={1} 
-                        max={50} 
+                        max={100} 
                         step={1}
                         onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
                       />
+                      <p className="text-[10px] text-muted-foreground">Evita loops de mensagens e economiza créditos de IA.</p>
                     </div>
 
-                    <Button onClick={updateConfig} className="w-full md:w-auto">Salvar Cérebro da IA</Button>
+                    <Button onClick={updateConfig} className="w-full gap-2">
+                      <CheckCircle2 className="h-4 w-4" /> Salvar Cérebro do Líder-X
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
