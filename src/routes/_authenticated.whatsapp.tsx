@@ -40,10 +40,12 @@ function WhatsAppPage() {
   const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
   const [webhookUrl, setWebhookUrl] = useState("");
-  const [config, setConfig] = useState<any>({
+  const [globalAntiBan, setGlobalAntiBan] = useState<any>({
     anti_ban_delay_min: 5,
     anti_ban_delay_max: 15,
-    anti_ban_batch_size: 50,
+    anti_ban_batch_size: 50
+  });
+  const [config, setConfig] = useState<any>({
     auto_responder_enabled: false,
     auto_responder_brain: "",
     auto_responder_limit_per_contact: 10
@@ -51,6 +53,7 @@ function WhatsAppPage() {
 
   useEffect(() => {
     fetchInstances();
+    fetchGlobalAntiBan();
     
     // Set dynamic webhook URL based on Supabase URL
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -61,6 +64,23 @@ function WhatsAppPage() {
       setWebhookUrl(`https://${projectId}.functions.supabase.co/whatsapp-webhook`);
     }
   }, []);
+
+  const fetchGlobalAntiBan = async () => {
+    // Buscamos a configuração anti-ban global (id 0 ou o primeiro registro sem instancia_id específico)
+    const { data, error } = await supabase
+      .from("whatsapp_configuracoes")
+      .select("*")
+      .is("instancia_id", null)
+      .maybeSingle();
+
+    if (data) {
+      setGlobalAntiBan({
+        anti_ban_delay_min: data.anti_ban_delay_min,
+        anti_ban_delay_max: data.anti_ban_delay_max,
+        anti_ban_batch_size: data.anti_ban_batch_size,
+      });
+    }
+  };
 
   const fetchInstances = async () => {
     setLoading(true);
@@ -98,19 +118,33 @@ function WhatsAppPage() {
       .maybeSingle();
 
     if (data) {
-      setConfig(data);
-    } else if (error) {
-      console.error("Erro ao buscar config:", error);
+      setConfig({
+        auto_responder_enabled: data.auto_responder_enabled,
+        auto_responder_brain: data.auto_responder_brain,
+        auto_responder_limit_per_contact: data.auto_responder_limit_per_contact
+      });
     } else {
       setConfig({
-        instancia_id: instanceId,
-        anti_ban_delay_min: 5,
-        anti_ban_delay_max: 15,
-        anti_ban_batch_size: 50,
         auto_responder_enabled: false,
         auto_responder_brain: "",
         auto_responder_limit_per_contact: 10
       });
+    }
+  };
+
+  const updateGlobalAntiBan = async () => {
+    const { error } = await supabase
+      .from("whatsapp_configuracoes")
+      .upsert({
+        id: '00000000-0000-0000-0000-000000000000', // ID fixo para global ou usar unique constraint
+        instancia_id: null,
+        ...globalAntiBan
+      }, { onConflict: 'instancia_id' });
+
+    if (error) {
+      toast.error("Erro ao salvar anti-banimento global");
+    } else {
+      toast.success("Configuração Anti-Banimento salva globalmente");
     }
   };
 
@@ -250,35 +284,72 @@ function WhatsAppPage() {
         </Card>
       </div>
 
-      {/* Webhook Section - Always visible */}
-      <Card className="bg-card/50 border-white/10">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Webhook className="h-5 w-5 text-blue-500" />
-            Configuração do Webhook
-          </CardTitle>
-          <CardDescription>
-            Configure esta URL na sua Evolution API para receber eventos em tempo real.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input value={webhookUrl} readOnly className="bg-black/20 font-mono text-sm" />
-            <Button variant="outline" size="icon" onClick={() => {
-              navigator.clipboard.writeText(webhookUrl);
-              toast.success("URL copiada!");
-            }}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="text-xs bg-blue-500/10 p-3 rounded-lg border border-blue-500/20 text-blue-400 flex items-start gap-2">
-            <Zap className="h-4 w-4 mt-0.5 shrink-0" />
-            <div>
-              <strong>Eventos recomendados:</strong> Marque <strong>MESSAGES_UPSERT</strong> e <strong>CONNECTION_UPDATE</strong> na sua instância da Evolution API.
+      {/* Seção Global - Sempre Visível */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Webhook Section */}
+        <Card className="bg-card/50 border-white/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Webhook className="h-5 w-5 text-blue-500" />
+              Webhook
+            </CardTitle>
+            <CardDescription>
+              URL para receber eventos da Evolution API.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input value={webhookUrl} readOnly className="bg-black/20 font-mono text-xs" />
+              <Button variant="outline" size="icon" onClick={() => {
+                navigator.clipboard.writeText(webhookUrl);
+                toast.success("URL copiada!");
+              }}>
+                <Copy className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="text-[10px] bg-blue-500/10 p-2 rounded border border-blue-500/20 text-blue-400 flex items-start gap-2">
+              <Zap className="h-3 w-3 mt-0.5 shrink-0" />
+              <span>Marque <strong>MESSAGES_UPSERT</strong> e <strong>CONNECTION_UPDATE</strong> na Evolution.</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Global Anti-Ban Section */}
+        <Card className="bg-card/50 border-white/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-orange-500" />
+              Anti-Banimento Global
+            </CardTitle>
+            <CardDescription>
+              Configurações aplicadas a todos os envios.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-[11px]">
+                <Label className="text-muted-foreground">Delay: {globalAntiBan.anti_ban_delay_min}s - {globalAntiBan.anti_ban_delay_max}s</Label>
+              </div>
+              <Slider 
+                value={[globalAntiBan.anti_ban_delay_min]} 
+                min={1} max={30} step={1}
+                onValueChange={(val) => setGlobalAntiBan({...globalAntiBan, anti_ban_delay_min: val[0]})}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-[11px]">
+                <Label className="text-muted-foreground">Lote: {globalAntiBan.anti_ban_batch_size} msg</Label>
+              </div>
+              <Slider 
+                value={[globalAntiBan.anti_ban_batch_size]} 
+                min={10} max={200} step={10}
+                onValueChange={(val) => setGlobalAntiBan({...globalAntiBan, anti_ban_batch_size: val[0]})}
+              />
+            </div>
+            <Button size="sm" onClick={updateGlobalAntiBan} className="w-full h-8 text-xs">Salvar Global</Button>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <Card className="lg:col-span-1 bg-card/50 backdrop-blur-xl border-white/10 h-fit">
@@ -380,67 +451,38 @@ function WhatsAppPage() {
                 </CardContent>
               </Card>
 
-              {/* Anti-Ban and Brain Settings (Lado a Lado) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-card/50 border-white/10">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <ShieldAlert className="h-5 w-5 text-orange-500" /> Configurações Anti-Banimento
+              {/* Brain Settings (Agora ocupando mais espaço quando selecionado) */}
+              <Card className="bg-card/50 border-white/10">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Bot className="h-6 w-6 text-primary" /> Cérebro do Lider-X (Auto-Responder)
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-8 pt-4">
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <Label className="text-muted-foreground">Intervalo entre Mensagens</Label>
-                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">{config.anti_ban_delay_min}s - {config.anti_ban_delay_max}s</span>
-                      </div>
-                      <Slider 
-                        value={[config.anti_ban_delay_min]} 
-                        min={1} max={30} step={1}
-                        onValueChange={(val) => setConfig({...config, anti_ban_delay_min: val[0]})}
-                      />
-                      <p className="text-[10px] text-muted-foreground italic">Recomendado: entre 5 e 15 segundos para evitar bloqueios.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <Label className="text-muted-foreground">Tamanho do Lote de Envio</Label>
-                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">{config.anti_ban_batch_size} mensagens</span>
-                      </div>
-                      <Slider 
-                        value={[config.anti_ban_batch_size]} 
-                        min={10} max={200} step={10}
-                        onValueChange={(val) => setConfig({...config, anti_ban_batch_size: val[0]})}
-                      />
-                    </div>
-                    <Button onClick={updateConfig} className="w-full shadow-lg shadow-primary/10">Salvar Anti-Ban</Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card/50 border-white/10">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Bot className="h-5 w-5 text-primary" /> Cérebro do Lider-X (Auto-Responder)
-                      </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground">{config.auto_responder_enabled ? 'Ativado' : 'Desativado'}</Label>
                       <Switch 
                         checked={config.auto_responder_enabled}
                         onCheckedChange={(val) => setConfig({...config, auto_responder_enabled: val})}
                         className="data-[state=checked]:bg-primary"
                       />
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6 pt-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm text-muted-foreground">Personalidade e Conhecimento</Label>
-                      <Textarea 
-                        placeholder="Ex: Você é o assistente virtual do candidato João Silva. Seja cordial, responda sobre as propostas de saúde e educação..." 
-                        className="min-h-[120px] text-sm bg-black/20 focus:ring-primary/50"
-                        value={config.auto_responder_brain || ""}
-                        onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
-                      />
-                    </div>
-                    
+                  </div>
+                  <CardDescription>
+                    Configure a inteligência artificial para responder automaticamente por esta instância.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Personalidade e Base de Conhecimento</Label>
+                    <Textarea 
+                      placeholder="Ex: Você é o assistente virtual do candidato João Silva. Seja cordial, responda sobre as propostas de saúde e educação..." 
+                      className="min-h-[200px] text-sm bg-black/20 focus:ring-primary/50 border-white/5"
+                      value={config.auto_responder_brain || ""}
+                      onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div className="flex justify-between text-sm">
                         <Label className="text-muted-foreground">Limite de Respostas/Contato</Label>
@@ -452,10 +494,14 @@ function WhatsAppPage() {
                         onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
                       />
                     </div>
-                    <Button onClick={updateConfig} className="w-full shadow-lg shadow-primary/10">Salvar Cérebro</Button>
-                  </CardContent>
-                </Card>
-              </div>
+                    <div className="flex items-end">
+                      <Button onClick={updateConfig} className="w-full shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90">
+                        <RefreshCw className="h-4 w-4 mr-2" /> Salvar Configurações do Cérebro
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>
