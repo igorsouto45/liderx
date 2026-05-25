@@ -32,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/whatsapp")({
 function WhatsAppPage() {
   const [instances, setInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [newInstanceName, setNewInstanceName] = useState("");
   const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
@@ -46,9 +47,16 @@ function WhatsAppPage() {
 
   useEffect(() => {
     fetchInstances();
-    // Set dynamic webhook URL based on project ID
-    const projectId = window.location.hostname.split('.')[0];
-    setWebhookUrl(`https://${projectId}.functions.supabase.co/whatsapp-webhook`);
+    
+    // Set dynamic webhook URL based on Supabase URL
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (supabaseUrl) {
+      setWebhookUrl(`${supabaseUrl}/functions/v1/whatsapp-webhook`);
+    } else {
+      // Fallback if env var is missing
+      const projectId = window.location.hostname.split('.')[0];
+      setWebhookUrl(`https://${projectId}.functions.supabase.co/whatsapp-webhook`);
+    }
   }, []);
 
   const fetchInstances = async () => {
@@ -71,6 +79,7 @@ function WhatsAppPage() {
       toast.error("Erro ao carregar instâncias");
     } else {
       setInstances(data || []);
+      // If we have instances and none selected, select the first one
       if (data && data.length > 0 && !selectedInstance) {
         setSelectedInstance(data[0]);
         fetchConfig(data[0].id);
@@ -92,6 +101,7 @@ function WhatsAppPage() {
       console.error("Erro ao buscar config:", error);
       toast.error("Erro ao carregar configurações");
     } else {
+      // Set default config if none exists for this instance
       setConfig({
         instancia_id: instanceId,
         anti_ban_delay_min: 5,
@@ -105,31 +115,43 @@ function WhatsAppPage() {
 
   const createInstance = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) {
+      toast.error("Você precisa estar logado");
+      return;
+    }
 
-    if (!newInstanceName) {
+    if (!newInstanceName.trim()) {
       toast.error("Informe um nome para a instância");
       return;
     }
 
-    const { data, error } = await supabase
-      .from("whatsapp_instancias")
-      .insert([{ 
-        nome: newInstanceName,
-        status: "disconnected",
-        tecnologia: newInstanceTech,
-        owner_id: session.user.id
-      }])
-      .select()
-      .single();
+    setCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from("whatsapp_instancias")
+        .insert([{ 
+          nome: newInstanceName.trim(),
+          status: "disconnected",
+          tecnologia: newInstanceTech,
+          owner_id: session.user.id
+        }])
+        .select()
+        .single();
 
-    if (error) {
-      toast.error(`Erro ao criar instância: ${error.message}`);
-    } else {
-      toast.success("Instância criada com sucesso");
-      setNewInstanceName("");
-      fetchInstances();
-      setSelectedInstance(data);
+      if (error) {
+        toast.error(`Erro ao criar instância: ${error.message}`);
+      } else if (data) {
+        toast.success("Instância criada com sucesso");
+        setNewInstanceName("");
+        await fetchInstances();
+        setSelectedInstance(data);
+        await fetchConfig(data.id);
+      }
+    } catch (err: any) {
+      console.error("Erro na criação:", err);
+      toast.error("Erro inesperado ao criar instância");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -141,12 +163,14 @@ function WhatsAppPage() {
       .upsert({
         instancia_id: selectedInstance.id,
         ...config
-      });
+      }, { onConflict: 'instancia_id' });
 
     if (error) {
+      console.error("Erro ao salvar config:", error);
       toast.error("Erro ao salvar configurações");
     } else {
       toast.success("Configurações salvas");
+      fetchConfig(selectedInstance.id);
     }
   };
 
@@ -191,8 +215,9 @@ function WhatsAppPage() {
               onChange={(e) => setNewInstanceName(e.target.value)}
               className="w-full md:w-64"
             />
-            <Button onClick={createInstance} className="gap-2">
-              <Plus className="h-4 w-4" /> Nova Instância
+            <Button onClick={createInstance} disabled={creating} className="gap-2">
+              {creating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Nova Instância
             </Button>
           </div>
         </div>
