@@ -486,6 +486,87 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_config: {
+        Row: {
+          ai_brain_enabled: boolean | null
+          ai_prompt: string | null
+          anti_ban_delay_max: number | null
+          anti_ban_delay_min: number | null
+          api_key: string | null
+          api_url: string | null
+          auto_responder_enabled: boolean | null
+          created_at: string
+          id: string
+          session_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_brain_enabled?: boolean | null
+          ai_prompt?: string | null
+          anti_ban_delay_max?: number | null
+          anti_ban_delay_min?: number | null
+          api_key?: string | null
+          api_url?: string | null
+          auto_responder_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          session_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_brain_enabled?: boolean | null
+          ai_prompt?: string | null
+          anti_ban_delay_max?: number | null
+          anti_ban_delay_min?: number | null
+          api_key?: string | null
+          api_url?: string | null
+          auto_responder_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          session_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_mensagens: {
+        Row: {
+          contact_name: string | null
+          content: string
+          created_at: string
+          from_me: boolean
+          id: string
+          remote_jid: string
+          status: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          content: string
+          created_at?: string
+          from_me?: boolean
+          id?: string
+          remote_jid: string
+          status?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          content?: string
+          created_at?: string
+          from_me?: boolean
+          id?: string
+          remote_jid?: string
+          status?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
