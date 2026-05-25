@@ -17,7 +17,8 @@ import {
   Bot,
   FileSignature,
   QrCode,
-  Target
+  Target,
+  Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -158,6 +159,7 @@ function AuthenticatedLayout() {
     { label: "QR Code Líder", icon: QrCode, to: "/qrcode-lider", roles: ["admin"] },
     { label: "Interações IA", icon: Bot, to: "/interacoes", roles: ["admin", "operador"] },
     { label: "Mensagens", icon: MessageSquare, to: "/mensagens", roles: ["admin", "líder"] },
+    { label: "WhatsApp", icon: Smartphone, to: "/whatsapp", roles: ["admin"] },
     { label: "Emissão de Contrato", icon: FileSignature, to: "/emissao-contrato", roles: ["admin"] },
     { label: "Configurações", icon: Settings, to: "/settings", roles: ["admin"] },
   ];
