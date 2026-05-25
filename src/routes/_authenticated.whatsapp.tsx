@@ -576,7 +576,7 @@ function WhatsAppPage() {
                             <div key={file.id} className="flex items-center justify-between bg-white/5 p-2 rounded text-xs border border-white/5">
                               <div className="flex items-center gap-2 truncate">
                                 <FileText className="h-3 w-3 text-blue-400 shrink-0" />
-                                <span className="truncate">{file.nome}</span>
+                                <span className="truncate">{file.nome_arquivo}</span>
                               </div>
                               <button onClick={() => deleteFile(file)} className="text-muted-foreground hover:text-red-400 transition-colors">
                                 <X className="h-3 w-3" />
