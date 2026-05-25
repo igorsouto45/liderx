@@ -156,6 +156,7 @@ function AuthenticatedLayout() {
     { label: "Estratégia", icon: Target, to: "/prioridades", roles: ["admin", "operador", "líder"] },
     { label: "Lideranças", icon: TrendingUp, to: "/liderancas", roles: ["admin", "operador"] },
     { label: "Mapa Estratégico", icon: Map, to: "/mapa", roles: ["admin", "operador"] },
+    { label: "Mapa Eleitorado RJ", icon: Map, to: "/mapa-rj", roles: ["admin", "operador"] },
     { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
     { label: "QR Code Líder", icon: QrCode, to: "/qrcode-lider", roles: ["admin"] },
     { label: "Interações IA", icon: Bot, to: "/interacoes", roles: ["admin", "operador"] },

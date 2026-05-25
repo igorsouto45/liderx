@@ -52,6 +52,36 @@ export type Database = {
           },
         ]
       }
+      eleitorado_rj_agregado: {
+        Row: {
+          faixa_etaria: string
+          genero: string
+          id: number
+          municipio: string
+          quantidade: number
+          secao: number
+          zona: number
+        }
+        Insert: {
+          faixa_etaria: string
+          genero: string
+          id?: number
+          municipio: string
+          quantidade?: number
+          secao: number
+          zona: number
+        }
+        Update: {
+          faixa_etaria?: string
+          genero?: string
+          id?: number
+          municipio?: string
+          quantidade?: number
+          secao?: number
+          zona?: number
+        }
+        Relationships: []
+      }
       eleitores: {
         Row: {
           bairro: string | null
@@ -689,6 +719,21 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      mapa_rj_detalhe_municipio: {
+        Args: { p_faixas?: string[]; p_generos?: string[]; p_municipio: string }
+        Returns: {
+          secao: number
+          total: number
+          zona: number
+        }[]
+      }
+      mapa_rj_totais_municipio: {
+        Args: { p_faixas?: string[]; p_generos?: string[] }
+        Returns: {
+          municipio: string
+          total: number
+        }[]
       }
     }
     Enums: {

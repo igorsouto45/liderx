@@ -19,6 +19,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedQrcodeLiderRouteImport } from './routes/_authenticated.qrcode-lider'
 import { Route as AuthenticatedPrioridadesRouteImport } from './routes/_authenticated.prioridades'
 import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated.mensagens'
+import { Route as AuthenticatedMapaRjRouteImport } from './routes/_authenticated.mapa-rj'
 import { Route as AuthenticatedMapaRouteImport } from './routes/_authenticated.mapa'
 import { Route as AuthenticatedLiderancasRouteImport } from './routes/_authenticated.liderancas'
 import { Route as AuthenticatedInteracoesRouteImport } from './routes/_authenticated.interacoes'
@@ -78,6 +79,11 @@ const AuthenticatedMensagensRoute = AuthenticatedMensagensRouteImport.update({
   path: '/mensagens',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMapaRjRoute = AuthenticatedMapaRjRouteImport.update({
+  id: '/mapa-rj',
+  path: '/mapa-rj',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMapaRoute = AuthenticatedMapaRouteImport.update({
   id: '/mapa',
   path: '/mapa',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/interacoes': typeof AuthenticatedInteracoesRoute
   '/liderancas': typeof AuthenticatedLiderancasRoute
   '/mapa': typeof AuthenticatedMapaRoute
+  '/mapa-rj': typeof AuthenticatedMapaRjRoute
   '/mensagens': typeof AuthenticatedMensagensRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/interacoes': typeof AuthenticatedInteracoesRoute
   '/liderancas': typeof AuthenticatedLiderancasRoute
   '/mapa': typeof AuthenticatedMapaRoute
+  '/mapa-rj': typeof AuthenticatedMapaRjRoute
   '/mensagens': typeof AuthenticatedMensagensRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/interacoes': typeof AuthenticatedInteracoesRoute
   '/_authenticated/liderancas': typeof AuthenticatedLiderancasRoute
   '/_authenticated/mapa': typeof AuthenticatedMapaRoute
+  '/_authenticated/mapa-rj': typeof AuthenticatedMapaRjRoute
   '/_authenticated/mensagens': typeof AuthenticatedMensagensRoute
   '/_authenticated/prioridades': typeof AuthenticatedPrioridadesRoute
   '/_authenticated/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/interacoes'
     | '/liderancas'
     | '/mapa'
+    | '/mapa-rj'
     | '/mensagens'
     | '/prioridades'
     | '/qrcode-lider'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/interacoes'
     | '/liderancas'
     | '/mapa'
+    | '/mapa-rj'
     | '/mensagens'
     | '/prioridades'
     | '/qrcode-lider'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/interacoes'
     | '/_authenticated/liderancas'
     | '/_authenticated/mapa'
+    | '/_authenticated/mapa-rj'
     | '/_authenticated/mensagens'
     | '/_authenticated/prioridades'
     | '/_authenticated/qrcode-lider'
@@ -309,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMensagensRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mapa-rj': {
+      id: '/_authenticated/mapa-rj'
+      path: '/mapa-rj'
+      fullPath: '/mapa-rj'
+      preLoaderRoute: typeof AuthenticatedMapaRjRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/mapa': {
       id: '/_authenticated/mapa'
       path: '/mapa'
@@ -369,6 +388,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInteracoesRoute: typeof AuthenticatedInteracoesRoute
   AuthenticatedLiderancasRoute: typeof AuthenticatedLiderancasRoute
   AuthenticatedMapaRoute: typeof AuthenticatedMapaRoute
+  AuthenticatedMapaRjRoute: typeof AuthenticatedMapaRjRoute
   AuthenticatedMensagensRoute: typeof AuthenticatedMensagensRoute
   AuthenticatedPrioridadesRoute: typeof AuthenticatedPrioridadesRoute
   AuthenticatedQrcodeLiderRoute: typeof AuthenticatedQrcodeLiderRoute
@@ -384,6 +404,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInteracoesRoute: AuthenticatedInteracoesRoute,
   AuthenticatedLiderancasRoute: AuthenticatedLiderancasRoute,
   AuthenticatedMapaRoute: AuthenticatedMapaRoute,
+  AuthenticatedMapaRjRoute: AuthenticatedMapaRjRoute,
   AuthenticatedMensagensRoute: AuthenticatedMensagensRoute,
   AuthenticatedPrioridadesRoute: AuthenticatedPrioridadesRoute,
   AuthenticatedQrcodeLiderRoute: AuthenticatedQrcodeLiderRoute,
