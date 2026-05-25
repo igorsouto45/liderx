@@ -33,6 +33,7 @@ function WhatsAppPage() {
   const [instances, setInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newInstanceName, setNewInstanceName] = useState("");
+  const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
   const [config, setConfig] = useState<any>({
     anti_ban_delay_min: 5,
@@ -48,12 +49,21 @@ function WhatsAppPage() {
 
   const fetchInstances = async () => {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast.error("Sessão não encontrada");
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("whatsapp_instancias")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("Erro ao buscar instâncias:", error);
       toast.error("Erro ao carregar instâncias");
     } else {
       setInstances(data || []);
@@ -70,16 +80,34 @@ function WhatsAppPage() {
       .from("whatsapp_configuracoes")
       .select("*")
       .eq("instancia_id", instanceId)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setConfig(data);
-    } else if (error && error.code !== "PGRST116") {
+    } else if (error) {
+      console.error("Erro ao buscar config:", error);
       toast.error("Erro ao carregar configurações");
+    } else {
+      // Create default config if not exists
+      setConfig({
+        instancia_id: instanceId,
+        anti_ban_delay_min: 5,
+        anti_ban_delay_max: 15,
+        anti_ban_batch_size: 50,
+        auto_responder_enabled: false,
+        auto_responder_brain: ""
+      });
     }
   };
 
   const createInstance = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
     if (!newInstanceName) {
       toast.error("Informe um nome para a instância");
       return;
@@ -89,17 +117,21 @@ function WhatsAppPage() {
       .from("whatsapp_instancias")
       .insert([{ 
         nome: newInstanceName,
-        status: "disconnected"
+        status: "disconnected",
+        tecnologia: newInstanceTech,
+        owner_id: session.user.id
       }])
       .select()
       .single();
 
     if (error) {
-      toast.error("Erro ao criar instância");
+      console.error("Erro ao criar instância:", error);
+      toast.error(`Erro ao criar instância: ${error.message}`);
     } else {
       toast.success("Instância criada com sucesso");
       setNewInstanceName("");
       fetchInstances();
+      setSelectedInstance(data);
     }
   };
 
@@ -114,6 +146,7 @@ function WhatsAppPage() {
       });
 
     if (error) {
+      console.error("Erro ao salvar config:", error);
       toast.error("Erro ao salvar configurações");
     } else {
       toast.success("Configurações salvas");
@@ -124,19 +157,29 @@ function WhatsAppPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">WhatsApp (Evolution API)</h1>
-          <p className="text-muted-foreground">Gerencie suas conexões, automações e cérebro do Líder-X.</p>
+          <h1 className="text-3xl font-bold tracking-tight">WhatsApp (Evolution GO)</h1>
+          <p className="text-muted-foreground">Gerencie suas conexões Baileys, automações e cérebro do Líder-X.</p>
         </div>
-        <div className="flex gap-2">
-          <Input 
-            placeholder="Nome da nova instância" 
-            value={newInstanceName}
-            onChange={(e) => setNewInstanceName(e.target.value)}
-            className="w-full md:w-64"
-          />
-          <Button onClick={createInstance} className="gap-2">
-            <Plus className="h-4 w-4" /> Nova Instância
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select 
+            className="bg-background border border-white/10 rounded-md px-3 py-2 text-sm"
+            value={newInstanceTech}
+            onChange={(e) => setNewInstanceTech(e.target.value)}
+          >
+            <option value="evolution_go">Evolution GO (Baileys)</option>
+            <option value="evolution_api">Evolution API (v2)</option>
+          </select>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Nome da instância" 
+              value={newInstanceName}
+              onChange={(e) => setNewInstanceName(e.target.value)}
+              className="w-full md:w-64"
+            />
+            <Button onClick={createInstance} className="gap-2">
+              <Plus className="h-4 w-4" /> Nova Instância
+            </Button>
+          </div>
         </div>
       </div>
 
