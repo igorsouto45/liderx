@@ -35,6 +35,8 @@ function WhatsAppPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newInstanceName, setNewInstanceName] = useState("");
+  const [newInstanceUrl, setNewInstanceUrl] = useState("");
+  const [newInstanceKey, setNewInstanceKey] = useState("");
   const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
   const [webhookUrl, setWebhookUrl] = useState("");
@@ -121,13 +123,25 @@ function WhatsAppPage() {
       return;
     }
 
+    if (!newInstanceUrl.trim()) {
+      toast.error("Informe a URL da instância");
+      return;
+    }
+
+    if (!newInstanceKey.trim()) {
+      toast.error("Informe a API Key da instância");
+      return;
+    }
+
     setCreating(true);
     try {
       const { data, error } = await supabase
         .from("whatsapp_instancias")
         .insert([{ 
           nome: newInstanceName.trim(),
-          status: "disconnected",
+          token: newInstanceUrl.trim(), // Storing URL in token field
+          instancia_key: newInstanceKey.trim(), // Storing API Key
+          status: "connected", // Mark as connected since it's already created externally
           tecnologia: newInstanceTech,
           owner_id: session.user.id
         }])
@@ -135,16 +149,18 @@ function WhatsAppPage() {
         .single();
 
       if (error) {
-        toast.error(`Erro ao criar instância: ${error.message}`);
+        toast.error(`Erro ao adicionar instância: ${error.message}`);
       } else if (data) {
-        toast.success("Instância criada com sucesso");
+        toast.success("Instância adicionada com sucesso");
         setNewInstanceName("");
+        setNewInstanceUrl("");
+        setNewInstanceKey("");
         await fetchInstances();
         setSelectedInstance(data);
         await fetchConfig(data.id);
       }
     } catch (err) {
-      toast.error("Erro ao criar instância");
+      toast.error("Erro ao adicionar instância");
     } finally {
       setCreating(false);
     }
@@ -188,33 +204,50 @@ function WhatsAppPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">WhatsApp (Evolution GO)</h1>
           <p className="text-muted-foreground">Gerencie suas conexões Baileys, automações e cérebro do Líder-X.</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <select 
-            className="bg-background border border-white/10 rounded-md px-3 py-2 text-sm"
-            value={newInstanceTech}
-            onChange={(e) => setNewInstanceTech(e.target.value)}
-          >
-            <option value="evolution_go">Evolution GO (Baileys)</option>
-            <option value="evolution_api">Evolution API (v2)</option>
-          </select>
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Nome da instância" 
-              value={newInstanceName}
-              onChange={(e) => setNewInstanceName(e.target.value)}
-              className="w-full md:w-64"
-            />
-            <Button onClick={createInstance} disabled={creating} className="gap-2">
-              {creating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Nova Instância
-            </Button>
+        
+        <Card className="bg-card/50 border-white/10 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-muted-foreground">Nome</Label>
+              <Input 
+                placeholder="Ex: Minha Instância" 
+                value={newInstanceName}
+                onChange={(e) => setNewInstanceName(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1 lg:col-span-2">
+              <Label className="text-[10px] uppercase text-muted-foreground">URL da Evolution API</Label>
+              <Input 
+                placeholder="https://sua-api.com" 
+                value={newInstanceUrl}
+                onChange={(e) => setNewInstanceUrl(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-muted-foreground">Global API Key</Label>
+              <Input 
+                placeholder="Key..." 
+                type="password"
+                value={newInstanceKey}
+                onChange={(e) => setNewInstanceKey(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={createInstance} disabled={creating} className="w-full gap-2 h-9">
+                {creating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Add Instância
+              </Button>
+            </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Webhook Section - Always visible */}
@@ -307,13 +340,25 @@ function WhatsAppPage() {
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center py-6 space-y-6">
                   {selectedInstance.status === 'connected' ? (
-                    <div className="text-center space-y-3">
+                    <div className="text-center space-y-4 w-full px-4">
                       <div className="h-20 w-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-2 border border-green-500/20">
                         <CheckCircle2 className="h-10 w-10 text-green-500" />
                       </div>
-                      <h3 className="font-bold text-lg">Conectado com Sucesso</h3>
-                      <Button variant="outline" size="sm" className="text-red-500 border-red-500/20 hover:bg-red-500/10">
-                        <Power className="h-4 w-4 mr-2" /> Desconectar
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-lg">Conectado (Evolution GO)</h3>
+                        <div className="bg-black/20 p-3 rounded-lg text-left space-y-2 border border-white/5">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground uppercase">Endpoint</span>
+                            <span className="text-xs font-mono break-all">{selectedInstance.token}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground uppercase">Instance Key</span>
+                            <span className="text-xs font-mono">{selectedInstance.instancia_key?.substring(0, 8)}...</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={deleteInstance} className="text-red-500 border-red-500/20 hover:bg-red-500/10 w-full">
+                        <Trash2 className="h-4 w-4 mr-2" /> Remover Instância
                       </Button>
                     </div>
                   ) : (
