@@ -12,7 +12,7 @@ import {
   Power,
   Trash2,
   CheckCircle2,
-  XCircle
+  Webhook
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +35,7 @@ function WhatsAppPage() {
   const [newInstanceName, setNewInstanceName] = useState("");
   const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [config, setConfig] = useState<any>({
     anti_ban_delay_min: 5,
     anti_ban_delay_max: 15,
@@ -45,6 +46,9 @@ function WhatsAppPage() {
 
   useEffect(() => {
     fetchInstances();
+    // Set dynamic webhook URL based on project ID
+    const projectId = window.location.hostname.split('.')[0];
+    setWebhookUrl(`https://${projectId}.functions.supabase.co/whatsapp-webhook`);
   }, []);
 
   const fetchInstances = async () => {
@@ -88,7 +92,6 @@ function WhatsAppPage() {
       console.error("Erro ao buscar config:", error);
       toast.error("Erro ao carregar configurações");
     } else {
-      // Create default config if not exists
       setConfig({
         instancia_id: instanceId,
         anti_ban_delay_min: 5,
@@ -102,11 +105,7 @@ function WhatsAppPage() {
 
   const createInstance = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      toast.error("Sessão expirada. Faça login novamente.");
-      return;
-    }
+    if (!session) return;
 
     if (!newInstanceName) {
       toast.error("Informe um nome para a instância");
@@ -125,7 +124,6 @@ function WhatsAppPage() {
       .single();
 
     if (error) {
-      console.error("Erro ao criar instância:", error);
       toast.error(`Erro ao criar instância: ${error.message}`);
     } else {
       toast.success("Instância criada com sucesso");
@@ -146,10 +144,27 @@ function WhatsAppPage() {
       });
 
     if (error) {
-      console.error("Erro ao salvar config:", error);
       toast.error("Erro ao salvar configurações");
     } else {
       toast.success("Configurações salvas");
+    }
+  };
+
+  const deleteInstance = async () => {
+    if (!selectedInstance) return;
+    if (!confirm(`Deseja realmente excluir a instância ${selectedInstance.nome}?`)) return;
+
+    const { error } = await supabase
+      .from("whatsapp_instancias")
+      .delete()
+      .eq("id", selectedInstance.id);
+
+    if (error) {
+      toast.error("Erro ao excluir instância");
+    } else {
+      toast.success("Instância excluída");
+      setSelectedInstance(null);
+      fetchInstances();
     }
   };
 
@@ -184,7 +199,6 @@ function WhatsAppPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar de Instâncias */}
         <Card className="lg:col-span-1 bg-card/50 backdrop-blur-xl border-white/10">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -222,180 +236,144 @@ function WhatsAppPage() {
           </CardContent>
         </Card>
 
-        {/* Conteúdo Principal */}
         <div className="lg:col-span-3 space-y-6">
           {!selectedInstance ? (
             <Card className="h-64 flex items-center justify-center bg-card/50 border-white/10">
               <p className="text-muted-foreground">Selecione ou crie uma instância para começar.</p>
             </Card>
           ) : (
-            <Tabs defaultValue="connection" className="w-full">
-              <TabsList className="bg-card/50 border border-white/10 p-1 mb-6">
-                <TabsTrigger value="connection" className="gap-2"><Zap className="h-4 w-4" /> Conexão</TabsTrigger>
-                <TabsTrigger value="antiban" className="gap-2"><ShieldAlert className="h-4 w-4" /> Anti-Banimento</TabsTrigger>
-                <TabsTrigger value="brain" className="gap-2"><Bot className="h-4 w-4" /> Cérebro IA</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="connection" className="space-y-4">
+            <div className="space-y-6">
+              {/* Card de Conexão e Webhook (Unificados) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-card/50 border-white/10">
                   <CardHeader>
-                    <CardTitle>Status da Conexão: {selectedInstance.nome}</CardTitle>
-                    <CardDescription>Escaneie o QR Code para conectar seu WhatsApp via Evolution API.</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-yellow-500" />
+                      Status: {selectedInstance.nome}
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex flex-col items-center justify-center py-10 space-y-6">
+                  <CardContent className="flex flex-col items-center justify-center py-6 space-y-4">
                     {selectedInstance.status === 'connected' ? (
-                      <div className="text-center space-y-4">
-                        <div className="h-20 w-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-                          <CheckCircle2 className="h-10 w-10 text-green-500" />
-                        </div>
-                        <h3 className="text-xl font-bold">Instância Conectada</h3>
-                        <p className="text-muted-foreground">O sistema está pronto para enviar e receber mensagens.</p>
-                        <Button variant="outline" className="text-red-500 border-red-500/20 hover:bg-red-500/10">
+                      <div className="text-center space-y-3">
+                        <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+                        <h3 className="font-bold">Conectado</h3>
+                        <Button variant="outline" size="sm" className="text-red-500 border-red-500/20">
                           <Power className="h-4 w-4 mr-2" /> Desconectar
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-center space-y-6">
-                        <div className="h-64 w-64 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center">
-                          <div className="text-center p-6">
-                            <RefreshCw className="h-10 w-10 text-muted-foreground mx-auto mb-4 animate-spin" />
-                            <p className="text-sm text-muted-foreground font-medium">Gerando QR Code...</p>
-                          </div>
+                      <div className="text-center space-y-4 w-full">
+                        <div className="h-40 w-40 bg-white/5 border border-dashed border-white/10 rounded-xl flex items-center justify-center mx-auto">
+                          <RefreshCw className="h-8 w-8 text-muted-foreground animate-spin" />
                         </div>
-                        <div className="flex gap-3 justify-center">
-                          <Button variant="outline" onClick={fetchInstances}>
-                            <RefreshCw className="h-4 w-4 mr-2" /> Recarregar
+                        <div className="flex gap-2 justify-center">
+                          <Button variant="outline" size="sm" onClick={fetchInstances}>
+                            <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
                           </Button>
-                          <Button variant="destructive">
-                            <Trash2 className="h-4 w-4 mr-2" /> Excluir Instância
+                          <Button variant="destructive" size="sm" onClick={deleteInstance}>
+                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
                           </Button>
                         </div>
                       </div>
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent>
 
-              <TabsContent value="antiban" className="space-y-4">
                 <Card className="bg-card/50 border-white/10">
                   <CardHeader>
-                    <CardTitle>Configurações Anti-Banimento</CardTitle>
-                    <CardDescription>Ajuste o comportamento do envio para minimizar riscos de bloqueio.</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <Webhook className="h-5 w-5 text-blue-500" />
+                      Webhook de Recebimento
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-8 py-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <Label>Intervalo Mínimo entre Mensagens (segundos)</Label>
-                        <span className="font-mono text-primary">{config.anti_ban_delay_min}s</span>
+                  <CardContent className="space-y-4">
+                    <p className="text-xs text-muted-foreground">
+                      Configure esta URL na sua Evolution API para receber mensagens em tempo real.
+                    </p>
+                    <div className="flex gap-2">
+                      <Input value={webhookUrl} readOnly className="bg-black/20 text-xs font-mono" />
+                      <Button variant="outline" size="icon" onClick={() => {
+                        navigator.clipboard.writeText(webhookUrl);
+                        toast.success("Copiado!");
+                      }}>
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="text-[10px] bg-blue-500/10 p-2 rounded border border-blue-500/20 text-blue-400">
+                      <strong>Eventos recomendados:</strong> messages.upsert, connection.update
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Seção Anti-Ban e Cérebro IA (Lado a Lado) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="bg-card/50 border-white/10">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4 text-orange-500" /> Anti-Banimento
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-2">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-xs">
+                        <Label>Intervalo (seg)</Label>
+                        <span className="text-primary">{config.anti_ban_delay_min}s - {config.anti_ban_delay_max}s</span>
                       </div>
                       <Slider 
                         value={[config.anti_ban_delay_min]} 
-                        min={1} 
-                        max={60} 
-                        step={1}
+                        min={1} max={30} step={1}
                         onValueChange={(val) => setConfig({...config, anti_ban_delay_min: val[0]})}
                       />
                     </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <Label>Intervalo Máximo entre Mensagens (segundos)</Label>
-                        <span className="font-mono text-primary">{config.anti_ban_delay_max}s</span>
-                      </div>
-                      <Slider 
-                        value={[config.anti_ban_delay_max]} 
-                        min={5} 
-                        max={300} 
-                        step={5}
-                        onValueChange={(val) => setConfig({...config, anti_ban_delay_max: val[0]})}
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <Label>Tamanho do Lote de Disparo</Label>
-                        <span className="font-mono text-primary">{config.anti_ban_batch_size} contatos</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-xs">
+                        <Label>Lote de Envio</Label>
+                        <span className="text-primary">{config.anti_ban_batch_size} msg</span>
                       </div>
                       <Slider 
                         value={[config.anti_ban_batch_size]} 
-                        min={10} 
-                        max={500} 
-                        step={10}
+                        min={10} max={200} step={10}
                         onValueChange={(val) => setConfig({...config, anti_ban_batch_size: val[0]})}
                       />
                     </div>
-
-                    <Button onClick={updateConfig} className="w-full md:w-auto">Salvar Configurações Anti-Ban</Button>
+                    <Button onClick={updateConfig} size="sm" className="w-full">Salvar Anti-Ban</Button>
                   </CardContent>
                 </Card>
-              </TabsContent>
 
-              <TabsContent value="brain" className="space-y-4">
-                <Card className="bg-card/50 border-white/10 overflow-hidden">
-                  <div className="bg-primary/10 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                    <Bot className="h-6 w-6 text-primary" />
-                    <div>
-                      <h3 className="font-bold">Cérebro Líder-X (Auto-Responder)</h3>
-                      <p className="text-xs text-muted-foreground">Personalidade e inteligência para respostas automáticas.</p>
-                    </div>
-                  </div>
-                  <CardContent className="space-y-6 py-6">
-                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                      <div className="space-y-1">
-                        <h4 className="font-semibold">Status do Robô</h4>
-                        <p className="text-sm text-muted-foreground">Ative para permitir que a IA responda automaticamente.</p>
-                      </div>
+                <Card className="bg-card/50 border-white/10">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Bot className="h-4 w-4 text-primary" /> Cérebro IA
+                      </CardTitle>
                       <Switch 
                         checked={config.auto_responder_enabled}
                         onCheckedChange={(val) => setConfig({...config, auto_responder_enabled: val})}
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label>Contexto e Personalidade</Label>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs text-primary"
-                          onClick={() => setConfig({
-                            ...config, 
-                            auto_responder_brain: "Você é o Líder-X, o assistente virtual oficial da campanha. Sua personalidade é prestativa, ética e entusiasmada. Responda dúvidas sobre propostas, agenda e como ajudar na campanha. Seja sempre cordial e use emojis moderadamente."
-                          })}
-                        >
-                          Usar Exemplo
-                        </Button>
-                      </div>
-                      <Textarea 
-                        placeholder="Descreva aqui como o robô deve se comportar e quais informações ele deve dominar..." 
-                        className="min-h-[250px] bg-white/5 border-white/10 focus:ring-primary/20"
-                        value={config.auto_responder_brain || ""}
-                        onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
-                      />
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-2">
+                    <Textarea 
+                      placeholder="Personalidade do robô..." 
+                      className="min-h-[100px] text-xs bg-white/5"
+                      value={config.auto_responder_brain || ""}
+                      onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
+                    />
+                    <div className="flex justify-between items-center text-xs">
+                      <span>Limite Diário</span>
+                      <span className="font-mono text-primary">{config.auto_responder_limit_per_contact || 10}</span>
                     </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <Label>Limite Diário de Respostas (por contato)</Label>
-                        <span className="font-mono text-primary">{config.auto_responder_limit_per_contact || 10}</span>
-                      </div>
-                      <Slider 
-                        value={[config.auto_responder_limit_per_contact || 10]} 
-                        min={1} 
-                        max={100} 
-                        step={1}
-                        onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
-                      />
-                      <p className="text-[10px] text-muted-foreground">Evita loops de mensagens e economiza créditos de IA.</p>
-                    </div>
-
-                    <Button onClick={updateConfig} className="w-full gap-2">
-                      <CheckCircle2 className="h-4 w-4" /> Salvar Cérebro do Líder-X
-                    </Button>
+                    <Slider 
+                      value={[config.auto_responder_limit_per_contact || 10]} 
+                      min={1} max={50} step={1}
+                      onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
+                    />
+                    <Button onClick={updateConfig} size="sm" className="w-full">Salvar Cérebro</Button>
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           )}
         </div>
       </div>
