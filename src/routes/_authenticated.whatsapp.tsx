@@ -331,16 +331,19 @@ function WhatsAppPage() {
               </TabsContent>
 
               <TabsContent value="brain" className="space-y-4">
-                <Card className="bg-card/50 border-white/10">
-                  <CardHeader>
-                    <CardTitle>Auto-Responder (Cérebro Líder-X)</CardTitle>
-                    <CardDescription>Configure como a IA deve responder automaticamente em nome do candidato.</CardDescription>
-                  </CardHeader>
+                <Card className="bg-card/50 border-white/10 overflow-hidden">
+                  <div className="bg-primary/10 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                    <Bot className="h-6 w-6 text-primary" />
+                    <div>
+                      <h3 className="font-bold">Cérebro Líder-X (Auto-Responder)</h3>
+                      <p className="text-xs text-muted-foreground">Personalidade e inteligência para respostas automáticas.</p>
+                    </div>
+                  </div>
                   <CardContent className="space-y-6 py-6">
                     <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                       <div className="space-y-1">
-                        <h4 className="font-semibold">Ativar Respostas Automáticas</h4>
-                        <p className="text-sm text-muted-foreground">A IA responderá dúvidas baseada no contexto abaixo.</p>
+                        <h4 className="font-semibold">Status do Robô</h4>
+                        <p className="text-sm text-muted-foreground">Ative para permitir que a IA responda automaticamente.</p>
                       </div>
                       <Switch 
                         checked={config.auto_responder_enabled}
@@ -349,10 +352,23 @@ function WhatsAppPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Contexto e Personalidade (Cérebro)</Label>
+                      <div className="flex justify-between items-center">
+                        <Label>Contexto e Personalidade</Label>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-xs text-primary"
+                          onClick={() => setConfig({
+                            ...config, 
+                            auto_responder_brain: "Você é o Líder-X, o assistente virtual oficial da campanha. Sua personalidade é prestativa, ética e entusiasmada. Responda dúvidas sobre propostas, agenda e como ajudar na campanha. Seja sempre cordial e use emojis moderadamente."
+                          })}
+                        >
+                          Usar Exemplo
+                        </Button>
+                      </div>
                       <Textarea 
-                        placeholder="Ex: Você é o assistente virtual do Candidato João Silva. Seu objetivo é falar sobre as propostas de educação e saúde..." 
-                        className="min-h-[200px] bg-white/5 border-white/10 resize-none"
+                        placeholder="Descreva aqui como o robô deve se comportar e quais informações ele deve dominar..." 
+                        className="min-h-[250px] bg-white/5 border-white/10 focus:ring-primary/20"
                         value={config.auto_responder_brain || ""}
                         onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
                       />
@@ -360,19 +376,22 @@ function WhatsAppPage() {
 
                     <div className="space-y-4">
                       <div className="flex justify-between">
-                        <Label>Limite de Respostas por Contato (por dia)</Label>
-                        <span className="font-mono text-primary">{config.auto_responder_limit_per_contact}</span>
+                        <Label>Limite Diário de Respostas (por contato)</Label>
+                        <span className="font-mono text-primary">{config.auto_responder_limit_per_contact || 10}</span>
                       </div>
                       <Slider 
                         value={[config.auto_responder_limit_per_contact || 10]} 
                         min={1} 
-                        max={50} 
+                        max={100} 
                         step={1}
                         onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
                       />
+                      <p className="text-[10px] text-muted-foreground">Evita loops de mensagens e economiza créditos de IA.</p>
                     </div>
 
-                    <Button onClick={updateConfig} className="w-full md:w-auto">Salvar Cérebro da IA</Button>
+                    <Button onClick={updateConfig} className="w-full gap-2">
+                      <CheckCircle2 className="h-4 w-4" /> Salvar Cérebro do Líder-X
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
