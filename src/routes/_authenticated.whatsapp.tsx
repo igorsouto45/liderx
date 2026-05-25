@@ -212,7 +212,10 @@ function WhatsAppPage() {
                     <span className="font-semibold text-sm">{inst.nome}</span>
                     <div className={`h-2 w-2 rounded-full ${inst.status === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
                   </div>
-                  <span className="text-xs opacity-70 uppercase tracking-tighter">{inst.status}</span>
+                  <div className="flex items-center justify-between opacity-70">
+                    <span className="text-[10px] uppercase tracking-tighter">{inst.status}</span>
+                    <span className="text-[10px] bg-white/10 px-1.5 rounded uppercase">{inst.tecnologia === 'evolution_go' ? 'GO' : 'API'}</span>
+                  </div>
                 </button>
               ))
             )}
