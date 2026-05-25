@@ -14,7 +14,10 @@ import {
   CheckCircle2,
   Webhook,
   Copy,
-  ExternalLink
+  ExternalLink,
+  FileUp,
+  FileText,
+  X
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +53,8 @@ function WhatsAppPage() {
     auto_responder_brain: "",
     auto_responder_limit_per_contact: 10
   });
+  const [files, setFiles] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchInstances();
@@ -129,6 +134,65 @@ function WhatsAppPage() {
         auto_responder_brain: "",
         auto_responder_limit_per_contact: 10
       });
+    }
+  };
+
+  const fetchFiles = async (instanceId: string) => {
+    const { data, error } = await supabase
+      .from("documentos_lideranca")
+      .select("*")
+      .eq("lider_id", instanceId);
+
+    if (data) {
+      setFiles(data);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedInstance || !e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${selectedInstance.id}/${fileName}`;
+
+    setUploading(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('documentos-liderancas')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from('documentos_lideranca')
+        .insert({
+          nome_arquivo: file.name,
+          caminho_arquivo: filePath,
+          tipo_arquivo: file.type,
+          tamanho_arquivo: file.size,
+          lider_id: selectedInstance.id
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success("Arquivo enviado para o cérebro!");
+      fetchFiles(selectedInstance.id);
+    } catch (error: any) {
+      toast.error(`Erro no upload: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteFile = async (file: any) => {
+    try {
+      await supabase.storage.from('documentos-liderancas').remove([file.caminho_arquivo]);
+      await supabase.from('documentos_lideranca').delete().eq('id', file.id);
+      toast.success("Arquivo removido");
+      fetchFiles(selectedInstance.id);
+    } catch (error: any) {
+      toast.error("Erro ao remover arquivo");
     }
   };
 
@@ -372,6 +436,7 @@ function WhatsAppPage() {
                   onClick={() => {
                     setSelectedInstance(inst);
                     fetchConfig(inst.id);
+                    fetchFiles(inst.id);
                   }}
                   className={`w-full text-left p-3 rounded-xl transition-all ${
                     selectedInstance?.id === inst.id 
@@ -476,10 +541,51 @@ function WhatsAppPage() {
                     <Label className="text-sm font-semibold">Personalidade e Base de Conhecimento</Label>
                     <Textarea 
                       placeholder="Ex: Você é o assistente virtual do candidato João Silva. Seja cordial, responda sobre as propostas de saúde e educação..." 
-                      className="min-h-[200px] text-sm bg-black/20 focus:ring-primary/50 border-white/5"
+                      className="min-h-[120px] text-sm bg-black/20 focus:ring-primary/50 border-white/5"
                       value={config.auto_responder_brain || ""}
                       onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
                     />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-sm font-semibold flex items-center gap-2">
+                      <FileUp className="h-4 w-4" /> Alimentar com Documentos (PDF/TXT)
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border border-dashed border-white/10 rounded-lg p-4 flex flex-col items-center justify-center bg-black/10 hover:bg-black/20 transition-colors relative">
+                        <input 
+                          type="file" 
+                          className="absolute inset-0 opacity-0 cursor-pointer" 
+                          accept=".pdf,.txt,.doc,.docx"
+                          onChange={handleFileUpload}
+                          disabled={uploading}
+                        />
+                        {uploading ? (
+                          <RefreshCw className="h-8 w-8 animate-spin text-primary mb-2" />
+                        ) : (
+                          <Plus className="h-8 w-8 text-muted-foreground mb-2" />
+                        )}
+                        <span className="text-xs text-muted-foreground text-center">Clique para subir arquivos para o cérebro</span>
+                      </div>
+                      
+                      <div className="space-y-2 max-h-[110px] overflow-y-auto pr-2 custom-scrollbar">
+                        {files.length === 0 ? (
+                          <p className="text-[10px] text-muted-foreground italic p-2 text-center">Nenhum documento anexado.</p>
+                        ) : (
+                          files.map((file) => (
+                            <div key={file.id} className="flex items-center justify-between bg-white/5 p-2 rounded text-xs border border-white/5">
+                              <div className="flex items-center gap-2 truncate">
+                                <FileText className="h-3 w-3 text-blue-400 shrink-0" />
+                                <span className="truncate">{file.nome_arquivo}</span>
+                              </div>
+                              <button onClick={() => deleteFile(file)} className="text-muted-foreground hover:text-red-400 transition-colors">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -496,7 +602,7 @@ function WhatsAppPage() {
                     </div>
                     <div className="flex items-end">
                       <Button onClick={updateConfig} className="w-full shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90">
-                        <RefreshCw className="h-4 w-4 mr-2" /> Salvar Configurações do Cérebro
+                        <RefreshCw className="h-4 w-4 mr-2" /> Salvar Cérebro
                       </Button>
                     </div>
                   </div>
