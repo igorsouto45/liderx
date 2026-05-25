@@ -63,8 +63,8 @@ function MapaRJ() {
     setLoadingDet(true);
     supabase.rpc("mapa_rj_detalhe_municipio", {
       p_municipio: selected,
-      p_generos: generos.length ? generos : null,
-      p_faixas: faixas.length ? faixas : null,
+      p_generos: generos.length ? generos : undefined,
+      p_faixas: faixas.length ? faixas : undefined,
     }).then(({ data, error }) => {
       if (error) console.error(error);
       setDetalhe((data || []) as DetalheRow[]);
