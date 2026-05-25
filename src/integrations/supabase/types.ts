@@ -531,6 +531,92 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_configuracoes: {
+        Row: {
+          anti_ban_batch_size: number | null
+          anti_ban_delay_max: number | null
+          anti_ban_delay_min: number | null
+          auto_responder_brain: string | null
+          auto_responder_enabled: boolean | null
+          auto_responder_limit_per_contact: number | null
+          created_at: string | null
+          id: string
+          instancia_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          anti_ban_batch_size?: number | null
+          anti_ban_delay_max?: number | null
+          anti_ban_delay_min?: number | null
+          auto_responder_brain?: string | null
+          auto_responder_enabled?: boolean | null
+          auto_responder_limit_per_contact?: number | null
+          created_at?: string | null
+          id?: string
+          instancia_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          anti_ban_batch_size?: number | null
+          anti_ban_delay_max?: number | null
+          anti_ban_delay_min?: number | null
+          auto_responder_brain?: string | null
+          auto_responder_enabled?: boolean | null
+          auto_responder_limit_per_contact?: number | null
+          created_at?: string | null
+          id?: string
+          instancia_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_configuracoes_instancia_id_fkey"
+            columns: ["instancia_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_instancias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_instancias: {
+        Row: {
+          created_at: string | null
+          id: string
+          instancia_key: string | null
+          last_connected: string | null
+          nome: string
+          owner_id: string | null
+          qrcode_data: string | null
+          status: string | null
+          token: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          instancia_key?: string | null
+          last_connected?: string | null
+          nome: string
+          owner_id?: string | null
+          qrcode_data?: string | null
+          status?: string | null
+          token?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instancia_key?: string | null
+          last_connected?: string | null
+          nome?: string
+          owner_id?: string | null
+          qrcode_data?: string | null
+          status?: string | null
+          token?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_mensagens: {
         Row: {
           contact_name: string | null
