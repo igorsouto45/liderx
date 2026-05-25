@@ -52,6 +52,36 @@ export type Database = {
           },
         ]
       }
+      eleitorado_rj_agregado: {
+        Row: {
+          faixa_etaria: string
+          genero: string
+          id: number
+          municipio: string
+          quantidade: number
+          secao: number
+          zona: number
+        }
+        Insert: {
+          faixa_etaria: string
+          genero: string
+          id?: number
+          municipio: string
+          quantidade?: number
+          secao: number
+          zona: number
+        }
+        Update: {
+          faixa_etaria?: string
+          genero?: string
+          id?: number
+          municipio?: string
+          quantidade?: number
+          secao?: number
+          zona?: number
+        }
+        Relationships: []
+      }
       eleitores: {
         Row: {
           bairro: string | null
