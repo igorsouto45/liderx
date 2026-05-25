@@ -12,10 +12,11 @@ import {
   Power,
   Trash2,
   CheckCircle2,
-  Webhook
+  Webhook,
+  Copy,
+  ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/whatsapp")({
 function WhatsAppPage() {
   const [instances, setInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [newInstanceName, setNewInstanceName] = useState("");
   const [newInstanceTech, setNewInstanceTech] = useState("evolution_go");
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
@@ -41,14 +43,21 @@ function WhatsAppPage() {
     anti_ban_delay_max: 15,
     anti_ban_batch_size: 50,
     auto_responder_enabled: false,
-    auto_responder_brain: ""
+    auto_responder_brain: "",
+    auto_responder_limit_per_contact: 10
   });
 
   useEffect(() => {
     fetchInstances();
-    // Set dynamic webhook URL based on project ID
-    const projectId = window.location.hostname.split('.')[0];
-    setWebhookUrl(`https://${projectId}.functions.supabase.co/whatsapp-webhook`);
+    
+    // Set dynamic webhook URL based on Supabase URL
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (supabaseUrl) {
+      setWebhookUrl(`${supabaseUrl}/functions/v1/whatsapp-webhook`);
+    } else {
+      const projectId = window.location.hostname.split('.')[0];
+      setWebhookUrl(`https://${projectId}.functions.supabase.co/whatsapp-webhook`);
+    }
   }, []);
 
   const fetchInstances = async () => {
@@ -90,7 +99,6 @@ function WhatsAppPage() {
       setConfig(data);
     } else if (error) {
       console.error("Erro ao buscar config:", error);
-      toast.error("Erro ao carregar configurações");
     } else {
       setConfig({
         instancia_id: instanceId,
@@ -98,7 +106,8 @@ function WhatsAppPage() {
         anti_ban_delay_max: 15,
         anti_ban_batch_size: 50,
         auto_responder_enabled: false,
-        auto_responder_brain: ""
+        auto_responder_brain: "",
+        auto_responder_limit_per_contact: 10
       });
     }
   };
@@ -107,29 +116,37 @@ function WhatsAppPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    if (!newInstanceName) {
+    if (!newInstanceName.trim()) {
       toast.error("Informe um nome para a instância");
       return;
     }
 
-    const { data, error } = await supabase
-      .from("whatsapp_instancias")
-      .insert([{ 
-        nome: newInstanceName,
-        status: "disconnected",
-        tecnologia: newInstanceTech,
-        owner_id: session.user.id
-      }])
-      .select()
-      .single();
+    setCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from("whatsapp_instancias")
+        .insert([{ 
+          nome: newInstanceName.trim(),
+          status: "disconnected",
+          tecnologia: newInstanceTech,
+          owner_id: session.user.id
+        }])
+        .select()
+        .single();
 
-    if (error) {
-      toast.error(`Erro ao criar instância: ${error.message}`);
-    } else {
-      toast.success("Instância criada com sucesso");
-      setNewInstanceName("");
-      fetchInstances();
-      setSelectedInstance(data);
+      if (error) {
+        toast.error(`Erro ao criar instância: ${error.message}`);
+      } else if (data) {
+        toast.success("Instância criada com sucesso");
+        setNewInstanceName("");
+        await fetchInstances();
+        setSelectedInstance(data);
+        await fetchConfig(data.id);
+      }
+    } catch (err) {
+      toast.error("Erro ao criar instância");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -141,12 +158,13 @@ function WhatsAppPage() {
       .upsert({
         instancia_id: selectedInstance.id,
         ...config
-      });
+      }, { onConflict: 'instancia_id' });
 
     if (error) {
       toast.error("Erro ao salvar configurações");
     } else {
       toast.success("Configurações salvas");
+      fetchConfig(selectedInstance.id);
     }
   };
 
@@ -191,23 +209,58 @@ function WhatsAppPage() {
               onChange={(e) => setNewInstanceName(e.target.value)}
               className="w-full md:w-64"
             />
-            <Button onClick={createInstance} className="gap-2">
-              <Plus className="h-4 w-4" /> Nova Instância
+            <Button onClick={createInstance} disabled={creating} className="gap-2">
+              {creating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Nova Instância
             </Button>
           </div>
         </div>
       </div>
 
+      {/* Webhook Section - Always visible */}
+      <Card className="bg-card/50 border-white/10">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Webhook className="h-5 w-5 text-blue-500" />
+            Configuração do Webhook
+          </CardTitle>
+          <CardDescription>
+            Configure esta URL na sua Evolution API para receber eventos em tempo real.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input value={webhookUrl} readOnly className="bg-black/20 font-mono text-sm" />
+            <Button variant="outline" size="icon" onClick={() => {
+              navigator.clipboard.writeText(webhookUrl);
+              toast.success("URL copiada!");
+            }}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-xs bg-blue-500/10 p-3 rounded-lg border border-blue-500/20 text-blue-400 flex items-start gap-2">
+            <Zap className="h-4 w-4 mt-0.5 shrink-0" />
+            <div>
+              <strong>Eventos recomendados:</strong> Marque <strong>MESSAGES_UPSERT</strong> e <strong>CONNECTION_UPDATE</strong> na sua instância da Evolution API.
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="lg:col-span-1 bg-card/50 backdrop-blur-xl border-white/10">
+        <Card className="lg:col-span-1 bg-card/50 backdrop-blur-xl border-white/10 h-fit">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" /> Instâncias
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 p-2">
-            {instances.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-4 text-center">Nenhuma instância cadastrada.</p>
+            {loading ? (
+              <div className="p-4 flex justify-center">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : instances.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-4 text-center italic">Nenhuma instância cadastrada.</p>
             ) : (
               instances.map((inst) => (
                 <button
@@ -218,13 +271,13 @@ function WhatsAppPage() {
                   }}
                   className={`w-full text-left p-3 rounded-xl transition-all ${
                     selectedInstance?.id === inst.id 
-                      ? "bg-primary/10 border border-primary/20 text-primary" 
+                      ? "bg-primary/10 border border-primary/20 text-primary shadow-[inset_0_0_20px_rgba(108,43,217,0.05)]" 
                       : "hover:bg-white/5 border border-transparent text-muted-foreground"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm">{inst.nome}</span>
-                    <div className={`h-2 w-2 rounded-full ${inst.status === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="font-semibold text-sm truncate">{inst.nome}</span>
+                    <div className={`h-2 w-2 rounded-full ${inst.status === 'connected' ? 'bg-green-500' : 'bg-red-500'} shadow-[0_0_8px_rgba(34,197,94,0.5)]`} />
                   </div>
                   <div className="flex items-center justify-between opacity-70">
                     <span className="text-[10px] uppercase tracking-tighter">{inst.status}</span>
@@ -238,98 +291,76 @@ function WhatsAppPage() {
 
         <div className="lg:col-span-3 space-y-6">
           {!selectedInstance ? (
-            <Card className="h-64 flex items-center justify-center bg-card/50 border-white/10">
-              <p className="text-muted-foreground">Selecione ou crie uma instância para começar.</p>
+            <Card className="h-64 flex flex-col items-center justify-center bg-card/50 border-white/10 border-dashed">
+              <MessageCircle className="h-12 w-12 text-muted-foreground/20 mb-4" />
+              <p className="text-muted-foreground">Selecione uma instância ao lado ou crie uma nova.</p>
             </Card>
           ) : (
             <div className="space-y-6">
-              {/* Card de Conexão e Webhook (Unificados) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-card/50 border-white/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-yellow-500" />
-                      Status: {selectedInstance.nome}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center justify-center py-6 space-y-4">
-                    {selectedInstance.status === 'connected' ? (
-                      <div className="text-center space-y-3">
-                        <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-                        <h3 className="font-bold">Conectado</h3>
-                        <Button variant="outline" size="sm" className="text-red-500 border-red-500/20">
-                          <Power className="h-4 w-4 mr-2" /> Desconectar
-                        </Button>
+              {/* Status and Actions */}
+              <Card className="bg-card/50 border-white/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-yellow-500" />
+                    Status da Conexão: {selectedInstance.nome}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center justify-center py-6 space-y-6">
+                  {selectedInstance.status === 'connected' ? (
+                    <div className="text-center space-y-3">
+                      <div className="h-20 w-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-2 border border-green-500/20">
+                        <CheckCircle2 className="h-10 w-10 text-green-500" />
                       </div>
-                    ) : (
-                      <div className="text-center space-y-4 w-full">
-                        <div className="h-40 w-40 bg-white/5 border border-dashed border-white/10 rounded-xl flex items-center justify-center mx-auto">
-                          <RefreshCw className="h-8 w-8 text-muted-foreground animate-spin" />
-                        </div>
-                        <div className="flex gap-2 justify-center">
-                          <Button variant="outline" size="sm" onClick={fetchInstances}>
-                            <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={deleteInstance}>
-                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card/50 border-white/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Webhook className="h-5 w-5 text-blue-500" />
-                      Webhook de Recebimento
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-xs text-muted-foreground">
-                      Configure esta URL na sua Evolution API para receber mensagens em tempo real.
-                    </p>
-                    <div className="flex gap-2">
-                      <Input value={webhookUrl} readOnly className="bg-black/20 text-xs font-mono" />
-                      <Button variant="outline" size="icon" onClick={() => {
-                        navigator.clipboard.writeText(webhookUrl);
-                        toast.success("Copiado!");
-                      }}>
-                        <RefreshCw className="h-4 w-4" />
+                      <h3 className="font-bold text-lg">Conectado com Sucesso</h3>
+                      <Button variant="outline" size="sm" className="text-red-500 border-red-500/20 hover:bg-red-500/10">
+                        <Power className="h-4 w-4 mr-2" /> Desconectar
                       </Button>
                     </div>
-                    <div className="text-[10px] bg-blue-500/10 p-2 rounded border border-blue-500/20 text-blue-400">
-                      <strong>Eventos recomendados:</strong> messages.upsert, connection.update
+                  ) : (
+                    <div className="text-center space-y-6 w-full">
+                      <div className="h-48 w-48 bg-white/5 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center mx-auto group hover:border-primary/50 transition-colors">
+                        <RefreshCw className="h-10 w-10 text-muted-foreground animate-spin mb-4" />
+                        <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Aguardando QR Code...</span>
+                      </div>
+                      <div className="flex gap-3 justify-center">
+                        <Button variant="outline" size="sm" onClick={fetchInstances} className="gap-2">
+                          <RefreshCw className="h-4 w-4" /> Atualizar Status
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={deleteInstance} className="gap-2">
+                          <Trash2 className="h-4 w-4" /> Excluir Instância
+                        </Button>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  )}
+                </CardContent>
+              </Card>
 
-              {/* Seção Anti-Ban e Cérebro IA (Lado a Lado) */}
+              {/* Anti-Ban and Brain Settings (Lado a Lado) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-card/50 border-white/10">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <ShieldAlert className="h-4 w-4 text-orange-500" /> Anti-Banimento
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ShieldAlert className="h-5 w-5 text-orange-500" /> Configurações Anti-Banimento
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6 pt-2">
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-xs">
-                        <Label>Intervalo (seg)</Label>
-                        <span className="text-primary">{config.anti_ban_delay_min}s - {config.anti_ban_delay_max}s</span>
+                  <CardContent className="space-y-8 pt-4">
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <Label className="text-muted-foreground">Intervalo entre Mensagens</Label>
+                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">{config.anti_ban_delay_min}s - {config.anti_ban_delay_max}s</span>
                       </div>
                       <Slider 
                         value={[config.anti_ban_delay_min]} 
                         min={1} max={30} step={1}
                         onValueChange={(val) => setConfig({...config, anti_ban_delay_min: val[0]})}
                       />
+                      <p className="text-[10px] text-muted-foreground italic">Recomendado: entre 5 e 15 segundos para evitar bloqueios.</p>
                     </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-xs">
-                        <Label>Lote de Envio</Label>
-                        <span className="text-primary">{config.anti_ban_batch_size} msg</span>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <Label className="text-muted-foreground">Tamanho do Lote de Envio</Label>
+                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">{config.anti_ban_batch_size} mensagens</span>
                       </div>
                       <Slider 
                         value={[config.anti_ban_batch_size]} 
@@ -337,39 +368,46 @@ function WhatsAppPage() {
                         onValueChange={(val) => setConfig({...config, anti_ban_batch_size: val[0]})}
                       />
                     </div>
-                    <Button onClick={updateConfig} size="sm" className="w-full">Salvar Anti-Ban</Button>
+                    <Button onClick={updateConfig} className="w-full shadow-lg shadow-primary/10">Salvar Anti-Ban</Button>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-card/50 border-white/10">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Bot className="h-4 w-4 text-primary" /> Cérebro IA
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Bot className="h-5 w-5 text-primary" /> Cérebro do Lider-X (Auto-Responder)
                       </CardTitle>
                       <Switch 
                         checked={config.auto_responder_enabled}
                         onCheckedChange={(val) => setConfig({...config, auto_responder_enabled: val})}
+                        className="data-[state=checked]:bg-primary"
                       />
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4 pt-2">
-                    <Textarea 
-                      placeholder="Personalidade do robô..." 
-                      className="min-h-[100px] text-xs bg-white/5"
-                      value={config.auto_responder_brain || ""}
-                      onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
-                    />
-                    <div className="flex justify-between items-center text-xs">
-                      <span>Limite Diário</span>
-                      <span className="font-mono text-primary">{config.auto_responder_limit_per_contact || 10}</span>
+                  <CardContent className="space-y-6 pt-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">Personalidade e Conhecimento</Label>
+                      <Textarea 
+                        placeholder="Ex: Você é o assistente virtual do candidato João Silva. Seja cordial, responda sobre as propostas de saúde e educação..." 
+                        className="min-h-[120px] text-sm bg-black/20 focus:ring-primary/50"
+                        value={config.auto_responder_brain || ""}
+                        onChange={(e) => setConfig({...config, auto_responder_brain: e.target.value})}
+                      />
                     </div>
-                    <Slider 
-                      value={[config.auto_responder_limit_per_contact || 10]} 
-                      min={1} max={50} step={1}
-                      onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
-                    />
-                    <Button onClick={updateConfig} size="sm" className="w-full">Salvar Cérebro</Button>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <Label className="text-muted-foreground">Limite de Respostas/Contato</Label>
+                        <span className="font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">{config.auto_responder_limit_per_contact || 10}</span>
+                      </div>
+                      <Slider 
+                        value={[config.auto_responder_limit_per_contact || 10]} 
+                        min={1} max={50} step={1}
+                        onValueChange={(val) => setConfig({...config, auto_responder_limit_per_contact: val[0]})}
+                      />
+                    </div>
+                    <Button onClick={updateConfig} className="w-full shadow-lg shadow-primary/10">Salvar Cérebro</Button>
                   </CardContent>
                 </Card>
               </div>

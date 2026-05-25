@@ -1,0 +1,1 @@
+ALTER TABLE public.whatsapp_configuracoes ADD CONSTRAINT whatsapp_configuracoes_instancia_id_key UNIQUE (instancia_id);
