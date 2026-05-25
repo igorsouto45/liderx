@@ -141,7 +141,7 @@ function WhatsAppPage() {
     const { data, error } = await supabase
       .from("documentos_lideranca")
       .select("*")
-      .eq("lideranca_id", instanceId); // Usando lideranca_id para vincular documentos à instância ou contexto
+      .eq("lider_id", instanceId);
 
     if (data) {
       setFiles(data);
@@ -167,11 +167,11 @@ function WhatsAppPage() {
       const { error: dbError } = await supabase
         .from('documentos_lideranca')
         .insert({
-          nome: file.name,
+          nome_arquivo: file.name,
           caminho_arquivo: filePath,
-          tipo: file.type,
-          tamanho: file.size,
-          lideranca_id: selectedInstance.id
+          tipo_arquivo: file.type,
+          tamanho_arquivo: file.size,
+          lider_id: selectedInstance.id
         });
 
       if (dbError) throw dbError;
