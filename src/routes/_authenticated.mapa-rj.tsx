@@ -47,8 +47,8 @@ function MapaRJ() {
     let cancelled = false;
     setLoading(true);
     supabase.rpc("mapa_rj_totais_municipio", {
-      p_generos: generos.length ? generos : null,
-      p_faixas: faixas.length ? faixas : null,
+      p_generos: generos.length ? generos : undefined,
+      p_faixas: faixas.length ? faixas : undefined,
     }).then(({ data, error }) => {
       if (cancelled) return;
       if (error) { console.error(error); setTotais([]); }
