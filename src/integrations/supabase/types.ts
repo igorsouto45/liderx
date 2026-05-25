@@ -720,6 +720,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      mapa_rj_detalhe_municipio: {
+        Args: { p_faixas?: string[]; p_generos?: string[]; p_municipio: string }
+        Returns: {
+          secao: number
+          total: number
+          zona: number
+        }[]
+      }
+      mapa_rj_totais_municipio: {
+        Args: { p_faixas?: string[]; p_generos?: string[] }
+        Returns: {
+          municipio: string
+          total: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "líder" | "operador"
