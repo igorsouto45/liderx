@@ -3,14 +3,25 @@ import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, MapPin, Target, RotateCcw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Loader2, 
+  Users, 
+  MapPin, 
+  Target, 
+  RotateCcw, 
+  Filter, 
+  LayoutDashboard,
+  Maximize2,
+  ChevronRight
+} from "lucide-react";
 import municipiosGeo from "@/data/rj_municipios.json";
 
 export const Route = createFileRoute("/_authenticated/mapa-rj")({
