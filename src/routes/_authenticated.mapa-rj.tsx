@@ -99,74 +99,146 @@ function MapaRJ() {
   }, [detalhe]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mapa Estratégico do RJ</h1>
-          <p className="text-sm text-muted-foreground">
-            Eleitorado agregado por município, zona e seção · TSE
-          </p>
+    <div className="flex flex-col h-[calc(100vh-100px)] gap-4">
+      {/* Cabeçalho Compacto */}
+      <div className="flex items-center justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <LayoutDashboard className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Mapa Eleitorado RJ</h1>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              Análise estratégica baseada em dados oficiais do TSE
+            </p>
+          </div>
         </div>
-        <Badge variant="secondary" className="text-base px-3 py-1">
-          <Users className="h-4 w-4 mr-2" />
-          {totalGeral.toLocaleString("pt-BR")} eleitores
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-sm font-medium px-3 py-1 bg-background">
+            <Users className="h-3.5 w-3.5 mr-2 text-primary" />
+            {totalGeral.toLocaleString("pt-BR")} <span className="hidden sm:inline ml-1">Eleitores</span>
+          </Badge>
+          <Button variant="ghost" size="icon" className="lg:hidden">
+            <Filter className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-4">
-        {/* Filtros */}
-        <Card className="lg:max-h-[calc(100vh-180px)] flex flex-col">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span className="flex items-center gap-2"><Target className="h-4 w-4" /> Filtros</span>
-              <Button variant="ghost" size="sm" onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); }}>
-                <RotateCcw className="h-3 w-3 mr-1" />Reset
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1 min-h-0 gap-4">
+        {/* Coluna Esquerda: Filtros e Ranking */}
+        <div className="flex flex-col gap-4 min-h-0">
+          {/* Filtros */}
+          <Card className="flex flex-col min-h-0 border-primary/20 shadow-sm">
+            <CardHeader className="py-3 px-4 border-b bg-muted/30">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-primary" /> Filtros
+                </CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 px-2 text-[10px]" 
+                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); }}
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />Limpar
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 space-y-6 overflow-y-auto">
+              <div className="space-y-3">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  Gênero
+                </Label>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {GENEROS.map(g => (
+                    <label key={g} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors">
+                      <Checkbox checked={generos.includes(g)} onCheckedChange={() => toggle(generos, g, setGeneros)} />
+                      <span className="text-xs">{g}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Faixa Etária</Label>
+                <ScrollArea className="h-48 rounded-md border bg-muted/20 p-2">
+                  <div className="space-y-1.5">
+                    {FAIXAS.map(f => (
+                      <label key={f} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1 rounded">
+                        <Checkbox checked={faixas.includes(f)} onCheckedChange={() => toggle(faixas, f, setFaixas)} />
+                        {f}
+                      </label>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Top Municípios</Label>
+                  <Badge variant="secondary" className="text-[10px]">{topN}</Badge>
+                </div>
+                <Slider value={[topN]} min={5} max={92} step={1} onValueChange={(v) => setTopN(v[0])} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Ranking / Lista */}
+          <Card className="flex-1 min-h-0 flex flex-col shadow-sm">
+            <CardHeader className="py-3 px-4 border-b bg-muted/30">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" /> Ranking RJ
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="p-2 space-y-1">
+                  {visiveis.map((m, i) => (
+                    <button
+                      key={m.municipio}
+                      onClick={() => setSelected(m.municipio)}
+                      className={`w-full text-left flex items-center justify-between gap-2 rounded-md p-2 transition-all ${
+                        selected === m.municipio 
+                          ? "bg-primary text-primary-foreground shadow-md scale-[1.02]" 
+                          : "hover:bg-muted"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ${
+                          selected === m.municipio ? "bg-primary-foreground/20" : "bg-muted-foreground/10"
+                        }`}>
+                          {i + 1}
+                        </span>
+                        <span className="text-xs font-medium truncate">{m.municipio}</span>
+                      </div>
+                      <span className="text-[10px] font-bold opacity-80">{m.total.toLocaleString("pt-BR")}</span>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Coluna Direita: Mapa e Detalhes */}
+        <div className="flex flex-col gap-4 min-h-0">
+          {/* Mapa */}
+          <Card className="flex-1 min-h-0 overflow-hidden relative border-primary/10 shadow-lg group">
+            <div className="absolute top-4 right-4 z-[500] pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button size="icon" variant="secondary" className="h-8 w-8 shadow-md">
+                <Maximize2 className="h-4 w-4" />
               </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 overflow-y-auto">
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Gênero</Label>
-              <div className="space-y-2 mt-2">
-                {GENEROS.map(g => (
-                  <label key={g} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={generos.includes(g)} onCheckedChange={() => toggle(generos, g, setGeneros)} />
-                    {g}
-                  </label>
-                ))}
-              </div>
             </div>
-
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Faixa etária</Label>
-              <p className="text-[10px] text-muted-foreground mb-2">Vazio = todas as faixas</p>
-              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-2">
-                {FAIXAS.map(f => (
-                  <label key={f} className="flex items-center gap-2 text-xs cursor-pointer">
-                    <Checkbox checked={faixas.includes(f)} onCheckedChange={() => toggle(faixas, f, setFaixas)} />
-                    {f}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-                Top municípios: {topN}
-              </Label>
-              <Slider value={[topN]} min={5} max={92} step={1} onValueChange={(v) => setTopN(v[0])} className="mt-3" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Mapa */}
-        <Card className="overflow-hidden">
-          <div className="h-[calc(100vh-180px)] min-h-[500px] relative">
+            
             {loading && (
-              <div className="absolute inset-0 z-[400] flex items-center justify-center bg-background/60 backdrop-blur">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-background/40 backdrop-blur-[2px]">
+                <div className="bg-background/90 p-4 rounded-xl shadow-2xl flex items-center gap-3 border">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-sm font-medium">Carregando dados...</span>
+                </div>
               </div>
             )}
+            
             <MapContainer center={RJ_CENTER} zoom={8} style={{ height: "100%", width: "100%" }} scrollWheelZoom>
               <TileLayer
                 attribution='&copy; OpenStreetMap'
@@ -183,27 +255,29 @@ function MapaRJ() {
                     center={coord}
                     radius={radiusFor(m.total)}
                     pathOptions={{
-                      color: isSel ? "hsl(var(--primary))" : "#e94560",
-                      fillColor: isSel ? "hsl(var(--primary))" : "#e94560",
-                      fillOpacity: 0.55,
+                      color: isSel ? "hsl(var(--primary))" : "#ef4444",
+                      fillColor: isSel ? "hsl(var(--primary))" : "#ef4444",
+                      fillOpacity: isSel ? 0.7 : 0.45,
                       weight: isSel ? 3 : 1,
                     }}
                     eventHandlers={{ click: () => setSelected(m.municipio) }}
                   >
-                    <Tooltip direction="top">
-                      <div className="text-xs">
-                        <strong>{m.municipio}</strong><br />
-                        {m.total.toLocaleString("pt-BR")} ({pct.toFixed(1)}%)
+                    <Tooltip direction="top" className="rounded-lg shadow-xl border-none p-0 overflow-hidden">
+                      <div className="bg-card px-3 py-2 border-l-4 border-primary">
+                        <p className="text-[11px] font-bold text-card-foreground">{m.municipio}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {m.total.toLocaleString("pt-BR")} eleitores ({pct.toFixed(1)}%)
+                        </p>
                       </div>
                     </Tooltip>
-                    <Popup>
-                      <div className="text-sm">
-                        <strong>{m.municipio}</strong>
-                        <div className="text-muted-foreground">
-                          {m.total.toLocaleString("pt-BR")} eleitores · {pct.toFixed(2)}%
-                        </div>
-                        <Button size="sm" className="mt-2" onClick={() => setSelected(m.municipio)}>
-                          Detalhar zonas
+                    <Popup className="custom-popup">
+                      <div className="p-1">
+                        <h3 className="font-bold text-sm mb-1">{m.municipio}</h3>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          {m.total.toLocaleString("pt-BR")} eleitores cadastrados
+                        </p>
+                        <Button size="sm" className="w-full h-8 text-xs" onClick={() => setSelected(m.municipio)}>
+                          Explorar Detalhes <ChevronRight className="h-3 w-3 ml-1" />
                         </Button>
                       </div>
                     </Popup>
@@ -211,76 +285,71 @@ function MapaRJ() {
                 );
               })}
             </MapContainer>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Painel lateral */}
-        <Card className="lg:max-h-[calc(100vh-180px)] flex flex-col">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              {selected ? selected : "Top municípios"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-0">
-            <ScrollArea className="h-full px-4 pb-4">
-              {!selected && (
-                <div className="space-y-1.5">
-                  {visiveis.map((m, i) => (
-                    <button
-                      key={m.municipio}
-                      onClick={() => setSelected(m.municipio)}
-                      className="w-full text-left flex items-center justify-between gap-2 rounded-md p-2 hover:bg-accent transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs text-muted-foreground w-5">{i + 1}</span>
-                        <span className="text-sm truncate">{m.municipio}</span>
-                      </div>
-                      <span className="text-xs font-semibold">{m.total.toLocaleString("pt-BR")}</span>
-                    </button>
-                  ))}
+          {/* Painel de Detalhes (quando selecionado) */}
+          {selected && (
+            <Card className="h-80 shadow-lg border-t-4 border-t-primary flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+              <CardHeader className="py-3 px-4 bg-muted/20 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" /> {selected}
+                  </CardTitle>
+                  <CardDescription className="text-[10px]">Detalhamento por Zonas e Seções</CardDescription>
                 </div>
-              )}
-
-              {selected && (
-                <div className="space-y-3">
-                  <Button variant="outline" size="sm" onClick={() => setSelected(null)}>← Voltar ao Top</Button>
-                  {loadingDet ? (
-                    <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
-                  ) : (
-                    <>
-                      <div>
-                        <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Por Zona Eleitoral</h4>
-                        <div className="space-y-1">
+                <Button variant="outline" size="sm" className="h-8" onClick={() => setSelected(null)}>
+                  Fechar Detalhes
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0 flex-1 overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 h-full">
+                  <div className="border-r flex flex-col p-4 bg-background">
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+                      <Target className="h-3 w-3" /> Zonas Eleitorais
+                    </h4>
+                    {loadingDet ? (
+                      <div className="flex-1 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                    ) : (
+                      <ScrollArea className="flex-1">
+                        <div className="space-y-2 pr-3">
                           {zonasResumo.map(([z, t]) => (
-                            <div key={z} className="flex justify-between text-sm border-b border-border/40 py-1.5">
-                              <span>Zona {z}</span>
-                              <span className="font-semibold">{t.toLocaleString("pt-BR")}</span>
+                            <div key={z} className="flex justify-between items-center p-2 rounded-lg border bg-muted/30 hover:bg-muted transition-colors">
+                              <span className="text-sm font-medium">Zona {z}</span>
+                              <Badge variant="outline" className="font-mono text-xs">{t.toLocaleString("pt-BR")}</Badge>
                             </div>
                           ))}
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                          Seções ({detalhe.length})
-                        </h4>
-                        <div className="space-y-0.5 text-xs max-h-96 overflow-y-auto pr-2">
+                      </ScrollArea>
+                    )}
+                  </div>
+                  <div className="flex flex-col p-4 bg-muted/5">
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center justify-between">
+                      <span>Seções Eleitorais</span>
+                      <Badge variant="secondary" className="text-[10px]">{detalhe.length}</Badge>
+                    </h4>
+                    {loadingDet ? (
+                      <div className="flex-1 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                    ) : (
+                      <ScrollArea className="flex-1">
+                        <div className="grid grid-cols-2 gap-2 pr-3">
                           {detalhe.map(r => (
-                            <div key={`${r.zona}-${r.secao}`} className="flex justify-between py-1 border-b border-border/30">
-                              <span className="text-muted-foreground">Z{r.zona} · S{r.secao}</span>
-                              <span className="font-mono">{r.total.toLocaleString("pt-BR")}</span>
+                            <div key={`${r.zona}-${r.secao}`} className="flex justify-between p-1.5 rounded border bg-background text-[11px]">
+                              <span className="text-muted-foreground">Z{r.zona}/S{r.secao}</span>
+                              <span className="font-bold">{r.total.toLocaleString("pt-BR")}</span>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    </>
-                  )}
+                      </ScrollArea>
+                    )}
+                  </div>
                 </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
   );
 }
