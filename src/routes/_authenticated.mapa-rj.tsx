@@ -55,6 +55,7 @@ function MapaRJ() {
   const [selected, setSelected] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<DetalheRow[]>([]);
   const [loadingDet, setLoadingDet] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     let cancelled = false;
