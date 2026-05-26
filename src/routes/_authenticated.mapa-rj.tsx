@@ -199,6 +199,15 @@ function MapaRJ() {
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Target className="h-4 w-4 text-primary" /> Ranking RJ
               </CardTitle>
+              <div className="mt-2 relative">
+                <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar município..."
+                  className="pl-8 h-8 text-xs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
