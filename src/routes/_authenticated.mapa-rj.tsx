@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { 
   Loader2, 
   Users, 
@@ -20,7 +21,8 @@ import {
   Filter, 
   LayoutDashboard,
   Maximize2,
-  ChevronRight
+  ChevronRight,
+  Search
 } from "lucide-react";
 import municipiosGeo from "@/data/rj_municipios.json";
 
@@ -53,6 +55,7 @@ function MapaRJ() {
   const [selected, setSelected] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<DetalheRow[]>([]);
   const [loadingDet, setLoadingDet] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +86,14 @@ function MapaRJ() {
     });
   }, [selected, generos, faixas]);
 
-  const visiveis = useMemo(() => totais.slice(0, topN), [totais, topN]);
+  const filtrados = useMemo(() => {
+    if (!searchTerm) return totais;
+    return totais.filter(m => 
+      m.municipio.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [totais, searchTerm]);
+
+  const visiveis = useMemo(() => filtrados.slice(0, topN), [filtrados, topN]);
   const maxTotal = visiveis[0]?.total ?? 1;
   const totalGeral = useMemo(() => totais.reduce((a, b) => a + b.total, 0), [totais]);
 
@@ -138,7 +148,7 @@ function MapaRJ() {
                   variant="ghost" 
                   size="sm" 
                   className="h-7 px-2 text-[10px]" 
-                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); }}
+                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); setSearchTerm(""); }}
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />Limpar
                 </Button>
@@ -189,6 +199,15 @@ function MapaRJ() {
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Target className="h-4 w-4 text-primary" /> Ranking RJ
               </CardTitle>
+              <div className="mt-2 relative">
+                <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar município..."
+                  className="pl-8 h-8 text-xs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
