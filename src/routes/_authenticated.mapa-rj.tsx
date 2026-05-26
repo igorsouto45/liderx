@@ -86,7 +86,14 @@ function MapaRJ() {
     });
   }, [selected, generos, faixas]);
 
-  const visiveis = useMemo(() => totais.slice(0, topN), [totais, topN]);
+  const filtrados = useMemo(() => {
+    if (!searchTerm) return totais;
+    return totais.filter(m => 
+      m.municipio.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [totais, searchTerm]);
+
+  const visiveis = useMemo(() => filtrados.slice(0, topN), [filtrados, topN]);
   const maxTotal = visiveis[0]?.total ?? 1;
   const totalGeral = useMemo(() => totais.reduce((a, b) => a + b.total, 0), [totais]);
 
