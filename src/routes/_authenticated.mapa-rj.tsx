@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { 
   Loader2, 
   Users, 
@@ -20,7 +21,8 @@ import {
   Filter, 
   LayoutDashboard,
   Maximize2,
-  ChevronRight
+  ChevronRight,
+  Search
 } from "lucide-react";
 import municipiosGeo from "@/data/rj_municipios.json";
 
