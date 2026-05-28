@@ -44,7 +44,7 @@ const RJ_CENTER: [number, number] = [-22.4, -42.7];
 const GEO = municipiosGeo as unknown as Record<string, [number, number]>;
 
 interface MuniTotal { municipio: string; total: number; }
-interface DetalheRow { zona: number; secao: number; total: number; }
+interface DetalheRow { zona: number; secao: number; total: number; bairro: string; local_nome: string; }
 
 function MapaRJ() {
   const [generos, setGeneros] = useState<string[]>(["FEMININO", "MASCULINO"]);
@@ -56,6 +56,8 @@ function MapaRJ() {
   const [detalhe, setDetalhe] = useState<DetalheRow[]>([]);
   const [loadingDet, setLoadingDet] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [bairroSearch, setBairroSearch] = useState("");
+
 
   useEffect(() => {
     let cancelled = false;
