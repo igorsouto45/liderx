@@ -157,6 +157,8 @@ function AuthenticatedLayout() {
     { label: "WhatsApp", icon: MessageCircle, to: "/whatsapp", roles: ["admin", "operador", "líder"] },
     { label: "Estratégia", icon: Target, to: "/prioridades", roles: ["admin", "operador", "líder"] },
     { label: "Lideranças", icon: TrendingUp, to: "/liderancas", roles: ["admin", "operador"] },
+    { label: "Situação Eleitoral", icon: FileCheck, to: "/situacao-eleitoral", roles: ["admin", "operador", "líder"] },
+
     { label: "Mapa Estratégico", icon: Map, to: "/mapa", roles: ["admin", "operador"] },
     { label: "Mapa Eleitorado RJ", icon: Map, to: "/mapa-rj", roles: ["admin", "operador"] },
     { label: "Captura (QR Code)", icon: UserPlus, to: "/captura", roles: ["admin", "operador", "líder"] },
