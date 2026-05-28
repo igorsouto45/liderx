@@ -238,6 +238,7 @@ function SituacaoEleitoral() {
       l.situacao_eleitoral || "Não informado",
       l.data_consulta_eleitoral ? format(new Date(l.data_consulta_eleitoral), "dd/MM/yyyy") : "",
 
+
       l.situacao_eleitoral_validada ? "Sim" : "Não",
       l.observacao_situacao_eleitoral || ""
     ]);
