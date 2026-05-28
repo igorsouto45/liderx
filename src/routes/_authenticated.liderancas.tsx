@@ -711,7 +711,84 @@ function Liderancas() {
                 )}
               </div>
 
+              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5 text-primary" />
+                  <h3 className="text-sm font-semibold text-primary">Situação Eleitoral</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Situação Eleitoral</Label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={form.situacao_eleitoral}
+                      onChange={(e) => setForm({ ...form, situacao_eleitoral: e.target.value })}
+                    >
+                      <option value="Não informado">Não informado</option>
+                      <option value="Apto">Apto</option>
+                      <option value="Inapto">Inapto</option>
+                      <option value="Pendente de validação">Pendente de validação</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Título de Eleitor</Label>
+                    <Input 
+                      value={form.titulo_eleitor} 
+                      onChange={(e) => setForm({ ...form, titulo_eleitor: e.target.value })} 
+                      placeholder="Número do título"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data da Consulta</Label>
+                    <Input 
+                      type="date" 
+                      value={form.data_consulta_eleitoral} 
+                      onChange={(e) => setForm({ ...form, data_consulta_eleitoral: e.target.value })} 
+                    />
+                  </div>
+
+                  <div className="space-y-2 flex items-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full gap-2"
+                      onClick={() => window.open("https://www.tse.jus.br/servicos-eleitorais/autoatendimento-eleitoral", "_blank")}
+                    >
+                      <Target className="h-4 w-4" />
+                      Consultar no TSE
+                    </Button>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Observações</Label>
+                    <Input 
+                      value={form.observacao_situacao_eleitoral} 
+                      onChange={(e) => setForm({ ...form, observacao_situacao_eleitoral: e.target.value })} 
+                      placeholder="Notas sobre a situação eleitoral"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center space-x-2">
+                    <Checkbox 
+                      id="eleitoral-validada" 
+                      checked={form.situacao_eleitoral_validada}
+                      onCheckedChange={(checked) => setForm({ ...form, situacao_eleitoral_validada: !!checked })}
+                    />
+                    <Label htmlFor="eleitoral-validada" className="text-sm font-medium cursor-pointer">
+                      Validado pelo administrador
+                    </Label>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground italic">
+                  A consulta deve ser realizada no ambiente oficial da Justiça Eleitoral. Este sistema apenas registra a situação informada ou validada.
+                </p>
+              </div>
+
               <div className="md:col-span-2 flex items-start space-x-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+
                 <Checkbox 
                   id="lgpd-lider" 
                   checked={form.lgpd_consent}
