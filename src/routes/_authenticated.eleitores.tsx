@@ -382,11 +382,6 @@ function Eleitores() {
     }
   });
 
-  const filteredEleitores = eleitores?.filter(e => 
-    e.nome.toLowerCase().includes(search.toLowerCase()) ||
-    e.telefone?.includes(search) ||
-    e.bairro?.toLowerCase().includes(search.toLowerCase())
-  );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
