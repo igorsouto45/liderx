@@ -88,9 +88,12 @@ export type Database = {
           cep: string | null
           cidade: string | null
           complemento: string | null
+          comprovante_situacao_eleitoral: string | null
           cpf: string | null
           created_at: string | null
+          data_consulta_eleitoral: string | null
           data_nascimento: string | null
+          data_validacao_eleitoral: string | null
           endereco: string | null
           id: string
           latitude: number | null
@@ -99,11 +102,16 @@ export type Database = {
           longitude: number | null
           nome: string
           numero: string | null
+          observacao_situacao_eleitoral: string | null
           origem_usuario_id: string | null
           secao_votacao: number | null
+          situacao_eleitoral: string | null
+          situacao_eleitoral_validada: boolean | null
           status: Database["public"]["Enums"]["eleitor_status"]
           telefone: string | null
+          titulo_eleitor: string | null
           uf: string | null
+          usuario_validacao_eleitoral: string | null
           zona_votacao: number | null
         }
         Insert: {
@@ -111,9 +119,12 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
+          comprovante_situacao_eleitoral?: string | null
           cpf?: string | null
           created_at?: string | null
+          data_consulta_eleitoral?: string | null
           data_nascimento?: string | null
+          data_validacao_eleitoral?: string | null
           endereco?: string | null
           id?: string
           latitude?: number | null
@@ -122,11 +133,16 @@ export type Database = {
           longitude?: number | null
           nome: string
           numero?: string | null
+          observacao_situacao_eleitoral?: string | null
           origem_usuario_id?: string | null
           secao_votacao?: number | null
+          situacao_eleitoral?: string | null
+          situacao_eleitoral_validada?: boolean | null
           status?: Database["public"]["Enums"]["eleitor_status"]
           telefone?: string | null
+          titulo_eleitor?: string | null
           uf?: string | null
+          usuario_validacao_eleitoral?: string | null
           zona_votacao?: number | null
         }
         Update: {
@@ -134,9 +150,12 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
+          comprovante_situacao_eleitoral?: string | null
           cpf?: string | null
           created_at?: string | null
+          data_consulta_eleitoral?: string | null
           data_nascimento?: string | null
+          data_validacao_eleitoral?: string | null
           endereco?: string | null
           id?: string
           latitude?: number | null
@@ -145,17 +164,29 @@ export type Database = {
           longitude?: number | null
           nome?: string
           numero?: string | null
+          observacao_situacao_eleitoral?: string | null
           origem_usuario_id?: string | null
           secao_votacao?: number | null
+          situacao_eleitoral?: string | null
+          situacao_eleitoral_validada?: boolean | null
           status?: Database["public"]["Enums"]["eleitor_status"]
           telefone?: string | null
+          titulo_eleitor?: string | null
           uf?: string | null
+          usuario_validacao_eleitoral?: string | null
           zona_votacao?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "eleitores_origem_usuario_id_fkey"
             columns: ["origem_usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eleitores_usuario_validacao_eleitoral_fkey"
+            columns: ["usuario_validacao_eleitoral"]
             isOneToOne: false
             referencedRelation: "perfis"
             referencedColumns: ["id"]
@@ -206,6 +237,51 @@ export type Database = {
           },
           {
             foreignKeyName: "historico_situacao_eleitoral_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_situacao_eleitoral_eleitores: {
+        Row: {
+          created_at: string | null
+          eleitor_id: string
+          id: string
+          observacao: string | null
+          situacao_anterior: string | null
+          situacao_nova: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          eleitor_id: string
+          id?: string
+          observacao?: string | null
+          situacao_anterior?: string | null
+          situacao_nova?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          eleitor_id?: string
+          id?: string
+          observacao?: string | null
+          situacao_anterior?: string | null
+          situacao_nova?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_situacao_eleitoral_eleitores_eleitor_id_fkey"
+            columns: ["eleitor_id"]
+            isOneToOne: false
+            referencedRelation: "eleitores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_situacao_eleitoral_eleitores_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "perfis"
