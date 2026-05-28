@@ -68,6 +68,11 @@ type FormState = {
   lgpd_consent: boolean;
   latitude: number | null;
   longitude: number | null;
+  titulo_eleitor: string;
+  situacao_eleitoral: string;
+  data_consulta_eleitoral: string;
+  observacao_situacao_eleitoral: string;
+  situacao_eleitoral_validada: boolean;
 };
 
 const initialForm: FormState = {
@@ -78,7 +83,13 @@ const initialForm: FormState = {
   lgpd_consent: false,
   latitude: null,
   longitude: null,
+  titulo_eleitor: "",
+  situacao_eleitoral: "Não informado",
+  data_consulta_eleitoral: "",
+  observacao_situacao_eleitoral: "",
+  situacao_eleitoral_validada: false,
 };
+
 
 
 
