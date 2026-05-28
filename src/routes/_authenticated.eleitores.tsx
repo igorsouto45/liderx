@@ -298,6 +298,9 @@ function Eleitores() {
         lgpd_consent: form.lgpd_consent,
         latitude: form.latitude,
         longitude: form.longitude,
+        situacao_eleitoral: form.situacao_eleitoral,
+        titulo_eleitor: form.titulo_eleitor,
+
       };
 
       // Verificação de duplicidade por telefone
