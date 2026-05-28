@@ -449,19 +449,36 @@ function Eleitores() {
 
       <Card className="dashboard-card p-0 overflow-hidden">
         <div className="p-4 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar por nome, telefone ou bairro..." 
-              className="pl-10 bg-black/20 border-white/10"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto flex-1">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Nome, telefone, bairro ou título..." 
+                className="pl-10 bg-black/20 border-white/10"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select value={electoralStatusFilter} onValueChange={setElectoralStatusFilter}>
+                <SelectTrigger className="bg-black/20 border-white/10">
+                  <SelectValue placeholder="Situação Eleitoral" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="all">Todas as situações</SelectItem>
+                  <SelectItem value="Apto">Apto</SelectItem>
+                  <SelectItem value="Inapto">Inapto</SelectItem>
+                  <SelectItem value="Pendente de validação">Pendente</SelectItem>
+                  <SelectItem value="Não informado">Não informado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>{filteredEleitores?.length || 0} eleitores encontrados</span>
           </div>
         </div>
+
 
         <Table>
           <TableHeader className="bg-white/5">
