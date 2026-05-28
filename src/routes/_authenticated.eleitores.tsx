@@ -401,6 +401,27 @@ function Eleitores() {
     }
   };
 
+  const getElectoralStatusBadge = (status: string | null) => {
+    switch (status) {
+      case "Apto": return <Badge className="bg-green-500 hover:bg-green-600">Apto</Badge>;
+      case "Inapto": return <Badge className="bg-red-500 hover:bg-red-600">Inapto</Badge>;
+      case "Pendente de validação": return <Badge className="bg-yellow-500 text-black hover:bg-yellow-600">Pendente</Badge>;
+      default: return <Badge variant="secondary">Não informado</Badge>;
+    }
+  };
+
+  const filteredEleitores = eleitores?.filter(e => {
+    const matchesSearch = e.nome.toLowerCase().includes(search.toLowerCase()) ||
+      e.telefone?.includes(search) ||
+      e.bairro?.toLowerCase().includes(search.toLowerCase()) ||
+      e.titulo_eleitor?.includes(search);
+    
+    const matchesStatus = electoralStatusFilter === "all" || e.situacao_eleitoral === electoralStatusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+
   return (
     <div className="space-y-6">
       <Toaster position="top-right" richColors />
