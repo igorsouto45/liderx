@@ -503,7 +503,7 @@ function SituacaoEleitoral() {
               <Input 
                 value={form.tituloEleitor} 
                 onChange={(e) => setForm({ ...form, tituloEleitor: e.target.value })} 
-                className="bg-white/5 border-white/10"
+                className="bg-background border-white/10"
               />
             </div>
 
@@ -513,7 +513,7 @@ function SituacaoEleitoral() {
                 type="date" 
                 value={form.dataConsulta} 
                 onChange={(e) => setForm({ ...form, dataConsulta: e.target.value })} 
-                className="bg-white/5 border-white/10"
+                className="bg-background border-white/10"
               />
             </div>
 
@@ -523,9 +523,10 @@ function SituacaoEleitoral() {
                 value={form.observacao} 
                 onChange={(e) => setForm({ ...form, observacao: e.target.value })} 
                 placeholder="Ex: Consultas realizadas no site do TSE"
-                className="bg-white/5 border-white/10"
+                className="bg-background border-white/10"
               />
             </div>
+
 
             {(profile?.tipo === 'admin') && (
               <div className="flex items-center space-x-2 pt-2">
