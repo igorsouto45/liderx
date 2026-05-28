@@ -884,6 +884,14 @@ function Eleitores() {
               <div className="grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Situação Eleitoral</p>
+                    <div>{getElectoralStatusBadge(viewingEleitor.situacao_eleitoral)}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Título de Eleitor</p>
+                    <p className="text-sm">{viewingEleitor.titulo_eleitor || "Não informado"}</p>
+                  </div>
+                  <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-bold">WhatsApp</p>
                     <p className="text-sm flex items-center gap-2"><Phone className="h-3 w-3" /> {viewingEleitor.telefone}</p>
                   </div>
@@ -891,6 +899,7 @@ function Eleitores() {
                     <p className="text-xs text-muted-foreground uppercase font-bold">CPF</p>
                     <p className="text-sm">{viewingEleitor.cpf || "Não informado"}</p>
                   </div>
+
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-bold">Nascimento</p>
                     <p className="text-sm">{viewingEleitor.data_nascimento ? new Date(viewingEleitor.data_nascimento).toLocaleDateString('pt-BR') : "---"}</p>
