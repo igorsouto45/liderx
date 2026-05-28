@@ -428,7 +428,7 @@ function SituacaoEleitoral() {
                               variant="ghost" 
                               size="icon" 
                               title="Ver Comprovante"
-                              onClick={() => handleViewProof(l.comprovante_situacao_eleitoral)}
+                              onClick={() => handleViewProof(l.comprovante_situacao_eleitoral as string)}
                             >
                               <FileText className="h-4 w-4 text-primary" />
                             </Button>
