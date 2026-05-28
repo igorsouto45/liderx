@@ -153,7 +153,7 @@ function MapaRJ() {
                   variant="ghost" 
                   size="sm" 
                   className="h-7 px-2 text-[10px]" 
-                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); setSearchTerm(""); }}
+                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); setSearchTerm(""); setBairroSearch(""); }}
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />Limpar
                 </Button>
