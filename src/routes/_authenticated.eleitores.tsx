@@ -484,10 +484,12 @@ function Eleitores() {
           <TableHeader className="bg-white/5">
             <TableRow className="border-white/5 hover:bg-transparent">
               <TableHead className="w-[300px]">Eleitor</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Situação Eleitoral</TableHead>
+              <TableHead>Status Político</TableHead>
               <TableHead>Bairro</TableHead>
               <TableHead>Liderança</TableHead>
               <TableHead className="text-right">Ações</TableHead>
+
             </TableRow>
           </TableHeader>
           <TableBody>
