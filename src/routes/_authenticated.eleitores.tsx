@@ -65,6 +65,8 @@ type FormState = {
   lgpd_consent: boolean;
   latitude: number | null;
   longitude: number | null;
+  situacao_eleitoral: string;
+  titulo_eleitor: string;
 };
 
 const initialForm: FormState = {
@@ -76,7 +78,10 @@ const initialForm: FormState = {
   lgpd_consent: false,
   latitude: null,
   longitude: null,
+  situacao_eleitoral: "Não informado",
+  titulo_eleitor: "",
 };
+
 
 
 
@@ -115,6 +120,8 @@ function Eleitores() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [electoralStatusFilter, setElectoralStatusFilter] = useState<string>("all");
+
 
   const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
     // Try exact CEP match first
@@ -219,7 +226,10 @@ function Eleitores() {
       lgpd_consent: eleitor.lgpd_consent || false,
       latitude: eleitor.latitude || null,
       longitude: eleitor.longitude || null,
+      situacao_eleitoral: eleitor.situacao_eleitoral || "Não informado",
+      titulo_eleitor: eleitor.titulo_eleitor || "",
     });
+
     setOpen(true);
   };
 
@@ -288,6 +298,9 @@ function Eleitores() {
         lgpd_consent: form.lgpd_consent,
         latitude: form.latitude,
         longitude: form.longitude,
+        situacao_eleitoral: form.situacao_eleitoral,
+        titulo_eleitor: form.titulo_eleitor,
+
       };
 
       // Verificação de duplicidade por telefone
@@ -369,11 +382,6 @@ function Eleitores() {
     }
   });
 
-  const filteredEleitores = eleitores?.filter(e => 
-    e.nome.toLowerCase().includes(search.toLowerCase()) ||
-    e.telefone?.includes(search) ||
-    e.bairro?.toLowerCase().includes(search.toLowerCase())
-  );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -387,6 +395,27 @@ function Eleitores() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  const getElectoralStatusBadge = (status: string | null) => {
+    switch (status) {
+      case "Apto": return <Badge className="bg-green-500 hover:bg-green-600">Apto</Badge>;
+      case "Inapto": return <Badge className="bg-red-500 hover:bg-red-600">Inapto</Badge>;
+      case "Pendente de validação": return <Badge className="bg-yellow-500 text-black hover:bg-yellow-600">Pendente</Badge>;
+      default: return <Badge variant="secondary">Não informado</Badge>;
+    }
+  };
+
+  const filteredEleitores = eleitores?.filter(e => {
+    const matchesSearch = e.nome.toLowerCase().includes(search.toLowerCase()) ||
+      e.telefone?.includes(search) ||
+      e.bairro?.toLowerCase().includes(search.toLowerCase()) ||
+      e.titulo_eleitor?.includes(search);
+    
+    const matchesStatus = electoralStatusFilter === "all" || e.situacao_eleitoral === electoralStatusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
 
   return (
     <div className="space-y-6">
@@ -420,42 +449,62 @@ function Eleitores() {
 
       <Card className="dashboard-card p-0 overflow-hidden">
         <div className="p-4 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar por nome, telefone ou bairro..." 
-              className="pl-10 bg-black/20 border-white/10"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto flex-1">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Nome, telefone, bairro ou título..." 
+                className="pl-10 bg-black/20 border-white/10"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select value={electoralStatusFilter} onValueChange={setElectoralStatusFilter}>
+                <SelectTrigger className="bg-black/20 border-white/10">
+                  <SelectValue placeholder="Situação Eleitoral" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="all">Todas as situações</SelectItem>
+                  <SelectItem value="Apto">Apto</SelectItem>
+                  <SelectItem value="Inapto">Inapto</SelectItem>
+                  <SelectItem value="Pendente de validação">Pendente</SelectItem>
+                  <SelectItem value="Não informado">Não informado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>{filteredEleitores?.length || 0} eleitores encontrados</span>
           </div>
         </div>
 
+
         <Table>
           <TableHeader className="bg-white/5">
             <TableRow className="border-white/5 hover:bg-transparent">
               <TableHead className="w-[300px]">Eleitor</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Situação Eleitoral</TableHead>
+              <TableHead>Status Político</TableHead>
               <TableHead>Bairro</TableHead>
               <TableHead>Liderança</TableHead>
               <TableHead className="text-right">Ações</TableHead>
+
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                   Carregando eleitores...
                 </TableCell>
               </TableRow>
             ) : filteredEleitores?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                   Nenhum eleitor encontrado.
                 </TableCell>
+
               </TableRow>
             ) : (
               filteredEleitores?.map((eleitor) => (
@@ -473,6 +522,7 @@ function Eleitores() {
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>{getElectoralStatusBadge(eleitor.situacao_eleitoral)}</TableCell>
                   <TableCell>{getStatusBadge(eleitor.status)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5 text-sm">
@@ -483,6 +533,7 @@ function Eleitores() {
                   <TableCell>
                     <div className="text-sm font-medium">{eleitor.perfis?.nome || "Campanha Direta"}</div>
                   </TableCell>
+
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -648,18 +699,47 @@ function Eleitores() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Situação Eleitoral</Label>
+                  <Select 
+                    value={form.situacao_eleitoral} 
+                    onValueChange={(v) => setForm({ ...form, situacao_eleitoral: v })}
+                  >
+                    <SelectTrigger className="bg-black/20 border-white/10">
+                      <SelectValue placeholder="Selecione a situação" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-white/10">
+                      <SelectItem value="Não informado">Não informado</SelectItem>
+                      <SelectItem value="Apto">Apto</SelectItem>
+                      <SelectItem value="Inapto">Inapto</SelectItem>
+                      <SelectItem value="Pendente de validação">Pendente de validação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <Label>Status Político</Label>
                   <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                     <SelectTrigger className="bg-black/20 border-white/10">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card border-white/10">
                       <SelectItem value="apoiador">Apoiador</SelectItem>
                       <SelectItem value="indeciso">Indeciso</SelectItem>
                       <SelectItem value="rejeição">Rejeição</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Título de Eleitor</Label>
+                  <Input 
+                    value={form.titulo_eleitor} 
+                    onChange={(e) => setForm({ ...form, titulo_eleitor: e.target.value })} 
+                    placeholder="Número do título"
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+
                 
                 <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 p-4 space-y-4">
                   <div className="flex items-center justify-between">
@@ -805,6 +885,14 @@ function Eleitores() {
               <div className="grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Situação Eleitoral</p>
+                    <div>{getElectoralStatusBadge(viewingEleitor.situacao_eleitoral)}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Título de Eleitor</p>
+                    <p className="text-sm">{viewingEleitor.titulo_eleitor || "Não informado"}</p>
+                  </div>
+                  <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-bold">WhatsApp</p>
                     <p className="text-sm flex items-center gap-2"><Phone className="h-3 w-3" /> {viewingEleitor.telefone}</p>
                   </div>
@@ -812,6 +900,7 @@ function Eleitores() {
                     <p className="text-xs text-muted-foreground uppercase font-bold">CPF</p>
                     <p className="text-sm">{viewingEleitor.cpf || "Não informado"}</p>
                   </div>
+
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-bold">Nascimento</p>
                     <p className="text-sm">{viewingEleitor.data_nascimento ? new Date(viewingEleitor.data_nascimento).toLocaleDateString('pt-BR') : "---"}</p>
