@@ -160,20 +160,7 @@ function MapaRJ() {
               </div>
             </CardHeader>
             <CardContent className="p-4 space-y-6 overflow-y-auto">
-              <div className="space-y-3">
-                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <MapPin className="h-3 w-3" /> Bairro / Distrito
-                </Label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Filtrar por bairro..."
-                    className="pl-8 h-8 text-xs"
-                    value={bairroSearch}
-                    onChange={(e) => setBairroSearch(e.target.value)}
-                  />
-                </div>
-              </div>
+              {/* Removido o campo duplicado de bairro daqui para colocar no Ranking */}
 
               <div className="space-y-3">
 
@@ -220,14 +207,25 @@ function MapaRJ() {
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Target className="h-4 w-4 text-primary" /> Ranking RJ
               </CardTitle>
-              <div className="mt-2 relative">
-                <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Pesquisar município..."
-                  className="pl-8 h-8 text-xs"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="mt-2 space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar município..."
+                    className="pl-8 h-8 text-xs bg-background/50"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="relative">
+                  <MapPin className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar bairro..."
+                    className="pl-8 h-8 text-xs bg-background/50 border-primary/30 focus:border-primary"
+                    value={bairroSearch}
+                    onChange={(e) => setBairroSearch(e.target.value)}
+                  />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
