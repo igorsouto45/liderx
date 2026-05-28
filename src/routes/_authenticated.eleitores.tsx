@@ -521,6 +521,7 @@ function Eleitores() {
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>{getElectoralStatusBadge(eleitor.situacao_eleitoral)}</TableCell>
                   <TableCell>{getStatusBadge(eleitor.status)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5 text-sm">
@@ -531,6 +532,7 @@ function Eleitores() {
                   <TableCell>
                     <div className="text-sm font-medium">{eleitor.perfis?.nome || "Campanha Direta"}</div>
                   </TableCell>
+
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
