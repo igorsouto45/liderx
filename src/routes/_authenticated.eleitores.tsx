@@ -120,6 +120,8 @@ function Eleitores() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [electoralStatusFilter, setElectoralStatusFilter] = useState<string>("all");
+
 
   const lookupLocalVotacao = async (cep: string, bairro?: string, cidade?: string) => {
     // Try exact CEP match first
