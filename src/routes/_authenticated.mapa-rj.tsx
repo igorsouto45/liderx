@@ -212,7 +212,7 @@ function MapaRJ() {
                   <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Pesquisar município..."
-                    className="pl-8 h-8 text-xs bg-background/50"
+                    className="pl-8 h-8 text-xs bg-background border-white/10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -221,10 +221,11 @@ function MapaRJ() {
                   <MapPin className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Pesquisar bairro..."
-                    className="pl-8 h-8 text-xs bg-background/50 border-primary/30 focus:border-primary"
+                    className="pl-8 h-8 text-xs bg-background border-primary/30 focus:border-primary"
                     value={bairroSearch}
                     onChange={(e) => setBairroSearch(e.target.value)}
                   />
+
                 </div>
               </div>
             </CardHeader>

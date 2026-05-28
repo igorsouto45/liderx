@@ -28,9 +28,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+
 
 export const Route = createFileRoute("/_authenticated/situacao-eleitoral")({
   component: SituacaoEleitoral,
@@ -314,24 +322,29 @@ function SituacaoEleitoral() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Nome, CPF ou Título..." 
-                className="pl-9 h-10 bg-white/5 border-white/10" 
+                className="pl-9 h-10 bg-background border-white/10" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <select 
-                className="h-10 px-3 py-2 rounded-md border border-white/10 bg-white/5 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+              <Select 
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onValueChange={(value) => setStatusFilter(value)}
               >
-                <option value="all">Todas as situações</option>
-                <option value="Apto">Apto</option>
-                <option value="Inapto">Inapto</option>
-                <option value="Pendente de validação">Pendente</option>
-                <option value="Não informado">Não informado</option>
-              </select>
+                <SelectTrigger className="h-10 w-[180px] bg-background border-white/10">
+                  <SelectValue placeholder="Situação" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="all">Todas as situações</SelectItem>
+                  <SelectItem value="Apto">Apto</SelectItem>
+                  <SelectItem value="Inapto">Inapto</SelectItem>
+                  <SelectItem value="Pendente de validação">Pendente</SelectItem>
+                  <SelectItem value="Não informado">Não informado</SelectItem>
+                </SelectContent>
+              </Select>
+
             </div>
           </div>
         </CardHeader>
@@ -468,16 +481,21 @@ function SituacaoEleitoral() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Situação Eleitoral</Label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+              <Select 
                 value={form.situacao}
-                onChange={(e) => setForm({ ...form, situacao: e.target.value as ElectoralStatus })}
+                onValueChange={(value) => setForm({ ...form, situacao: value as ElectoralStatus })}
               >
-                <option value="Não informado">Não informado</option>
-                <option value="Apto">Apto</option>
-                <option value="Inapto">Inapto</option>
-                <option value="Pendente de validação">Pendente de validação</option>
-              </select>
+                <SelectTrigger className="w-full bg-background border-white/10">
+                  <SelectValue placeholder="Selecione a situação" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="Não informado">Não informado</SelectItem>
+                  <SelectItem value="Apto">Apto</SelectItem>
+                  <SelectItem value="Inapto">Inapto</SelectItem>
+                  <SelectItem value="Pendente de validação">Pendente de validação</SelectItem>
+                </SelectContent>
+              </Select>
+
             </div>
             
             <div className="space-y-2">
@@ -485,7 +503,7 @@ function SituacaoEleitoral() {
               <Input 
                 value={form.tituloEleitor} 
                 onChange={(e) => setForm({ ...form, tituloEleitor: e.target.value })} 
-                className="bg-white/5 border-white/10"
+                className="bg-background border-white/10"
               />
             </div>
 
@@ -495,7 +513,7 @@ function SituacaoEleitoral() {
                 type="date" 
                 value={form.dataConsulta} 
                 onChange={(e) => setForm({ ...form, dataConsulta: e.target.value })} 
-                className="bg-white/5 border-white/10"
+                className="bg-background border-white/10"
               />
             </div>
 
@@ -505,9 +523,10 @@ function SituacaoEleitoral() {
                 value={form.observacao} 
                 onChange={(e) => setForm({ ...form, observacao: e.target.value })} 
                 placeholder="Ex: Consultas realizadas no site do TSE"
-                className="bg-white/5 border-white/10"
+                className="bg-background border-white/10"
               />
             </div>
+
 
             {(profile?.tipo === 'admin') && (
               <div className="flex items-center space-x-2 pt-2">
