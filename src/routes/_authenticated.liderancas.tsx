@@ -382,12 +382,28 @@ function Liderancas() {
 
 
       if (editingId) {
+        const previousLider = liderancas?.find(l => l.id === editingId);
+        
         const { error } = await supabase
           .from("liderancas")
           .update(payload)
           .eq("id", editingId);
         if (error) throw error;
+
+        // Track electoral status change
+        if (previousLider && previousLider.situacao_eleitoral !== form.situacao_eleitoral) {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.from("historico_situacao_eleitoral").insert({
+            lider_id: editingId,
+            situacao_anterior: previousLider.situacao_eleitoral,
+            situacao_nova: form.situacao_eleitoral,
+            usuario_id: session?.user.id,
+            observacao: form.observacao_situacao_eleitoral
+          });
+        }
+
         toast.success("Liderança atualizada com sucesso!");
+
       } else {
         const { error } = await supabase.from("liderancas").insert({
           ...payload,
