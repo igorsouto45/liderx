@@ -226,7 +226,10 @@ function Eleitores() {
       lgpd_consent: eleitor.lgpd_consent || false,
       latitude: eleitor.latitude || null,
       longitude: eleitor.longitude || null,
+      situacao_eleitoral: eleitor.situacao_eleitoral || "Não informado",
+      titulo_eleitor: eleitor.titulo_eleitor || "",
     });
+
     setOpen(true);
   };
 
