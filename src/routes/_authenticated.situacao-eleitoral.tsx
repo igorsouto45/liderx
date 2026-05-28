@@ -481,16 +481,21 @@ function SituacaoEleitoral() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Situação Eleitoral</Label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+              <Select 
                 value={form.situacao}
-                onChange={(e) => setForm({ ...form, situacao: e.target.value as ElectoralStatus })}
+                onValueChange={(value) => setForm({ ...form, situacao: value as ElectoralStatus })}
               >
-                <option value="Não informado">Não informado</option>
-                <option value="Apto">Apto</option>
-                <option value="Inapto">Inapto</option>
-                <option value="Pendente de validação">Pendente de validação</option>
-              </select>
+                <SelectTrigger className="w-full bg-background border-white/10">
+                  <SelectValue placeholder="Selecione a situação" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="Não informado">Não informado</SelectItem>
+                  <SelectItem value="Apto">Apto</SelectItem>
+                  <SelectItem value="Inapto">Inapto</SelectItem>
+                  <SelectItem value="Pendente de validação">Pendente de validação</SelectItem>
+                </SelectContent>
+              </Select>
+
             </div>
             
             <div className="space-y-2">
