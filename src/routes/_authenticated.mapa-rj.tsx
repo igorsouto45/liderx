@@ -44,7 +44,7 @@ const RJ_CENTER: [number, number] = [-22.4, -42.7];
 const GEO = municipiosGeo as unknown as Record<string, [number, number]>;
 
 interface MuniTotal { municipio: string; total: number; }
-interface DetalheRow { zona: number; secao: number; total: number; }
+interface DetalheRow { zona: number; secao: number; total: number; bairro: string; local_nome: string; }
 
 function MapaRJ() {
   const [generos, setGeneros] = useState<string[]>(["FEMININO", "MASCULINO"]);
@@ -56,6 +56,8 @@ function MapaRJ() {
   const [detalhe, setDetalhe] = useState<DetalheRow[]>([]);
   const [loadingDet, setLoadingDet] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [bairroSearch, setBairroSearch] = useState("");
+
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +65,7 @@ function MapaRJ() {
     supabase.rpc("mapa_rj_totais_municipio", {
       p_generos: generos.length ? generos : undefined,
       p_faixas: faixas.length ? faixas : undefined,
+      p_bairro: bairroSearch || undefined,
     }).then(({ data, error }) => {
       if (cancelled) return;
       if (error) { console.error(error); setTotais([]); }
@@ -70,7 +73,7 @@ function MapaRJ() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [generos, faixas]);
+  }, [generos, faixas, bairroSearch]);
 
   useEffect(() => {
     if (!selected) { setDetalhe([]); return; }
@@ -79,12 +82,14 @@ function MapaRJ() {
       p_municipio: selected,
       p_generos: generos.length ? generos : undefined,
       p_faixas: faixas.length ? faixas : undefined,
+      p_bairro: bairroSearch || undefined,
     }).then(({ data, error }) => {
       if (error) console.error(error);
       setDetalhe((data || []) as DetalheRow[]);
       setLoadingDet(false);
     });
-  }, [selected, generos, faixas]);
+  }, [selected, generos, faixas, bairroSearch]);
+
 
   const filtrados = useMemo(() => {
     if (!searchTerm) return totais;
@@ -148,7 +153,7 @@ function MapaRJ() {
                   variant="ghost" 
                   size="sm" 
                   className="h-7 px-2 text-[10px]" 
-                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); setSearchTerm(""); }}
+                  onClick={() => { setGeneros(["FEMININO","MASCULINO"]); setFaixas([]); setTopN(92); setSearchTerm(""); setBairroSearch(""); }}
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />Limpar
                 </Button>
@@ -156,6 +161,22 @@ function MapaRJ() {
             </CardHeader>
             <CardContent className="p-4 space-y-6 overflow-y-auto">
               <div className="space-y-3">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-3 w-3" /> Bairro / Distrito
+                </Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Filtrar por bairro..."
+                    className="pl-8 h-8 text-xs"
+                    value={bairroSearch}
+                    onChange={(e) => setBairroSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+
                 <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   Gênero
                 </Label>
@@ -350,15 +371,22 @@ function MapaRJ() {
                       <div className="flex-1 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
                     ) : (
                       <ScrollArea className="flex-1">
-                        <div className="grid grid-cols-2 gap-2 pr-3">
+                        <div className="flex flex-col gap-2 pr-3">
                           {detalhe.map(r => (
-                            <div key={`${r.zona}-${r.secao}`} className="flex justify-between p-1.5 rounded border bg-background text-[11px]">
-                              <span className="text-muted-foreground">Z{r.zona}/S{r.secao}</span>
-                              <span className="font-bold">{r.total.toLocaleString("pt-BR")}</span>
+                            <div key={`${r.zona}-${r.secao}`} className="flex flex-col p-2 rounded border bg-background text-[11px] gap-1">
+                              <div className="flex justify-between font-bold">
+                                <span className="text-primary">Zona {r.zona} / Seção {r.secao}</span>
+                                <span>{r.total.toLocaleString("pt-BR")} eleitores</span>
+                              </div>
+                              <div className="flex flex-col text-[10px] text-muted-foreground">
+                                <span className="truncate" title={r.local_nome}><Target className="h-2.5 w-2.5 inline mr-1" />{r.local_nome}</span>
+                                <span className="truncate"><MapPin className="h-2.5 w-2.5 inline mr-1" />{r.bairro}</span>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </ScrollArea>
+
                     )}
                   </div>
                 </div>
