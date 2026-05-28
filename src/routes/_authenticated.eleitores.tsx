@@ -698,18 +698,47 @@ function Eleitores() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Situação Eleitoral</Label>
+                  <Select 
+                    value={form.situacao_eleitoral} 
+                    onValueChange={(v) => setForm({ ...form, situacao_eleitoral: v })}
+                  >
+                    <SelectTrigger className="bg-black/20 border-white/10">
+                      <SelectValue placeholder="Selecione a situação" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-white/10">
+                      <SelectItem value="Não informado">Não informado</SelectItem>
+                      <SelectItem value="Apto">Apto</SelectItem>
+                      <SelectItem value="Inapto">Inapto</SelectItem>
+                      <SelectItem value="Pendente de validação">Pendente de validação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <Label>Status Político</Label>
                   <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                     <SelectTrigger className="bg-black/20 border-white/10">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card border-white/10">
                       <SelectItem value="apoiador">Apoiador</SelectItem>
                       <SelectItem value="indeciso">Indeciso</SelectItem>
                       <SelectItem value="rejeição">Rejeição</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Título de Eleitor</Label>
+                  <Input 
+                    value={form.titulo_eleitor} 
+                    onChange={(e) => setForm({ ...form, titulo_eleitor: e.target.value })} 
+                    placeholder="Número do título"
+                    className="bg-black/20 border-white/10"
+                  />
+                </div>
+
                 
                 <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 p-4 space-y-4">
                   <div className="flex items-center justify-between">
