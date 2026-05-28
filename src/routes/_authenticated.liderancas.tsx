@@ -22,8 +22,11 @@ import {
   File,
   X as XIcon,
   Download,
-  Loader2
+  Loader2,
+  FileCheck,
+  ShieldCheck
 } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
