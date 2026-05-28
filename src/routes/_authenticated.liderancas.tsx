@@ -294,7 +294,7 @@ function Liderancas() {
       nome: lider.nome || "",
       telefone: lider.telefone || "",
       email: lider.email || "",
-      senha: "", // Não editamos a senha aqui por enquanto
+      senha: "",
       data_nascimento: lider.data_nascimento || "",
       cpf: lider.cpf || "",
       cep: lider.cep || "",
@@ -310,7 +310,13 @@ function Liderancas() {
       lgpd_consent: lider.lgpd_consent || false,
       latitude: lider.latitude || null,
       longitude: lider.longitude || null,
+      titulo_eleitor: lider.titulo_eleitor || "",
+      situacao_eleitoral: lider.situacao_eleitoral || "Não informado",
+      data_consulta_eleitoral: lider.data_consulta_eleitoral ? new Date(lider.data_consulta_eleitoral).toISOString().split('T')[0] : "",
+      observacao_situacao_eleitoral: lider.observacao_situacao_eleitoral || "",
+      situacao_eleitoral_validada: lider.situacao_eleitoral_validada || false,
     });
+
     setOpen(true);
   };
 
