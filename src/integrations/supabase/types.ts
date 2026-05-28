@@ -204,6 +204,13 @@ export type Database = {
             referencedRelation: "liderancas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "historico_situacao_eleitoral_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ia_mensagens: {
