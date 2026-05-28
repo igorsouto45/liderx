@@ -371,15 +371,22 @@ function MapaRJ() {
                       <div className="flex-1 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
                     ) : (
                       <ScrollArea className="flex-1">
-                        <div className="grid grid-cols-2 gap-2 pr-3">
+                        <div className="flex flex-col gap-2 pr-3">
                           {detalhe.map(r => (
-                            <div key={`${r.zona}-${r.secao}`} className="flex justify-between p-1.5 rounded border bg-background text-[11px]">
-                              <span className="text-muted-foreground">Z{r.zona}/S{r.secao}</span>
-                              <span className="font-bold">{r.total.toLocaleString("pt-BR")}</span>
+                            <div key={`${r.zona}-${r.secao}`} className="flex flex-col p-2 rounded border bg-background text-[11px] gap-1">
+                              <div className="flex justify-between font-bold">
+                                <span className="text-primary">Zona {r.zona} / Seção {r.secao}</span>
+                                <span>{r.total.toLocaleString("pt-BR")} eleitores</span>
+                              </div>
+                              <div className="flex flex-col text-[10px] text-muted-foreground">
+                                <span className="truncate" title={r.local_nome}><Target className="h-2.5 w-2.5 inline mr-1" />{r.local_nome}</span>
+                                <span className="truncate"><MapPin className="h-2.5 w-2.5 inline mr-1" />{r.bairro}</span>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </ScrollArea>
+
                     )}
                   </div>
                 </div>
