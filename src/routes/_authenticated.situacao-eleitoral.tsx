@@ -87,10 +87,11 @@ function SituacaoEleitoral() {
         .from("historico_situacao_eleitoral")
         .select(`
           *,
-          perfil:usuario_id (nome)
+          perfis:usuario_id (nome)
         `)
         .eq("lider_id", historyLiderId)
         .order("created_at", { ascending: false });
+
       if (error) throw error;
       return data;
     },
