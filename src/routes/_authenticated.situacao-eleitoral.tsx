@@ -62,7 +62,7 @@ function SituacaoEleitoral() {
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
-      const { data } = await supabase.from("perfis").eq("id", session.user.id).single();
+      const { data } = await supabase.from("perfis").select("*").eq("id", session.user.id).single();
       return data;
     }
   });
