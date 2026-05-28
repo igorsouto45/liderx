@@ -65,6 +65,7 @@ function MapaRJ() {
     supabase.rpc("mapa_rj_totais_municipio", {
       p_generos: generos.length ? generos : undefined,
       p_faixas: faixas.length ? faixas : undefined,
+      p_bairro: bairroSearch || undefined,
     }).then(({ data, error }) => {
       if (cancelled) return;
       if (error) { console.error(error); setTotais([]); }
@@ -72,7 +73,7 @@ function MapaRJ() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [generos, faixas]);
+  }, [generos, faixas, bairroSearch]);
 
   useEffect(() => {
     if (!selected) { setDetalhe([]); return; }
@@ -81,12 +82,14 @@ function MapaRJ() {
       p_municipio: selected,
       p_generos: generos.length ? generos : undefined,
       p_faixas: faixas.length ? faixas : undefined,
+      p_bairro: bairroSearch || undefined,
     }).then(({ data, error }) => {
       if (error) console.error(error);
       setDetalhe((data || []) as DetalheRow[]);
       setLoadingDet(false);
     });
-  }, [selected, generos, faixas]);
+  }, [selected, generos, faixas, bairroSearch]);
+
 
   const filtrados = useMemo(() => {
     if (!searchTerm) return totais;
