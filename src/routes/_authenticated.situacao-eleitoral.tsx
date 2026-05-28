@@ -573,7 +573,7 @@ function SituacaoEleitoral() {
                           {getStatusBadge(h.situacao_nova)}
                         </div>
                         <span className="text-[10px] text-muted-foreground">
-                          {format(new Date(h.created_at!), "dd/MM/yyyy HH:mm")}
+                          {h.created_at ? format(new Date(h.created_at), "dd/MM/yyyy HH:mm") : "---"}
                         </span>
                       </div>
                       <div className="text-xs">
