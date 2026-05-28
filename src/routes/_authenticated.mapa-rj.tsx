@@ -162,6 +162,22 @@ function MapaRJ() {
             <CardContent className="p-4 space-y-6 overflow-y-auto">
               <div className="space-y-3">
                 <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-3 w-3" /> Bairro / Distrito
+                </Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Filtrar por bairro..."
+                    className="pl-8 h-8 text-xs"
+                    value={bairroSearch}
+                    onChange={(e) => setBairroSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   Gênero
                 </Label>
                 <div className="grid grid-cols-1 gap-1.5">
