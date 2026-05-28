@@ -377,7 +377,7 @@ function SituacaoEleitoral() {
                       </TableCell>
                       <TableCell>{getStatusBadge(l.situacao_eleitoral)}</TableCell>
                       <TableCell className="text-xs">
-                        {l.data_consulta_eleitoral ? format(new Date(l.data_consulta_eleitoral), "dd/MM/yyyy") : "Nunca"}
+                        {l.data_consulta_eleitoral ? format(new Date(l.data_consulta_eleitoral as string), "dd/MM/yyyy") : "Nunca"}
                       </TableCell>
                       <TableCell className="text-center">
                         {l.situacao_eleitoral_validada ? (
