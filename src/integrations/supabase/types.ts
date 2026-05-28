@@ -162,6 +162,57 @@ export type Database = {
           },
         ]
       }
+      historico_situacao_eleitoral: {
+        Row: {
+          comprovante: string | null
+          created_at: string | null
+          data_alteracao: string | null
+          id: string
+          lider_id: string
+          observacao: string | null
+          situacao_anterior: string | null
+          situacao_nova: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          comprovante?: string | null
+          created_at?: string | null
+          data_alteracao?: string | null
+          id?: string
+          lider_id: string
+          observacao?: string | null
+          situacao_anterior?: string | null
+          situacao_nova?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          comprovante?: string | null
+          created_at?: string | null
+          data_alteracao?: string | null
+          id?: string
+          lider_id?: string
+          observacao?: string | null
+          situacao_anterior?: string | null
+          situacao_nova?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_situacao_eleitoral_lider_id_fkey"
+            columns: ["lider_id"]
+            isOneToOne: false
+            referencedRelation: "liderancas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_situacao_eleitoral_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ia_mensagens: {
         Row: {
           content: string
@@ -225,9 +276,12 @@ export type Database = {
           cep: string | null
           cidade: string | null
           complemento: string | null
+          comprovante_situacao_eleitoral: string | null
           cpf: string | null
           created_at: string | null
+          data_consulta_eleitoral: string | null
           data_nascimento: string | null
+          data_validacao_eleitoral: string | null
           email: string | null
           endereco: string | null
           id: string
@@ -237,10 +291,15 @@ export type Database = {
           longitude: number | null
           nome: string
           numero: string | null
+          observacao_situacao_eleitoral: string | null
           perfil_id: string | null
           secao_votacao: number | null
+          situacao_eleitoral: string | null
+          situacao_eleitoral_validada: boolean | null
           telefone: string | null
+          titulo_eleitor: string | null
           uf: string | null
+          usuario_validacao_eleitoral: string | null
           zona_votacao: number | null
         }
         Insert: {
@@ -249,9 +308,12 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
+          comprovante_situacao_eleitoral?: string | null
           cpf?: string | null
           created_at?: string | null
+          data_consulta_eleitoral?: string | null
           data_nascimento?: string | null
+          data_validacao_eleitoral?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -261,10 +323,15 @@ export type Database = {
           longitude?: number | null
           nome: string
           numero?: string | null
+          observacao_situacao_eleitoral?: string | null
           perfil_id?: string | null
           secao_votacao?: number | null
+          situacao_eleitoral?: string | null
+          situacao_eleitoral_validada?: boolean | null
           telefone?: string | null
+          titulo_eleitor?: string | null
           uf?: string | null
+          usuario_validacao_eleitoral?: string | null
           zona_votacao?: number | null
         }
         Update: {
@@ -273,9 +340,12 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
+          comprovante_situacao_eleitoral?: string | null
           cpf?: string | null
           created_at?: string | null
+          data_consulta_eleitoral?: string | null
           data_nascimento?: string | null
+          data_validacao_eleitoral?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -285,10 +355,15 @@ export type Database = {
           longitude?: number | null
           nome?: string
           numero?: string | null
+          observacao_situacao_eleitoral?: string | null
           perfil_id?: string | null
           secao_votacao?: number | null
+          situacao_eleitoral?: string | null
+          situacao_eleitoral_validada?: boolean | null
           telefone?: string | null
+          titulo_eleitor?: string | null
           uf?: string | null
+          usuario_validacao_eleitoral?: string | null
           zona_votacao?: number | null
         }
         Relationships: [

@@ -15,6 +15,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated.whatsapp'
+import { Route as AuthenticatedSituacaoEleitoralRouteImport } from './routes/_authenticated.situacao-eleitoral'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedQrcodeLiderRouteImport } from './routes/_authenticated.qrcode-lider'
 import { Route as AuthenticatedPrioridadesRouteImport } from './routes/_authenticated.prioridades'
@@ -57,6 +58,12 @@ const AuthenticatedWhatsappRoute = AuthenticatedWhatsappRouteImport.update({
   path: '/whatsapp',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSituacaoEleitoralRoute =
+  AuthenticatedSituacaoEleitoralRouteImport.update({
+    id: '/situacao-eleitoral',
+    path: '/situacao-eleitoral',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/situacao-eleitoral': typeof AuthenticatedSituacaoEleitoralRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
 }
 export interface FileRoutesByTo {
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/situacao-eleitoral': typeof AuthenticatedSituacaoEleitoralRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
 }
 export interface FileRoutesById {
@@ -178,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/prioridades': typeof AuthenticatedPrioridadesRoute
   '/_authenticated/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/situacao-eleitoral': typeof AuthenticatedSituacaoEleitoralRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
 }
 export interface FileRouteTypes {
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/prioridades'
     | '/qrcode-lider'
     | '/settings'
+    | '/situacao-eleitoral'
     | '/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/prioridades'
     | '/qrcode-lider'
     | '/settings'
+    | '/situacao-eleitoral'
     | '/whatsapp'
   id:
     | '__root__'
@@ -238,6 +250,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prioridades'
     | '/_authenticated/qrcode-lider'
     | '/_authenticated/settings'
+    | '/_authenticated/situacao-eleitoral'
     | '/_authenticated/whatsapp'
   fileRoutesById: FileRoutesById
 }
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/whatsapp'
       fullPath: '/whatsapp'
       preLoaderRoute: typeof AuthenticatedWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/situacao-eleitoral': {
+      id: '/_authenticated/situacao-eleitoral'
+      path: '/situacao-eleitoral'
+      fullPath: '/situacao-eleitoral'
+      preLoaderRoute: typeof AuthenticatedSituacaoEleitoralRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings': {
@@ -393,6 +413,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPrioridadesRoute: typeof AuthenticatedPrioridadesRoute
   AuthenticatedQrcodeLiderRoute: typeof AuthenticatedQrcodeLiderRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSituacaoEleitoralRoute: typeof AuthenticatedSituacaoEleitoralRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
 }
 
@@ -409,6 +430,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPrioridadesRoute: AuthenticatedPrioridadesRoute,
   AuthenticatedQrcodeLiderRoute: AuthenticatedQrcodeLiderRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSituacaoEleitoralRoute: AuthenticatedSituacaoEleitoralRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
 }
 

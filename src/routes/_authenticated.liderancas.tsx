@@ -22,8 +22,13 @@ import {
   File,
   X as XIcon,
   Download,
-  Loader2
+  Loader2,
+  FileCheck,
+  ShieldCheck,
+  Target
 } from "lucide-react";
+
+
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -68,6 +73,11 @@ type FormState = {
   lgpd_consent: boolean;
   latitude: number | null;
   longitude: number | null;
+  titulo_eleitor: string;
+  situacao_eleitoral: string;
+  data_consulta_eleitoral: string;
+  observacao_situacao_eleitoral: string;
+  situacao_eleitoral_validada: boolean;
 };
 
 const initialForm: FormState = {
@@ -78,7 +88,13 @@ const initialForm: FormState = {
   lgpd_consent: false,
   latitude: null,
   longitude: null,
+  titulo_eleitor: "",
+  situacao_eleitoral: "Não informado",
+  data_consulta_eleitoral: "",
+  observacao_situacao_eleitoral: "",
+  situacao_eleitoral_validada: false,
 };
+
 
 
 
@@ -283,7 +299,7 @@ function Liderancas() {
       nome: lider.nome || "",
       telefone: lider.telefone || "",
       email: lider.email || "",
-      senha: "", // Não editamos a senha aqui por enquanto
+      senha: "",
       data_nascimento: lider.data_nascimento || "",
       cpf: lider.cpf || "",
       cep: lider.cep || "",
@@ -299,7 +315,13 @@ function Liderancas() {
       lgpd_consent: lider.lgpd_consent || false,
       latitude: lider.latitude || null,
       longitude: lider.longitude || null,
+      titulo_eleitor: lider.titulo_eleitor || "",
+      situacao_eleitoral: lider.situacao_eleitoral || "Não informado",
+      data_consulta_eleitoral: lider.data_consulta_eleitoral ? new Date(lider.data_consulta_eleitoral).toISOString().split('T')[0] : "",
+      observacao_situacao_eleitoral: lider.observacao_situacao_eleitoral || "",
+      situacao_eleitoral_validada: lider.situacao_eleitoral_validada || false,
     });
+
     setOpen(true);
   };
 
@@ -351,15 +373,37 @@ function Liderancas() {
         lgpd_consent: form.lgpd_consent,
         latitude: form.latitude,
         longitude: form.longitude,
+        titulo_eleitor: form.titulo_eleitor,
+        situacao_eleitoral: form.situacao_eleitoral,
+        data_consulta_eleitoral: form.data_consulta_eleitoral || null,
+        observacao_situacao_eleitoral: form.observacao_situacao_eleitoral,
+        situacao_eleitoral_validada: form.situacao_eleitoral_validada,
       };
 
+
       if (editingId) {
+        const previousLider = liderancas?.find(l => l.id === editingId);
+        
         const { error } = await supabase
           .from("liderancas")
           .update(payload)
           .eq("id", editingId);
         if (error) throw error;
+
+        // Track electoral status change
+        if (previousLider && previousLider.situacao_eleitoral !== form.situacao_eleitoral) {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.from("historico_situacao_eleitoral").insert({
+            lider_id: editingId,
+            situacao_anterior: previousLider.situacao_eleitoral,
+            situacao_nova: form.situacao_eleitoral,
+            usuario_id: session?.user.id,
+            observacao: form.observacao_situacao_eleitoral
+          });
+        }
+
         toast.success("Liderança atualizada com sucesso!");
+
       } else {
         const { error } = await supabase.from("liderancas").insert({
           ...payload,
@@ -688,7 +732,84 @@ function Liderancas() {
                 )}
               </div>
 
+              <div className="md:col-span-2 rounded-md border border-white/10 bg-white/5 p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5 text-primary" />
+                  <h3 className="text-sm font-semibold text-primary">Situação Eleitoral</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Situação Eleitoral</Label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={form.situacao_eleitoral}
+                      onChange={(e) => setForm({ ...form, situacao_eleitoral: e.target.value })}
+                    >
+                      <option value="Não informado">Não informado</option>
+                      <option value="Apto">Apto</option>
+                      <option value="Inapto">Inapto</option>
+                      <option value="Pendente de validação">Pendente de validação</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Título de Eleitor</Label>
+                    <Input 
+                      value={form.titulo_eleitor} 
+                      onChange={(e) => setForm({ ...form, titulo_eleitor: e.target.value })} 
+                      placeholder="Número do título"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data da Consulta</Label>
+                    <Input 
+                      type="date" 
+                      value={form.data_consulta_eleitoral} 
+                      onChange={(e) => setForm({ ...form, data_consulta_eleitoral: e.target.value })} 
+                    />
+                  </div>
+
+                  <div className="space-y-2 flex items-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full gap-2"
+                      onClick={() => window.open("https://www.tse.jus.br/servicos-eleitorais/autoatendimento-eleitoral", "_blank")}
+                    >
+                      <Target className="h-4 w-4" />
+                      Consultar no TSE
+                    </Button>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Observações</Label>
+                    <Input 
+                      value={form.observacao_situacao_eleitoral} 
+                      onChange={(e) => setForm({ ...form, observacao_situacao_eleitoral: e.target.value })} 
+                      placeholder="Notas sobre a situação eleitoral"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center space-x-2">
+                    <Checkbox 
+                      id="eleitoral-validada" 
+                      checked={form.situacao_eleitoral_validada}
+                      onCheckedChange={(checked) => setForm({ ...form, situacao_eleitoral_validada: !!checked })}
+                    />
+                    <Label htmlFor="eleitoral-validada" className="text-sm font-medium cursor-pointer">
+                      Validado pelo administrador
+                    </Label>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground italic">
+                  A consulta deve ser realizada no ambiente oficial da Justiça Eleitoral. Este sistema apenas registra a situação informada ou validada.
+                </p>
+              </div>
+
               <div className="md:col-span-2 flex items-start space-x-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+
                 <Checkbox 
                   id="lgpd-lider" 
                   checked={form.lgpd_consent}
