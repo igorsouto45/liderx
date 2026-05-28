@@ -576,7 +576,7 @@ function SituacaoEleitoral() {
                         </span>
                       </div>
                       <div className="text-xs">
-                        <p className="text-muted-foreground font-medium">Alterado por: <span className="text-foreground">{h.perfil?.nome || "Sistema"}</span></p>
+                        <p className="text-muted-foreground font-medium">Alterado por: <span className="text-foreground">{(h as any).perfis?.nome || "Sistema"}</span></p>
                         {h.observacao && <p className="mt-1 bg-black/20 p-2 rounded italic">"{h.observacao}"</p>}
                       </div>
                     </div>
