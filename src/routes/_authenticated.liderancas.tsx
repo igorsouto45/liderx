@@ -368,7 +368,13 @@ function Liderancas() {
         lgpd_consent: form.lgpd_consent,
         latitude: form.latitude,
         longitude: form.longitude,
+        titulo_eleitor: form.titulo_eleitor,
+        situacao_eleitoral: form.situacao_eleitoral,
+        data_consulta_eleitoral: form.data_consulta_eleitoral || null,
+        observacao_situacao_eleitoral: form.observacao_situacao_eleitoral,
+        situacao_eleitoral_validada: form.situacao_eleitoral_validada,
       };
+
 
       if (editingId) {
         const { error } = await supabase
