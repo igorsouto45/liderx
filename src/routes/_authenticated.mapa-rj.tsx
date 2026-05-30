@@ -128,12 +128,12 @@ function MapaRJ() {
       }
     };
 
-    fetchDetalhes().then(({ detRes, bairrosRes }) => {
-      if (detRes.error) console.error(detRes.error);
-      if (bairrosRes.error) console.error(bairrosRes.error);
+    fetchDetalhes().then(({ detRes, bairrosRes }: any) => {
+      if (detRes?.error) console.error(detRes.error);
+      if (bairrosRes?.error) console.error(bairrosRes.error);
       
-      setDetalhe((detRes.data || []) as DetalheRow[]);
-      setDetalheBairros((bairrosRes.data || []) as BairroRow[]);
+      setDetalhe((detRes?.data || []) as DetalheRow[]);
+      setDetalheBairros((bairrosRes?.data || []) as BairroRow[]);
       setLoadingDet(false);
     });
   }, [selected, generos, faixas, bairroSearch, dataSource]);
