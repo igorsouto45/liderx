@@ -883,13 +883,26 @@ export type Database = {
           total: number
         }[]
       }
-      mapa_rj_detalhe_eleitores_sistema: {
-        Args: { p_bairro?: string; p_municipio: string }
-        Returns: {
-          bairro: string
-          total: number
-        }[]
-      }
+      mapa_rj_detalhe_eleitores_sistema:
+        | {
+            Args: { p_bairro?: string; p_municipio: string }
+            Returns: {
+              bairro: string
+              total: number
+            }[]
+          }
+        | {
+            Args: {
+              p_bairro?: string
+              p_faixas?: string[]
+              p_generos?: string[]
+              p_municipio: string
+            }
+            Returns: {
+              bairro: string
+              total: number
+            }[]
+          }
       mapa_rj_detalhe_municipio:
         | {
             Args: {
@@ -918,13 +931,25 @@ export type Database = {
               zona: number
             }[]
           }
-      mapa_rj_totais_eleitores_sistema: {
-        Args: { p_bairro?: string }
-        Returns: {
-          municipio: string
-          total: number
-        }[]
-      }
+      mapa_rj_totais_eleitores_sistema:
+        | {
+            Args: { p_bairro?: string }
+            Returns: {
+              municipio: string
+              total: number
+            }[]
+          }
+        | {
+            Args: {
+              p_bairro?: string
+              p_faixas?: string[]
+              p_generos?: string[]
+            }
+            Returns: {
+              municipio: string
+              total: number
+            }[]
+          }
       mapa_rj_totais_municipio:
         | {
             Args: { p_faixas?: string[]; p_generos?: string[] }
