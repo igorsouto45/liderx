@@ -75,6 +75,8 @@ function MapaRJ() {
       } else {
         return supabase.rpc("mapa_rj_totais_eleitores_sistema", {
           p_bairro: bairroSearch || undefined,
+          p_generos: generos.length ? generos : undefined,
+          p_faixas: faixas.length ? faixas : undefined,
         });
       }
     };
@@ -122,6 +124,8 @@ function MapaRJ() {
         const bairrosRes = await supabase.rpc("mapa_rj_detalhe_eleitores_sistema", {
           p_municipio: selected,
           p_bairro: bairroSearch || undefined,
+          p_generos: generos.length ? generos : undefined,
+          p_faixas: faixas.length ? faixas : undefined,
         });
         return { detRes: { data: [], error: null }, bairrosRes };
       }
@@ -215,7 +219,7 @@ function MapaRJ() {
                 </Tabs>
               </div>
 
-              {dataSource === "tse" && (
+              {(true) && (
                 <>
                   <div className="space-y-3">
                     <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -404,7 +408,7 @@ function MapaRJ() {
                       >
                         Bairros ({detalheBairros.length})
                       </TabsTrigger>
-                      {dataSource === "tse" && (
+                      {(true) && (
                         <TabsTrigger 
                           value="secoes" 
                           className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 text-xs"
