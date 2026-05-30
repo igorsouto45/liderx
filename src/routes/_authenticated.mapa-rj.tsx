@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +60,6 @@ function MapaRJ() {
   const [loadingDet, setLoadingDet] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [bairroSearch, setBairroSearch] = useState("");
-
 
   useEffect(() => {
     let cancelled = false;
@@ -124,7 +123,7 @@ function MapaRJ() {
           p_municipio: selected,
           p_bairro: bairroSearch || undefined,
         });
-        return { detRes: { data: [] }, bairrosRes };
+        return { detRes: { data: [], error: null }, bairrosRes };
       }
     };
 
@@ -137,7 +136,6 @@ function MapaRJ() {
       setLoadingDet(false);
     });
   }, [selected, generos, faixas, bairroSearch, dataSource]);
-
 
   const filtrados = useMemo(() => {
     if (!searchTerm) return totais;
@@ -154,12 +152,6 @@ function MapaRJ() {
     set(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
 
   const radiusFor = (n: number) => 6 + Math.sqrt(n / maxTotal) * 28;
-
-  const zonasResumo = useMemo(() => {
-    const m = new Map<number, number>();
-    detalhe.forEach(r => m.set(r.zona, (m.get(r.zona) || 0) + r.total));
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
-  }, [detalhe]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] gap-4">
@@ -224,35 +216,35 @@ function MapaRJ() {
               </div>
 
               {dataSource === "tse" && (
-                <div className="space-y-3">
-                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    Gênero
-                  </Label>
-                  <div className="grid grid-cols-1 gap-1.5">
-                    {GENEROS.map(g => (
-                      <label key={g} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors">
-                        <Checkbox checked={generos.includes(g)} onCheckedChange={() => toggle(generos, g, setGeneros)} />
-                        <span className="text-xs">{g}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {dataSource === "tse" && (
-                <div className="space-y-3">
-                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Faixa Etária</Label>
-                  <ScrollArea className="h-48 rounded-md border bg-muted/20 p-2">
-                    <div className="space-y-1.5">
-                      {FAIXAS.map(f => (
-                        <label key={f} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1 rounded">
-                          <Checkbox checked={faixas.includes(f)} onCheckedChange={() => toggle(faixas, f, setFaixas)} />
-                          {f}
+                <>
+                  <div className="space-y-3">
+                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      Gênero
+                    </Label>
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {GENEROS.map(g => (
+                        <label key={g} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors">
+                          <Checkbox checked={generos.includes(g)} onCheckedChange={() => toggle(generos, g, setGeneros)} />
+                          <span className="text-xs">{g}</span>
                         </label>
                       ))}
                     </div>
-                  </ScrollArea>
-                </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Faixa Etária</Label>
+                    <ScrollArea className="h-48 rounded-md border bg-muted/20 p-2">
+                      <div className="space-y-1.5">
+                        {FAIXAS.map(f => (
+                          <label key={f} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1 rounded">
+                            <Checkbox checked={faixas.includes(f)} onCheckedChange={() => toggle(faixas, f, setFaixas)} />
+                            {f}
+                          </label>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </>
               )}
 
               <div className="space-y-4 pt-2">
@@ -289,7 +281,6 @@ function MapaRJ() {
                     value={bairroSearch}
                     onChange={(e) => setBairroSearch(e.target.value)}
                   />
-
                 </div>
               </div>
             </CardHeader>
@@ -369,7 +360,7 @@ function MapaRJ() {
                       <div className="bg-card px-3 py-2 border-l-4 border-primary">
                         <p className="text-[11px] font-bold text-card-foreground">{m.municipio}</p>
                         <p className="text-[10px] text-muted-foreground">
-                          {m.total.toLocaleString("pt-BR")} eleitores ({pct.toFixed(1)}%)
+                          {m.total.toLocaleString("pt-BR")} {dataSource === "tse" ? "eleitores" : "cadastrados"} ({pct.toFixed(1)}%)
                         </p>
                       </div>
                     </Tooltip>
@@ -377,7 +368,7 @@ function MapaRJ() {
                       <div className="p-1">
                         <h3 className="font-bold text-sm mb-1">{m.municipio}</h3>
                         <p className="text-xs text-muted-foreground mb-3">
-                          {m.total.toLocaleString("pt-BR")} eleitores cadastrados
+                          {m.total.toLocaleString("pt-BR")} {dataSource === "tse" ? "eleitores (TSE)" : "eleitores cadastrados"}
                         </p>
                         <Button size="sm" className="w-full h-8 text-xs" onClick={() => setSelected(m.municipio)}>
                           Explorar Detalhes <ChevronRight className="h-3 w-3 ml-1" />
@@ -393,53 +384,69 @@ function MapaRJ() {
           {/* Painel de Detalhes (quando selecionado) */}
           {selected && (
             <Card className="h-80 shadow-lg border-t-4 border-t-primary flex flex-col animate-in slide-in-from-bottom-4 duration-300">
-              <CardHeader className="py-3 px-4 bg-muted/20 flex flex-row items-center justify-between">
+              <CardHeader className="py-2 px-4 bg-muted/20 flex flex-row items-center justify-between space-y-0">
                 <div>
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" /> {selected}
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 text-primary" /> {selected}
                   </CardTitle>
-                  <CardDescription className="text-[10px]">Detalhamento por Zonas e Seções</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" className="h-8" onClick={() => setSelected(null)}>
-                  Fechar Detalhes
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setSelected(null)}>
+                  Fechar
                 </Button>
               </CardHeader>
               <CardContent className="p-0 flex-1 overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-                  <div className="border-r flex flex-col p-4 bg-background">
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-                      <Target className="h-3 w-3" /> Zonas Eleitorais
-                    </h4>
+                <Tabs defaultValue="bairros" className="h-full flex flex-col">
+                  <div className="px-4 border-b bg-muted/10">
+                    <TabsList className="h-8 w-full justify-start bg-transparent p-0 gap-4">
+                      <TabsTrigger 
+                        value="bairros" 
+                        className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 text-xs"
+                      >
+                        Bairros ({detalheBairros.length})
+                      </TabsTrigger>
+                      {dataSource === "tse" && (
+                        <TabsTrigger 
+                          value="secoes" 
+                          className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 text-xs"
+                        >
+                          Seções ({detalhe.length})
+                        </TabsTrigger>
+                      )}
+                    </TabsList>
+                  </div>
+
+                  <TabsContent value="bairros" className="flex-1 min-h-0 m-0 p-4">
                     {loadingDet ? (
-                      <div className="flex-1 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                      <div className="h-full flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
                     ) : (
-                      <ScrollArea className="flex-1">
+                      <ScrollArea className="h-full">
                         <div className="space-y-2 pr-3">
-                          {zonasResumo.map(([z, t]) => (
-                            <div key={z} className="flex justify-between items-center p-2 rounded-lg border bg-muted/30 hover:bg-muted transition-colors">
-                              <span className="text-sm font-medium">Zona {z}</span>
-                              <Badge variant="outline" className="font-mono text-xs">{t.toLocaleString("pt-BR")}</Badge>
-                            </div>
-                          ))}
+                          {detalheBairros.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-8">Nenhum dado encontrado para este município.</p>
+                          ) : (
+                            detalheBairros.map((b) => (
+                              <div key={b.bairro} className="flex justify-between items-center p-2 rounded-lg border bg-muted/30 hover:bg-muted transition-colors">
+                                <span className="text-xs font-medium">{b.bairro}</span>
+                                <Badge variant="outline" className="font-mono text-[10px]">{b.total.toLocaleString("pt-BR")}</Badge>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </ScrollArea>
                     )}
-                  </div>
-                  <div className="flex flex-col p-4 bg-muted/5">
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center justify-between">
-                      <span>Seções Eleitorais</span>
-                      <Badge variant="secondary" className="text-[10px]">{detalhe.length}</Badge>
-                    </h4>
+                  </TabsContent>
+
+                  <TabsContent value="secoes" className="flex-1 min-h-0 m-0 p-4">
                     {loadingDet ? (
-                      <div className="flex-1 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                      <div className="h-full flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
                     ) : (
-                      <ScrollArea className="flex-1">
+                      <ScrollArea className="h-full">
                         <div className="flex flex-col gap-2 pr-3">
                           {detalhe.map(r => (
                             <div key={`${r.zona}-${r.secao}`} className="flex flex-col p-2 rounded border bg-background text-[11px] gap-1">
                               <div className="flex justify-between font-bold">
                                 <span className="text-primary">Zona {r.zona} / Seção {r.secao}</span>
-                                <span>{r.total.toLocaleString("pt-BR")} eleitores</span>
+                                <span>{r.total.toLocaleString("pt-BR")}</span>
                               </div>
                               <div className="flex flex-col text-[10px] text-muted-foreground">
                                 <span className="truncate" title={r.local_nome}><Target className="h-2.5 w-2.5 inline mr-1" />{r.local_nome}</span>
@@ -449,10 +456,9 @@ function MapaRJ() {
                           ))}
                         </div>
                       </ScrollArea>
-
                     )}
-                  </div>
-                </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           )}
