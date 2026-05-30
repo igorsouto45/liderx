@@ -45,8 +45,10 @@ const GEO = municipiosGeo as unknown as Record<string, [number, number]>;
 
 interface MuniTotal { municipio: string; total: number; }
 interface DetalheRow { zona: number; secao: number; total: number; bairro: string; local_nome: string; }
+interface BairroRow { bairro: string; total: number; }
 
 function MapaRJ() {
+  const [dataSource, setDataSource] = useState<"tse" | "sistema">("sistema");
   const [generos, setGeneros] = useState<string[]>(["FEMININO", "MASCULINO"]);
   const [faixas, setFaixas] = useState<string[]>([]);
   const [topN, setTopN] = useState<number>(92);
@@ -54,6 +56,7 @@ function MapaRJ() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<DetalheRow[]>([]);
+  const [detalheBairros, setDetalheBairros] = useState<BairroRow[]>([]);
   const [loadingDet, setLoadingDet] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [bairroSearch, setBairroSearch] = useState("");
@@ -62,33 +65,78 @@ function MapaRJ() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    supabase.rpc("mapa_rj_totais_municipio", {
-      p_generos: generos.length ? generos : undefined,
-      p_faixas: faixas.length ? faixas : undefined,
-      p_bairro: bairroSearch || undefined,
-    }).then(({ data, error }) => {
+
+    const fetchTotais = async () => {
+      if (dataSource === "tse") {
+        return supabase.rpc("mapa_rj_totais_municipio", {
+          p_generos: generos.length ? generos : undefined,
+          p_faixas: faixas.length ? faixas : undefined,
+          p_bairro: bairroSearch || undefined,
+        });
+      } else {
+        return supabase.rpc("mapa_rj_totais_eleitores_sistema", {
+          p_bairro: bairroSearch || undefined,
+        });
+      }
+    };
+
+    fetchTotais().then(({ data, error }) => {
       if (cancelled) return;
-      if (error) { console.error(error); setTotais([]); }
-      else setTotais((data || []) as MuniTotal[]);
+      if (error) {
+        console.error(error);
+        setTotais([]);
+      } else {
+        setTotais((data || []) as MuniTotal[]);
+      }
       setLoading(false);
     });
+
     return () => { cancelled = true; };
-  }, [generos, faixas, bairroSearch]);
+  }, [generos, faixas, bairroSearch, dataSource]);
 
   useEffect(() => {
-    if (!selected) { setDetalhe([]); return; }
+    if (!selected) {
+      setDetalhe([]);
+      setDetalheBairros([]);
+      return;
+    }
     setLoadingDet(true);
-    supabase.rpc("mapa_rj_detalhe_municipio", {
-      p_municipio: selected,
-      p_generos: generos.length ? generos : undefined,
-      p_faixas: faixas.length ? faixas : undefined,
-      p_bairro: bairroSearch || undefined,
-    }).then(({ data, error }) => {
-      if (error) console.error(error);
-      setDetalhe((data || []) as DetalheRow[]);
+
+    const fetchDetalhes = async () => {
+      if (dataSource === "tse") {
+        const [detRes, bairrosRes] = await Promise.all([
+          supabase.rpc("mapa_rj_detalhe_municipio", {
+            p_municipio: selected,
+            p_generos: generos.length ? generos : undefined,
+            p_faixas: faixas.length ? faixas : undefined,
+            p_bairro: bairroSearch || undefined,
+          }),
+          supabase.rpc("mapa_rj_bairros_municipio_tse", {
+            p_municipio: selected,
+            p_generos: generos.length ? generos : undefined,
+            p_faixas: faixas.length ? faixas : undefined,
+            p_bairro: bairroSearch || undefined,
+          })
+        ]);
+        return { detRes, bairrosRes };
+      } else {
+        const bairrosRes = await supabase.rpc("mapa_rj_detalhe_eleitores_sistema", {
+          p_municipio: selected,
+          p_bairro: bairroSearch || undefined,
+        });
+        return { detRes: { data: [] }, bairrosRes };
+      }
+    };
+
+    fetchDetalhes().then(({ detRes, bairrosRes }) => {
+      if (detRes.error) console.error(detRes.error);
+      if (bairrosRes.error) console.error(bairrosRes.error);
+      
+      setDetalhe((detRes.data || []) as DetalheRow[]);
+      setDetalheBairros((bairrosRes.data || []) as BairroRow[]);
       setLoadingDet(false);
     });
-  }, [selected, generos, faixas, bairroSearch]);
+  }, [selected, generos, faixas, bairroSearch, dataSource]);
 
 
   const filtrados = useMemo(() => {
@@ -124,18 +172,21 @@ function MapaRJ() {
           <div>
             <h1 className="text-xl font-bold tracking-tight">Mapa Eleitorado RJ</h1>
             <p className="text-xs text-muted-foreground hidden sm:block">
-              Análise estratégica baseada em dados oficiais do TSE
+              {dataSource === "tse" ? "Análise estratégica baseada em dados oficiais do TSE" : "Análise da nossa base de eleitores cadastrados"}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <Tabs value={dataSource} onValueChange={(v) => setDataSource(v as any)} className="w-[300px] hidden md:block">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="sistema" className="text-xs">Nossa Base</TabsTrigger>
+              <TabsTrigger value="tse" className="text-xs">Estatística TSE</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Badge variant="outline" className="text-sm font-medium px-3 py-1 bg-background">
             <Users className="h-3.5 w-3.5 mr-2 text-primary" />
-            {totalGeral.toLocaleString("pt-BR")} <span className="hidden sm:inline ml-1">Eleitores</span>
+            {totalGeral.toLocaleString("pt-BR")} <span className="hidden sm:inline ml-1">{dataSource === "tse" ? "Eleitores (TSE)" : "Cadastrados"}</span>
           </Badge>
-          <Button variant="ghost" size="icon" className="lg:hidden">
-            <Filter className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
@@ -160,36 +211,49 @@ function MapaRJ() {
               </div>
             </CardHeader>
             <CardContent className="p-4 space-y-6 overflow-y-auto">
-              {/* Removido o campo duplicado de bairro daqui para colocar no Ranking */}
-
-              <div className="space-y-3">
-
-                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  Gênero
+              <div className="md:hidden">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-2">
+                  Fonte de Dados
                 </Label>
-                <div className="grid grid-cols-1 gap-1.5">
-                  {GENEROS.map(g => (
-                    <label key={g} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors">
-                      <Checkbox checked={generos.includes(g)} onCheckedChange={() => toggle(generos, g, setGeneros)} />
-                      <span className="text-xs">{g}</span>
-                    </label>
-                  ))}
-                </div>
+                <Tabs value={dataSource} onValueChange={(v) => setDataSource(v as any)} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="sistema" className="text-xs">Nossa Base</TabsTrigger>
+                    <TabsTrigger value="tse" className="text-xs">Estatística TSE</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Faixa Etária</Label>
-                <ScrollArea className="h-48 rounded-md border bg-muted/20 p-2">
-                  <div className="space-y-1.5">
-                    {FAIXAS.map(f => (
-                      <label key={f} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1 rounded">
-                        <Checkbox checked={faixas.includes(f)} onCheckedChange={() => toggle(faixas, f, setFaixas)} />
-                        {f}
+              {dataSource === "tse" && (
+                <div className="space-y-3">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    Gênero
+                  </Label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {GENEROS.map(g => (
+                      <label key={g} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors">
+                        <Checkbox checked={generos.includes(g)} onCheckedChange={() => toggle(generos, g, setGeneros)} />
+                        <span className="text-xs">{g}</span>
                       </label>
                     ))}
                   </div>
-                </ScrollArea>
-              </div>
+                </div>
+              )}
+
+              {dataSource === "tse" && (
+                <div className="space-y-3">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Faixa Etária</Label>
+                  <ScrollArea className="h-48 rounded-md border bg-muted/20 p-2">
+                    <div className="space-y-1.5">
+                      {FAIXAS.map(f => (
+                        <label key={f} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1 rounded">
+                          <Checkbox checked={faixas.includes(f)} onCheckedChange={() => toggle(faixas, f, setFaixas)} />
+                          {f}
+                        </label>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
 
               <div className="space-y-4 pt-2">
                 <div className="flex justify-between items-center">
