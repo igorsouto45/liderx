@@ -1,34 +1,109 @@
-# Plano de Implementação: Gestão de Lideranças, Perfil de Acesso e Correções
+## Escopo
 
-Este plano visa corrigir o problema de salvamento de eleitores, implementar o sistema de lideranças (com cadastro e acesso restrito), e adicionar funcionalidades de captura (QR Code) e prioridades.
+Adicionar três novos módulos ao sistema existente, sem alterar funcionalidades atuais:
 
-## 1. Banco de Dados e Segurança (Migração)
-- **Perfis Automáticos**: Criar trigger para gerar automaticamente um registro na tabela `perfis` ao criar um usuário no Auth.
-- **Sincronização Retroativa**: Garantir que todos os usuários atuais do Auth tenham um perfil correspondente.
-- **Tabela `liderancas`**: Criar tabela para armazenar dados geográficos e cadastrais dos líderes (nome, telefone, CPF, CEP, endereço, zona/seção, etc.), vinculada ao perfil do usuário.
-- **Tabela `prioridades`**: Criar tabela para registrar demandas e prioridades vinculadas às lideranças.
-- **Geolocalização**: Adicionar campos de latitude e longitude em `eleitores` e `liderancas`.
-- **Segurança (RLS)**:
-  - Usuários com perfil `líder` só podem ver e cadastrar eleitores vinculados ao seu ID (`origem_usuario_id`).
-  - Admin e Operador mantêm acesso total.
+1. **Cadastro do Candidato** (singleton) — para dados fixos usados em contratos e recibos
+2. **Gestão de Liderança** (visão do próprio líder) — eleitores captados, reuniões e fotos
+3. **Recibos de Pagamento** — base preparada para receber o modelo depois
+4. **PWA + Captura de fotos offline com GPS/data/hora**
 
-## 2. Correção e Melhoria no Cadastro de Eleitores
-- **Bug de Salvamento**: Validar campos numéricos (Zona/Seção) para evitar erros de tipo e garantir que o `origem_usuario_id` seja válido.
-- **Feedback Visual**: Melhorar mensagens de erro e sucesso no diálogo de cadastro.
+---
 
-## 3. Gestão de Lideranças (Frontend)
-- **Cadastro de Líder**: Implementar formulário em `src/routes/_authenticated.liderancas.tsx` idêntico ao de eleitores.
-- **Listagem**: Mostrar líderes cadastrados e sua localização (preparação para o mapa).
+## 1. Cadastro do Candidato (singleton)
 
-## 4. Perfil de Acesso Restrito (Liderança)
-- **Navegação Inteligente**: No layout autenticado, ocultar abas administrativas (Dashboard, Configurações, etc.) para usuários com perfil `líder`.
-- **Restrição de Conteúdo**: Garantir que o líder veja apenas sua base de eleitores e ferramentas de captura.
+**Nova rota:** `/candidato` (menu lateral, visível só para Admin)
 
-## 5. Captura e Prioridades
-- **QR Code Dinâmico**: Em `src/routes/_authenticated.captura.tsx`, gerar o link e QR Code usando o ID do usuário logado como referência.
-- **Página de Prioridades**: Implementar listagem e cadastro de prioridades em `src/routes/_authenticated.prioridades.tsx`.
+**Tabela:** `public.candidato` (linha única, enforced por constraint)
 
-## Detalhes Técnicos
-- Utilização de Triggers PL/pgSQL para automação de perfis.
-- Políticas RLS (Row Level Security) avançadas para isolamento de dados.
-- Integração com `qrcode.react` para geração dinâmica de códigos.
+Campos:
+- Dados básicos: `nome_completo`, `nome_urna`, `cpf`, `rg`, `data_nascimento`, `nacionalidade`, `estado_civil`, `profissao`
+- Dados eleitorais (sem número de urna): `cargo_pretendido`, `partido_sigla`, `coligacao`
+- `updated_at`, `updated_by`
+
+**Comportamento:**
+- Só Admin edita
+- A tela carrega o registro único (ou cria vazio na primeira vez)
+- Emissão de Contrato passa a usar automaticamente esses dados como contratante fixo
+
+---
+
+## 2. Gestão de Liderança (painel do próprio líder)
+
+**Nova rota:** `/minha-gestao` (visível para perfil `líder`; Admin enxerga com seletor de líder)
+
+Três abas internas:
+
+**a) Eleitores Captados**
+- Lista os eleitores onde `origem_usuario_id = auth.uid()` (já existe via RLS)
+- Reaproveita componentes da tela de eleitores em modo leitura/resumo
+- Totais: hoje, semana, mês
+
+**b) Reuniões**
+- Nova tabela `reunioes_liderança`: `titulo`, `descricao`, `data_hora`, `local_nome`, `endereco`, `latitude`, `longitude`, `status` (agendada/realizada/cancelada), `lideranca_id`
+- CRUD pelo próprio líder
+
+**c) Fotos de Reunião**
+- Nova tabela `fotos_reuniao`: `reuniao_id`, `lideranca_id`, `storage_path`, `latitude`, `longitude`, `capturada_em` (timestamp do dispositivo no momento da foto), `enviada_em`, `observacao`
+- Novo bucket privado `fotos-reunioes`
+- Galeria com mapa de pino por foto
+
+---
+
+## 3. PWA + Fotos offline com GPS
+
+Seguindo a skill PWA do Lovable:
+- Manifest + ícones + `vite-plugin-pwa` com `generateSW`, `registerType: autoUpdate`
+- Wrapper de registro com guarda: nunca registra em preview/iframe/dev
+- `NetworkFirst` para navegação HTML
+
+**Captura no celular:**
+- Componente "Tirar Foto da Reunião" usa `<input type="file" accept="image/*" capture="environment">` para abrir a câmera
+- No momento do disparo: `navigator.geolocation.getCurrentPosition` + `Date.now()` são gravados junto com o blob
+- Os dados (foto + lat/lng + timestamp + reuniao_id) ficam em **IndexedDB** (lib `idb`) numa fila `outbox_fotos`
+- Service worker dispara **Background Sync** (`sync` tag `upload-fotos`); fallback: ao voltar online (`online` event) ou ao abrir o app, um worker em foreground processa a fila e faz upload para o Storage + insere linha em `fotos_reuniao`
+- Indicador na UI mostra "X fotos aguardando envio"
+
+> Importante: o app só funciona offline depois de publicado e instalado (PWA não roda offline no preview do editor).
+
+---
+
+## 4. Recibos de Pagamento (base)
+
+**Nova rota:** `/recibos` (Admin)
+
+**Tabela:** `public.recibos`
+- `numero` (sequencial), `pagador_nome`, `pagador_cpf`, `valor`, `descricao`, `data_emissao`, `forma_pagamento`, `lideranca_id` (opcional), `pdf_path`
+
+**Tela:**
+- Lista + criar recibo + download PDF
+- Geração de PDF reaproveitando o mesmo gerador da Emissão de Contrato, usando os dados do **Candidato** como emissor
+- Modelo visual fica como placeholder até o usuário enviar o modelo oficial — só então o layout final é aplicado
+
+---
+
+## Migrações (uma única, com GRANTs e RLS)
+
+- `candidato` (singleton): só admin lê/escreve
+- `reunioes_lideranca`: líder vê/edita as próprias; admin vê todas
+- `fotos_reuniao`: líder insere/lê as próprias; admin lê todas
+- `recibos`: só admin
+- Bucket `fotos-reunioes` (privado) + políticas no `storage.objects` por pasta `{lideranca_id}/...`
+
+---
+
+## Detalhes técnicos
+
+- Stack: TanStack Start + Supabase (Lovable Cloud)
+- Libs novas: `idb` (IndexedDB), `vite-plugin-pwa`, `workbox-window`
+- Service worker próprio para Background Sync de upload (registrado pelo wrapper guardado, sem rodar em preview)
+- Geração de PDF: continua na rota existente de contrato; recibos usam o mesmo utilitário
+- Menu lateral: novos itens "Candidato" (admin), "Minha Gestão" (líder/admin), "Recibos" (admin)
+- Nenhuma alteração nas rotas/lógicas existentes (Eleitores, Mapa RJ, Situação Eleitoral etc.)
+
+---
+
+## Fora de escopo (até você confirmar)
+
+- Layout final do recibo — aguardando seu modelo
+- Layout final do contrato com novos dados do candidato — aguardando modelo (se for diferente do atual)
+- Notificações push para o líder

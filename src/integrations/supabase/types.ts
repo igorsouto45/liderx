@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidato: {
+        Row: {
+          cargo_pretendido: string | null
+          coligacao: string | null
+          cpf: string | null
+          created_at: string
+          data_nascimento: string | null
+          estado_civil: string | null
+          id: number
+          nacionalidade: string | null
+          nome_completo: string | null
+          nome_urna: string | null
+          partido_sigla: string | null
+          profissao: string | null
+          rg: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cargo_pretendido?: string | null
+          coligacao?: string | null
+          cpf?: string | null
+          created_at?: string
+          data_nascimento?: string | null
+          estado_civil?: string | null
+          id?: number
+          nacionalidade?: string | null
+          nome_completo?: string | null
+          nome_urna?: string | null
+          partido_sigla?: string | null
+          profissao?: string | null
+          rg?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cargo_pretendido?: string | null
+          coligacao?: string | null
+          cpf?: string | null
+          created_at?: string
+          data_nascimento?: string | null
+          estado_civil?: string | null
+          id?: number
+          nacionalidade?: string | null
+          nome_completo?: string | null
+          nome_urna?: string | null
+          partido_sigla?: string | null
+          profissao?: string | null
+          rg?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       documentos_lideranca: {
         Row: {
           caminho_arquivo: string
@@ -189,6 +243,50 @@ export type Database = {
             columns: ["usuario_validacao_eleitoral"]
             isOneToOne: false
             referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fotos_reuniao: {
+        Row: {
+          capturada_em: string
+          enviada_em: string
+          id: string
+          latitude: number | null
+          lideranca_user_id: string
+          longitude: number | null
+          observacao: string | null
+          reuniao_id: string | null
+          storage_path: string
+        }
+        Insert: {
+          capturada_em: string
+          enviada_em?: string
+          id?: string
+          latitude?: number | null
+          lideranca_user_id: string
+          longitude?: number | null
+          observacao?: string | null
+          reuniao_id?: string | null
+          storage_path: string
+        }
+        Update: {
+          capturada_em?: string
+          enviada_em?: string
+          id?: string
+          latitude?: number | null
+          lideranca_user_id?: string
+          longitude?: number | null
+          observacao?: string | null
+          reuniao_id?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotos_reuniao_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes_lideranca"
             referencedColumns: ["id"]
           },
         ]
@@ -648,6 +746,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recibos: {
+        Row: {
+          created_at: string
+          data_emissao: string
+          descricao: string | null
+          emitido_por: string | null
+          forma_pagamento: string | null
+          id: string
+          lideranca_user_id: string | null
+          numero: number
+          pagador_cpf: string | null
+          pagador_nome: string
+          pdf_path: string | null
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_emissao?: string
+          descricao?: string | null
+          emitido_por?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          lideranca_user_id?: string | null
+          numero?: number
+          pagador_cpf?: string | null
+          pagador_nome: string
+          pdf_path?: string | null
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_emissao?: string
+          descricao?: string | null
+          emitido_por?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          lideranca_user_id?: string | null
+          numero?: number
+          pagador_cpf?: string | null
+          pagador_nome?: string
+          pdf_path?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      reunioes_lideranca: {
+        Row: {
+          created_at: string
+          data_hora: string
+          descricao: string | null
+          endereco: string | null
+          id: string
+          latitude: number | null
+          lideranca_user_id: string
+          local_nome: string | null
+          longitude: number | null
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_hora: string
+          descricao?: string | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          lideranca_user_id: string
+          local_nome?: string | null
+          longitude?: number | null
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_hora?: string
+          descricao?: string | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          lideranca_user_id?: string
+          local_nome?: string | null
+          longitude?: number | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
