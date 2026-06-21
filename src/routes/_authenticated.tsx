@@ -19,7 +19,10 @@ import {
   QrCode,
   Target,
   MessageCircle,
-  FileCheck
+  FileCheck,
+  UserSquare2,
+  ClipboardList,
+  Receipt
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -153,6 +156,9 @@ function AuthenticatedLayout() {
 
   const allMenuItems = [
     { label: "Painel de Guerra", icon: LayoutDashboard, to: "/dashboard", roles: ["admin", "operador"] },
+    { label: "Candidato", icon: UserSquare2, to: "/candidato", roles: ["admin"] },
+    { label: "Minha Gestão", icon: ClipboardList, to: "/minha-gestao", roles: ["admin", "operador", "líder"] },
+    { label: "Recibos", icon: Receipt, to: "/recibos", roles: ["admin"] },
     { label: "Situação Eleitoral", icon: FileCheck, to: "/situacao-eleitoral", roles: ["admin", "operador", "líder"] },
     { label: "Eleitores", icon: Users, to: "/eleitores", roles: ["admin", "operador", "líder"] },
     { label: "WhatsApp", icon: MessageCircle, to: "/whatsapp", roles: ["admin", "operador", "líder"] },

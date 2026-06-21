@@ -23,7 +23,7 @@ function EmissaoContrato() {
   const [selectedLiderId, setSelectedLiderId] = useState<string>("");
   const [generating, setGenerating] = useState(false);
 
-  const { data: liderancas, isLoading } = useQuery({
+  const { data: liderancas } = useQuery({
     queryKey: ["liderancas"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,6 +31,14 @@ function EmissaoContrato() {
         .select("*")
         .order("nome");
       if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: candidato } = useQuery({
+    queryKey: ["candidato-singleton"],
+    queryFn: async () => {
+      const { data } = await supabase.from("candidato").select("*").eq("id", 1).maybeSingle();
       return data;
     }
   });
@@ -133,8 +141,12 @@ function EmissaoContrato() {
                 <h2 className="text-center font-bold text-xl mb-8 uppercase underline">Contrato Particular de Prestação de Serviços</h2>
                 
                 <p className="mb-4">
-                  Pelo presente instrumento particular, de um lado <strong>CAMPANHA ELEITORAL 2026</strong>, 
-                  adiante denominada apenas CONTRATANTE, e de outro lado:
+                  Pelo presente instrumento particular, de um lado{" "}
+                  <strong>{candidato?.nome_completo || "[CADASTRE O CANDIDATO]"}</strong>
+                  {candidato?.cpf && <>, CPF {candidato.cpf}</>}
+                  {candidato?.cargo_pretendido && <>, candidato(a) a {candidato.cargo_pretendido}</>}
+                  {candidato?.partido_sigla && <> pelo {candidato.partido_sigla}</>}
+                  , adiante denominado(a) apenas CONTRATANTE, e de outro lado:
                 </p>
 
                 <div className="mb-6 p-4 border border-black/10">
