@@ -17,7 +17,6 @@ function isUnsafeContext(): boolean {
   if (host === "lovableproject.com" || host.endsWith(".lovableproject.com")) return true;
   if (host === "lovableproject-dev.com" || host.endsWith(".lovableproject-dev.com")) return true;
   if (host === "beta.lovable.dev" || host.endsWith(".beta.lovable.dev")) return true;
-  // @ts-expect-error vite
   if (!import.meta.env.PROD) return true;
   return false;
 }

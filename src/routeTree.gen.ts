@@ -17,8 +17,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWhatsappRouteImport } from './routes/_authenticated.whatsapp'
 import { Route as AuthenticatedSituacaoEleitoralRouteImport } from './routes/_authenticated.situacao-eleitoral'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
+import { Route as AuthenticatedRecibosRouteImport } from './routes/_authenticated.recibos'
 import { Route as AuthenticatedQrcodeLiderRouteImport } from './routes/_authenticated.qrcode-lider'
 import { Route as AuthenticatedPrioridadesRouteImport } from './routes/_authenticated.prioridades'
+import { Route as AuthenticatedMinhaGestaoRouteImport } from './routes/_authenticated.minha-gestao'
 import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated.mensagens'
 import { Route as AuthenticatedMapaRjRouteImport } from './routes/_authenticated.mapa-rj'
 import { Route as AuthenticatedMapaRouteImport } from './routes/_authenticated.mapa'
@@ -28,6 +30,7 @@ import { Route as AuthenticatedEmissaoContratoRouteImport } from './routes/_auth
 import { Route as AuthenticatedEleitoresRouteImport } from './routes/_authenticated.eleitores'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCapturaRouteImport } from './routes/_authenticated.captura'
+import { Route as AuthenticatedCandidatoRouteImport } from './routes/_authenticated.candidato'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -69,6 +72,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedRecibosRoute = AuthenticatedRecibosRouteImport.update({
+  id: '/recibos',
+  path: '/recibos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedQrcodeLiderRoute =
   AuthenticatedQrcodeLiderRouteImport.update({
     id: '/qrcode-lider',
@@ -79,6 +87,12 @@ const AuthenticatedPrioridadesRoute =
   AuthenticatedPrioridadesRouteImport.update({
     id: '/prioridades',
     path: '/prioridades',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMinhaGestaoRoute =
+  AuthenticatedMinhaGestaoRouteImport.update({
+    id: '/minha-gestao',
+    path: '/minha-gestao',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedMensagensRoute = AuthenticatedMensagensRouteImport.update({
@@ -127,12 +141,18 @@ const AuthenticatedCapturaRoute = AuthenticatedCapturaRouteImport.update({
   path: '/captura',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCandidatoRoute = AuthenticatedCandidatoRouteImport.update({
+  id: '/candidato',
+  path: '/candidato',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/cadastro-lider': typeof CadastroLiderRoute
   '/login': typeof LoginRoute
+  '/candidato': typeof AuthenticatedCandidatoRoute
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
@@ -142,8 +162,10 @@ export interface FileRoutesByFullPath {
   '/mapa': typeof AuthenticatedMapaRoute
   '/mapa-rj': typeof AuthenticatedMapaRjRoute
   '/mensagens': typeof AuthenticatedMensagensRoute
+  '/minha-gestao': typeof AuthenticatedMinhaGestaoRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
+  '/recibos': typeof AuthenticatedRecibosRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/situacao-eleitoral': typeof AuthenticatedSituacaoEleitoralRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
@@ -153,6 +175,7 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/cadastro-lider': typeof CadastroLiderRoute
   '/login': typeof LoginRoute
+  '/candidato': typeof AuthenticatedCandidatoRoute
   '/captura': typeof AuthenticatedCapturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/eleitores': typeof AuthenticatedEleitoresRoute
@@ -162,8 +185,10 @@ export interface FileRoutesByTo {
   '/mapa': typeof AuthenticatedMapaRoute
   '/mapa-rj': typeof AuthenticatedMapaRjRoute
   '/mensagens': typeof AuthenticatedMensagensRoute
+  '/minha-gestao': typeof AuthenticatedMinhaGestaoRoute
   '/prioridades': typeof AuthenticatedPrioridadesRoute
   '/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
+  '/recibos': typeof AuthenticatedRecibosRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/situacao-eleitoral': typeof AuthenticatedSituacaoEleitoralRoute
   '/whatsapp': typeof AuthenticatedWhatsappRoute
@@ -175,6 +200,7 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/cadastro-lider': typeof CadastroLiderRoute
   '/login': typeof LoginRoute
+  '/_authenticated/candidato': typeof AuthenticatedCandidatoRoute
   '/_authenticated/captura': typeof AuthenticatedCapturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/eleitores': typeof AuthenticatedEleitoresRoute
@@ -184,8 +210,10 @@ export interface FileRoutesById {
   '/_authenticated/mapa': typeof AuthenticatedMapaRoute
   '/_authenticated/mapa-rj': typeof AuthenticatedMapaRjRoute
   '/_authenticated/mensagens': typeof AuthenticatedMensagensRoute
+  '/_authenticated/minha-gestao': typeof AuthenticatedMinhaGestaoRoute
   '/_authenticated/prioridades': typeof AuthenticatedPrioridadesRoute
   '/_authenticated/qrcode-lider': typeof AuthenticatedQrcodeLiderRoute
+  '/_authenticated/recibos': typeof AuthenticatedRecibosRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/situacao-eleitoral': typeof AuthenticatedSituacaoEleitoralRoute
   '/_authenticated/whatsapp': typeof AuthenticatedWhatsappRoute
@@ -197,6 +225,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/cadastro-lider'
     | '/login'
+    | '/candidato'
     | '/captura'
     | '/dashboard'
     | '/eleitores'
@@ -206,8 +235,10 @@ export interface FileRouteTypes {
     | '/mapa'
     | '/mapa-rj'
     | '/mensagens'
+    | '/minha-gestao'
     | '/prioridades'
     | '/qrcode-lider'
+    | '/recibos'
     | '/settings'
     | '/situacao-eleitoral'
     | '/whatsapp'
@@ -217,6 +248,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/cadastro-lider'
     | '/login'
+    | '/candidato'
     | '/captura'
     | '/dashboard'
     | '/eleitores'
@@ -226,8 +258,10 @@ export interface FileRouteTypes {
     | '/mapa'
     | '/mapa-rj'
     | '/mensagens'
+    | '/minha-gestao'
     | '/prioridades'
     | '/qrcode-lider'
+    | '/recibos'
     | '/settings'
     | '/situacao-eleitoral'
     | '/whatsapp'
@@ -238,6 +272,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/cadastro-lider'
     | '/login'
+    | '/_authenticated/candidato'
     | '/_authenticated/captura'
     | '/_authenticated/dashboard'
     | '/_authenticated/eleitores'
@@ -247,8 +282,10 @@ export interface FileRouteTypes {
     | '/_authenticated/mapa'
     | '/_authenticated/mapa-rj'
     | '/_authenticated/mensagens'
+    | '/_authenticated/minha-gestao'
     | '/_authenticated/prioridades'
     | '/_authenticated/qrcode-lider'
+    | '/_authenticated/recibos'
     | '/_authenticated/settings'
     | '/_authenticated/situacao-eleitoral'
     | '/_authenticated/whatsapp'
@@ -320,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/recibos': {
+      id: '/_authenticated/recibos'
+      path: '/recibos'
+      fullPath: '/recibos'
+      preLoaderRoute: typeof AuthenticatedRecibosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/qrcode-lider': {
       id: '/_authenticated/qrcode-lider'
       path: '/qrcode-lider'
@@ -332,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/prioridades'
       fullPath: '/prioridades'
       preLoaderRoute: typeof AuthenticatedPrioridadesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/minha-gestao': {
+      id: '/_authenticated/minha-gestao'
+      path: '/minha-gestao'
+      fullPath: '/minha-gestao'
+      preLoaderRoute: typeof AuthenticatedMinhaGestaoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/mensagens': {
@@ -397,10 +448,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCapturaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/candidato': {
+      id: '/_authenticated/candidato'
+      path: '/candidato'
+      fullPath: '/candidato'
+      preLoaderRoute: typeof AuthenticatedCandidatoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedCandidatoRoute: typeof AuthenticatedCandidatoRoute
   AuthenticatedCapturaRoute: typeof AuthenticatedCapturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEleitoresRoute: typeof AuthenticatedEleitoresRoute
@@ -410,14 +469,17 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMapaRoute: typeof AuthenticatedMapaRoute
   AuthenticatedMapaRjRoute: typeof AuthenticatedMapaRjRoute
   AuthenticatedMensagensRoute: typeof AuthenticatedMensagensRoute
+  AuthenticatedMinhaGestaoRoute: typeof AuthenticatedMinhaGestaoRoute
   AuthenticatedPrioridadesRoute: typeof AuthenticatedPrioridadesRoute
   AuthenticatedQrcodeLiderRoute: typeof AuthenticatedQrcodeLiderRoute
+  AuthenticatedRecibosRoute: typeof AuthenticatedRecibosRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSituacaoEleitoralRoute: typeof AuthenticatedSituacaoEleitoralRoute
   AuthenticatedWhatsappRoute: typeof AuthenticatedWhatsappRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedCandidatoRoute: AuthenticatedCandidatoRoute,
   AuthenticatedCapturaRoute: AuthenticatedCapturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEleitoresRoute: AuthenticatedEleitoresRoute,
@@ -427,8 +489,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMapaRoute: AuthenticatedMapaRoute,
   AuthenticatedMapaRjRoute: AuthenticatedMapaRjRoute,
   AuthenticatedMensagensRoute: AuthenticatedMensagensRoute,
+  AuthenticatedMinhaGestaoRoute: AuthenticatedMinhaGestaoRoute,
   AuthenticatedPrioridadesRoute: AuthenticatedPrioridadesRoute,
   AuthenticatedQrcodeLiderRoute: AuthenticatedQrcodeLiderRoute,
+  AuthenticatedRecibosRoute: AuthenticatedRecibosRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSituacaoEleitoralRoute: AuthenticatedSituacaoEleitoralRoute,
   AuthenticatedWhatsappRoute: AuthenticatedWhatsappRoute,
