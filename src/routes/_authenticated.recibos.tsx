@@ -149,7 +149,7 @@ function ReciboPreview({ recibo, candidato }: { recibo: any; candidato: any }) {
         <div className="text-center">
           <div className="border-t border-black w-2/3 mx-auto mb-1"></div>
           <p className="text-xs uppercase">{candidato?.nome_completo || "Candidato"}</p>
-          {candidato?.cpf && <p className="text-xs">CPF: {candidato.cpf}</p>}
+          {candidato?.cnpj && <p className="text-xs">CNPJ: {candidato.cnpj}</p>}
           {candidato?.cargo_pretendido && <p className="text-xs">{candidato.cargo_pretendido}{candidato.partido_sigla ? ` • ${candidato.partido_sigla}` : ""}</p>}
         </div>
       </div>

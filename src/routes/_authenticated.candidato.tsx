@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/candidato")({
 type CandidatoForm = {
   nome_completo: string;
   nome_urna: string;
-  cpf: string;
+  cnpj: string;
   rg: string;
   data_nascimento: string;
   nacionalidade: string;
@@ -27,7 +27,7 @@ type CandidatoForm = {
 };
 
 const EMPTY: CandidatoForm = {
-  nome_completo: "", nome_urna: "", cpf: "", rg: "", data_nascimento: "",
+  nome_completo: "", nome_urna: "", cnpj: "", rg: "", data_nascimento: "",
   nacionalidade: "Brasileiro(a)", estado_civil: "", profissao: "",
   cargo_pretendido: "", partido_sigla: "", coligacao: "",
 };
@@ -50,7 +50,7 @@ function CandidatoPage() {
         setForm({
           nome_completo: data.nome_completo ?? "",
           nome_urna: data.nome_urna ?? "",
-          cpf: data.cpf ?? "",
+          cnpj: (data as { cnpj?: string | null }).cnpj ?? "",
           rg: data.rg ?? "",
           data_nascimento: data.data_nascimento ?? "",
           nacionalidade: data.nacionalidade ?? "Brasileiro(a)",
@@ -111,7 +111,7 @@ function CandidatoPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <Field label="Nome completo"><Input value={form.nome_completo} onChange={set("nome_completo")} disabled={!isAdmin} /></Field>
             <Field label="Nome de urna"><Input value={form.nome_urna} onChange={set("nome_urna")} disabled={!isAdmin} /></Field>
-            <Field label="CPF"><Input value={form.cpf} onChange={set("cpf")} disabled={!isAdmin} /></Field>
+            <Field label="CNPJ de campanha"><Input value={form.cnpj} onChange={set("cnpj")} disabled={!isAdmin} placeholder="00.000.000/0000-00" /></Field>
             <Field label="RG"><Input value={form.rg} onChange={set("rg")} disabled={!isAdmin} /></Field>
             <Field label="Data de nascimento"><Input type="date" value={form.data_nascimento} onChange={set("data_nascimento")} disabled={!isAdmin} /></Field>
             <Field label="Nacionalidade"><Input value={form.nacionalidade} onChange={set("nacionalidade")} disabled={!isAdmin} /></Field>

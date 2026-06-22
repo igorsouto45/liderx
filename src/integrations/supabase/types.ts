@@ -17,6 +17,7 @@ export type Database = {
       candidato: {
         Row: {
           cargo_pretendido: string | null
+          cnpj: string | null
           coligacao: string | null
           cpf: string | null
           created_at: string
@@ -34,6 +35,7 @@ export type Database = {
         }
         Insert: {
           cargo_pretendido?: string | null
+          cnpj?: string | null
           coligacao?: string | null
           cpf?: string | null
           created_at?: string
@@ -51,6 +53,7 @@ export type Database = {
         }
         Update: {
           cargo_pretendido?: string | null
+          cnpj?: string | null
           coligacao?: string | null
           cpf?: string | null
           created_at?: string
