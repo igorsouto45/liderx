@@ -50,7 +50,7 @@ function CandidatoPage() {
         setForm({
           nome_completo: data.nome_completo ?? "",
           nome_urna: data.nome_urna ?? "",
-          cpf: data.cpf ?? "",
+          cnpj: (data as { cnpj?: string | null }).cnpj ?? "",
           rg: data.rg ?? "",
           data_nascimento: data.data_nascimento ?? "",
           nacionalidade: data.nacionalidade ?? "Brasileiro(a)",
