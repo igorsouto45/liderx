@@ -111,7 +111,7 @@ function CandidatoPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <Field label="Nome completo"><Input value={form.nome_completo} onChange={set("nome_completo")} disabled={!isAdmin} /></Field>
             <Field label="Nome de urna"><Input value={form.nome_urna} onChange={set("nome_urna")} disabled={!isAdmin} /></Field>
-            <Field label="CPF"><Input value={form.cpf} onChange={set("cpf")} disabled={!isAdmin} /></Field>
+            <Field label="CNPJ de campanha"><Input value={form.cnpj} onChange={set("cnpj")} disabled={!isAdmin} placeholder="00.000.000/0000-00" /></Field>
             <Field label="RG"><Input value={form.rg} onChange={set("rg")} disabled={!isAdmin} /></Field>
             <Field label="Data de nascimento"><Input type="date" value={form.data_nascimento} onChange={set("data_nascimento")} disabled={!isAdmin} /></Field>
             <Field label="Nacionalidade"><Input value={form.nacionalidade} onChange={set("nacionalidade")} disabled={!isAdmin} /></Field>
