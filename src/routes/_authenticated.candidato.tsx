@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/candidato")({
 type CandidatoForm = {
   nome_completo: string;
   nome_urna: string;
-  cpf: string;
+  cnpj: string;
   rg: string;
   data_nascimento: string;
   nacionalidade: string;
@@ -27,7 +27,7 @@ type CandidatoForm = {
 };
 
 const EMPTY: CandidatoForm = {
-  nome_completo: "", nome_urna: "", cpf: "", rg: "", data_nascimento: "",
+  nome_completo: "", nome_urna: "", cnpj: "", rg: "", data_nascimento: "",
   nacionalidade: "Brasileiro(a)", estado_civil: "", profissao: "",
   cargo_pretendido: "", partido_sigla: "", coligacao: "",
 };
