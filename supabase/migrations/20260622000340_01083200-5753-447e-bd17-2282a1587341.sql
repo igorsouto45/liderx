@@ -1,0 +1,1 @@
+ALTER TABLE public.candidato ADD COLUMN IF NOT EXISTS cnpj text;
