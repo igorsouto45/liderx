@@ -143,7 +143,7 @@ function EmissaoContrato() {
                 <p className="mb-4">
                   Pelo presente instrumento particular, de um lado{" "}
                   <strong>{candidato?.nome_completo || "[CADASTRE O CANDIDATO]"}</strong>
-                  {candidato?.cpf && <>, CPF {candidato.cpf}</>}
+                  {candidato?.cnpj && <>, CNPJ {candidato.cnpj}</>}
                   {candidato?.cargo_pretendido && <>, candidato(a) a {candidato.cargo_pretendido}</>}
                   {candidato?.partido_sigla && <> pelo {candidato.partido_sigla}</>}
                   , adiante denominado(a) apenas CONTRATANTE, e de outro lado:
