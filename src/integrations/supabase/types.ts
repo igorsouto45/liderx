@@ -1077,92 +1077,47 @@ export type Database = {
           total: number
         }[]
       }
-      mapa_rj_detalhe_eleitores_sistema:
-        | {
-            Args: { p_bairro?: string; p_municipio: string }
-            Returns: {
-              bairro: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              p_bairro?: string
-              p_faixas?: string[]
-              p_generos?: string[]
-              p_municipio: string
-            }
-            Returns: {
-              bairro: string
-              total: number
-            }[]
-          }
-      mapa_rj_detalhe_municipio:
-        | {
-            Args: {
-              p_faixas?: string[]
-              p_generos?: string[]
-              p_municipio: string
-            }
-            Returns: {
-              secao: number
-              total: number
-              zona: number
-            }[]
-          }
-        | {
-            Args: {
-              p_bairro?: string
-              p_faixas?: string[]
-              p_generos?: string[]
-              p_municipio: string
-            }
-            Returns: {
-              bairro: string
-              local_nome: string
-              secao: number
-              total: number
-              zona: number
-            }[]
-          }
-      mapa_rj_totais_eleitores_sistema:
-        | {
-            Args: { p_bairro?: string }
-            Returns: {
-              municipio: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              p_bairro?: string
-              p_faixas?: string[]
-              p_generos?: string[]
-            }
-            Returns: {
-              municipio: string
-              total: number
-            }[]
-          }
-      mapa_rj_totais_municipio:
-        | {
-            Args: { p_faixas?: string[]; p_generos?: string[] }
-            Returns: {
-              municipio: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              p_bairro?: string
-              p_faixas?: string[]
-              p_generos?: string[]
-            }
-            Returns: {
-              municipio: string
-              total: number
-            }[]
-          }
+      mapa_rj_detalhe_eleitores_sistema: {
+        Args: {
+          p_bairro?: string
+          p_faixas?: string[]
+          p_generos?: string[]
+          p_municipio: string
+        }
+        Returns: {
+          bairro: string
+          total: number
+        }[]
+      }
+      mapa_rj_detalhe_municipio: {
+        Args: {
+          p_bairro?: string
+          p_faixas?: string[]
+          p_generos?: string[]
+          p_municipio: string
+        }
+        Returns: {
+          bairro: string
+          local_nome: string
+          secao: number
+          total: number
+          zona: number
+        }[]
+      }
+      mapa_rj_totais_eleitores_sistema: {
+        Args: { p_bairro?: string; p_faixas?: string[]; p_generos?: string[] }
+        Returns: {
+          municipio: string
+          total: number
+        }[]
+      }
+      mapa_rj_totais_municipio: {
+        Args: { p_bairro?: string; p_faixas?: string[]; p_generos?: string[] }
+        Returns: {
+          municipio: string
+          total: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
